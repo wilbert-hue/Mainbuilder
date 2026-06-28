@@ -1,0 +1,17 @@
+# Files to ignore when deploying to Vercel
+node_modules
+.next
+.git
+*.md
+!README.md
+!DEPLOYMENT.md
+*.py
+__pycache__
+backups
+*.csv
+*.xlsx
+*.xls
+
+
+
+

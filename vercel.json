@@ -1,0 +1,33 @@
+{
+  "functions": {
+    "app/api/process-data/route.ts": {
+      "maxDuration": 300
+    },
+    "app/api/process-excel/route.ts": {
+      "maxDuration": 300
+    },
+    "app/api/generate-dashboard/route.ts": {
+      "maxDuration": 300
+    },
+    "app/api/process-intelligence-file/route.ts": {
+      "maxDuration": 300
+    },
+    "app/api/process-competitive-intelligence/route.ts": {
+      "maxDuration": 300
+    },
+    "app/api/dashboards/save/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/dashboards/[id]/route.ts": {
+      "maxDuration": 60
+    }
+  },
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "framework": "nextjs",
+  "installCommand": "npm install"
+}
+
+
+
+

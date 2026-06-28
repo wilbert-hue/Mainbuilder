@@ -1,0 +1,20 @@
+{
+  "name": "excel-upload-tool",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Excel to JSON converter for dashboard data processing",
+  "main": "lib/excel-processor.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "dependencies": {
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/xlsx": "^0.0.36",
+    "typescript": "^5"
+  }
+}
+
