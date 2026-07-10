@@ -232,7 +232,7 @@ function processIntelligenceJsonGrid(
         return {
           name: ph.name,
           startCol: newStartCol >= 0 ? newStartCol : 0,
-          colSpan: newColSpan > 0 ? newColSpan : 1,
+          colSpan: newColSpan,
         }
       })
       .filter((ph) => ph.colSpan > 0)
