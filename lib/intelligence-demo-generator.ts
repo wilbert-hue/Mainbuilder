@@ -234,6 +234,15 @@ export function generateDemoValue(
   const market = parseMarketContext(ctx.marketName)
   const h = header.toLowerCase().trim()
 
+  // If the header lists allowed options in parentheses like "Field (A, B, C)", use those.
+  const bracketMatch = header.match(/\(([^)]+)\)/)
+  if (bracketMatch) {
+    const options = bracketMatch[1].split(',').map(s => s.trim()).filter(Boolean)
+    if (options.length >= 2) {
+      return pickVariant(options, rowIndex)
+    }
+  }
+
   const professional = professionalDriverValue(header, rowIndex, market)
   if (professional) return professional
 
