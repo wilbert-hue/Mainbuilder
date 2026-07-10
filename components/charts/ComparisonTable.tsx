@@ -17,7 +17,7 @@ interface ComparisonTableProps {
 }
 
 export function ComparisonTable({ title, height = 600 }: ComparisonTableProps) {
-  const { data, filters } = useDashboardStore()
+  const { data, filters, currency } = useDashboardStore()
   const [sortField, setSortField] = useState<string>('geography')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
 
@@ -161,8 +161,10 @@ export function ComparisonTable({ title, height = 600 }: ComparisonTableProps) {
   }
 
   const year = filters.yearRange[0] + Math.floor((filters.yearRange[1] - filters.yearRange[0]) / 2)
-  const valueUnit = filters.dataType === 'value' 
-    ? `${data.metadata.currency} ${data.metadata.value_unit}`
+  const selectedCurrency = currency || data.metadata.currency || 'USD'
+  const isINR = selectedCurrency === 'INR'
+  const valueUnit = filters.dataType === 'value'
+    ? isINR ? 'INR Cr.' : `${data.metadata.currency} ${data.metadata.value_unit}`
     : data.metadata.volume_unit
 
   return (

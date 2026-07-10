@@ -286,7 +286,7 @@ export function GlobalKPICards() {
               </p>
               <p className="text-base font-bold text-black leading-tight">
                 {kpiData.dataType === 'value' && kpiData.isINR
-                  ? `₹ ${formatIndianNumber(kpiData.marketSizeStart)}`
+                  ? `₹ ${kpiData.marketSizeStart.toFixed(2)} Cr.`
                   : kpiData.dataType === 'value'
                   ? `$ ${formatLargeNumber(kpiData.marketSizeStart, 1)} ${kpiData.unit}`
                   : `${formatLargeNumber(kpiData.marketSizeStart, 1)} ${kpiData.unit}`}
@@ -305,7 +305,7 @@ export function GlobalKPICards() {
               </p>
               <p className="text-base font-bold text-black leading-tight">
                 {kpiData.dataType === 'value' && kpiData.isINR
-                  ? `₹ ${formatIndianNumber(kpiData.marketSizeEnd)}`
+                  ? `₹ ${kpiData.marketSizeEnd.toFixed(2)} Cr.`
                   : kpiData.dataType === 'value'
                   ? `$ ${formatLargeNumber(kpiData.marketSizeEnd, 1)} ${kpiData.unit}`
                   : `${formatLargeNumber(kpiData.marketSizeEnd, 1)} ${kpiData.unit}`}
@@ -339,7 +339,7 @@ export function GlobalKPICards() {
               </p>
               <p className="text-base font-bold text-black leading-tight">
                 {kpiData.dataType === 'value' && kpiData.isINR
-                  ? `₹ ${formatIndianNumber(kpiData.absoluteGrowth)}`
+                  ? `₹ ${kpiData.absoluteGrowth.toFixed(2)} Cr.`
                   : kpiData.dataType === 'value'
                   ? `$ ${formatLargeNumber(kpiData.absoluteGrowth, 1)} ${kpiData.unit}`
                   : `${formatLargeNumber(kpiData.absoluteGrowth, 1)} ${kpiData.unit}`}

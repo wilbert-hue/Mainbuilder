@@ -28,7 +28,6 @@ import { FilterPresets } from '@/components/filters/FilterPresets'
 import { ChartGroupSelector } from '@/components/filters/ChartGroupSelector'
 import { CustomScrollbar } from '@/components/ui/CustomScrollbar'
 import { GlobalKPICards } from '@/components/GlobalKPICards'
-import { DashboardBuilderDownload } from '@/components/DashboardBuilderDownload'
 import { getChartsForGroup } from '@/lib/chart-groups'
 import { Lightbulb, X, Layers, LayoutGrid, Settings } from 'lucide-react'
 import { useRouter } from 'next/navigation'
@@ -173,7 +172,6 @@ export function DashboardShell({ readOnly = false }: Props) {
             <IntelligenceDatabaseViews />
           </div>
         </div>
-        <DashboardBuilderDownload />
         <Footer />
       </div>
     )
@@ -382,7 +380,6 @@ export function DashboardShell({ readOnly = false }: Props) {
         </div>
       </div>
 
-      <DashboardBuilderDownload />
       <Footer />
     </div>
   )

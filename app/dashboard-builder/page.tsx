@@ -2,7 +2,7 @@
 
 import { useState, useEffect, type Dispatch, type SetStateAction } from 'react'
 import { useRouter } from 'next/navigation'
-import { Upload, Loader2, CheckCircle2, XCircle, FileSpreadsheet, Eye, Users, Building2, ArrowRight, TrendingUp, DollarSign, LayoutList } from 'lucide-react'
+import { Upload, Loader2, CheckCircle2, XCircle, FileSpreadsheet, Eye, Users, Building2, ArrowRight, TrendingUp, DollarSign, LayoutList, X } from 'lucide-react'
 import Image from 'next/image'
 import { useDashboardStore } from '@/lib/store'
 import type { ComparisonData } from '@/lib/types'
@@ -1004,7 +1004,7 @@ export default function DashboardBuilderPage() {
                       onChange={() => setCurrencyInput('INR')}
                       className="builder-radio"
                     />
-                    <span className="text-sm font-medium text-slate-200">INR (₹)</span>
+                    <span className="text-sm font-medium text-slate-200">INR Cr. (₹)</span>
                   </label>
                 </div>
                 <p className="mt-1 text-xs text-slate-500">
@@ -1039,9 +1039,19 @@ export default function DashboardBuilderPage() {
                     </div>
                     <p className="text-xs text-slate-500">CSV, XLSX, or XLS up to 50MB</p>
                     {valueFile && (
-                      <p className="text-sm text-emerald-400 mt-2">
-                        ✓ {valueFile.name} ({(valueFile.size / 1024 / 1024).toFixed(2)} MB)
-                      </p>
+                      <div className="flex items-center justify-center gap-2 mt-2">
+                        <p className="text-sm text-emerald-400">
+                          ✓ {valueFile.name} ({(valueFile.size / 1024 / 1024).toFixed(2)} MB)
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => { setValueFile(null); setMarketStatus('idle'); setMarketStatusMessage(''); setProcessedData(null) }}
+                          className="text-slate-400 hover:text-red-400 transition-colors"
+                          title="Remove file"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -1122,9 +1132,19 @@ export default function DashboardBuilderPage() {
                     </div>
                     <p className="text-xs text-slate-500">CSV, XLSX, or XLS up to 50MB</p>
                     {volumeFile && (
-                      <p className="text-sm text-emerald-400 mt-2">
-                        ✓ {volumeFile.name} ({(volumeFile.size / 1024 / 1024).toFixed(2)} MB)
-                      </p>
+                      <div className="flex items-center justify-center gap-2 mt-2">
+                        <p className="text-sm text-emerald-400">
+                          ✓ {volumeFile.name} ({(volumeFile.size / 1024 / 1024).toFixed(2)} MB)
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => setVolumeFile(null)}
+                          className="text-slate-400 hover:text-red-400 transition-colors"
+                          title="Remove file"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -1160,9 +1180,19 @@ export default function DashboardBuilderPage() {
                     </div>
                     <p className="text-xs text-slate-500">CSV, XLSX, or XLS up to 50MB</p>
                     {crossValueFile && (
-                      <p className="text-sm text-emerald-400 mt-2">
-                        ✓ {crossValueFile.name} ({(crossValueFile.size / 1024 / 1024).toFixed(2)} MB)
-                      </p>
+                      <div className="flex items-center justify-center gap-2 mt-2">
+                        <p className="text-sm text-emerald-400">
+                          ✓ {crossValueFile.name} ({(crossValueFile.size / 1024 / 1024).toFixed(2)} MB)
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => setCrossValueFile(null)}
+                          className="text-slate-400 hover:text-red-400 transition-colors"
+                          title="Remove file"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -1198,9 +1228,19 @@ export default function DashboardBuilderPage() {
                     </div>
                     <p className="text-xs text-slate-500">CSV, XLSX, or XLS up to 50MB</p>
                     {crossVolumeFile && (
-                      <p className="text-sm text-emerald-400 mt-2">
-                        ✓ {crossVolumeFile.name} ({(crossVolumeFile.size / 1024 / 1024).toFixed(2)} MB)
-                      </p>
+                      <div className="flex items-center justify-center gap-2 mt-2">
+                        <p className="text-sm text-emerald-400">
+                          ✓ {crossVolumeFile.name} ({(crossVolumeFile.size / 1024 / 1024).toFixed(2)} MB)
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => setCrossVolumeFile(null)}
+                          className="text-slate-400 hover:text-red-400 transition-colors"
+                          title="Remove file"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -1247,6 +1287,26 @@ export default function DashboardBuilderPage() {
             <div className="mb-6">
               <h2 className="text-2xl font-bold text-white mb-2">2. Intelligence Data Input</h2>
               <p className="text-sm text-slate-400">Add customer or distributor intelligence data to your dashboard</p>
+            </div>
+
+            {/* Market Name for intelligence-only dashboards */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-slate-200 mb-2">
+                Market Name
+              </label>
+              <input
+                type="text"
+                value={dashboardNameInput}
+                onChange={(e) => {
+                  setDashboardNameInput(e.target.value)
+                  setDashboardName(e.target.value)
+                }}
+                className="builder-input"
+                placeholder="e.g. India ASP Market Analysis"
+              />
+              <p className="mt-1 text-xs text-slate-500">
+                Used as the title in Customer / Distributor Intelligence Database tables
+              </p>
             </div>
 
             <IntelligenceDataInput mode={intelMode} onModeChange={setIntelMode} />
@@ -1311,11 +1371,21 @@ export default function DashboardBuilderPage() {
                         <p className="text-sm text-sky-400 mt-2 font-medium">Drop file here!</p>
                       )}
                       {customerIntelFile && !isDraggingCustomerIntel && (
-                        <p className="text-sm text-emerald-400 mt-2">
-                          {customerIntelFileData ? '✓' : '⏳'} {customerIntelFile.name} (
-                          {(customerIntelFile.size / 1024 / 1024).toFixed(2)} MB)
-                          {customerIntelFileData && <span className="text-emerald-300 ml-1">(Ready)</span>}
-                        </p>
+                        <div className="flex items-center justify-center gap-2 mt-2">
+                          <p className="text-sm text-emerald-400">
+                            {customerIntelFileData ? '✓' : '⏳'} {customerIntelFile.name} (
+                            {(customerIntelFile.size / 1024 / 1024).toFixed(2)} MB)
+                            {customerIntelFileData && <span className="text-emerald-300 ml-1">(Ready)</span>}
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => { setCustomerIntelFile(null); setCustomerIntelFileData(null); setCustomerIntelStatus('idle'); setCustomerIntelStatusMessage('') }}
+                            className="text-slate-400 hover:text-red-400 transition-colors"
+                            title="Remove file"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -1387,11 +1457,21 @@ export default function DashboardBuilderPage() {
                         <p className="text-sm text-sky-400 mt-2 font-medium">Drop file here!</p>
                       )}
                       {distributorIntelFile && !isDraggingDistributorIntel && (
-                        <p className="text-sm text-emerald-400 mt-2">
-                          {distributorIntelFileData ? '✓' : '⏳'} {distributorIntelFile.name} (
-                          {(distributorIntelFile.size / 1024 / 1024).toFixed(2)} MB)
-                          {distributorIntelFileData && <span className="text-emerald-300 ml-1">(Ready)</span>}
-                        </p>
+                        <div className="flex items-center justify-center gap-2 mt-2">
+                          <p className="text-sm text-emerald-400">
+                            {distributorIntelFileData ? '✓' : '⏳'} {distributorIntelFile.name} (
+                            {(distributorIntelFile.size / 1024 / 1024).toFixed(2)} MB)
+                            {distributorIntelFileData && <span className="text-emerald-300 ml-1">(Ready)</span>}
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => { setDistributorIntelFile(null); setDistributorIntelFileData(null); setDistributorIntelStatus('idle'); setDistributorIntelStatusMessage('') }}
+                            className="text-slate-400 hover:text-red-400 transition-colors"
+                            title="Remove file"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
                       )}
                     </div>
                   </div>

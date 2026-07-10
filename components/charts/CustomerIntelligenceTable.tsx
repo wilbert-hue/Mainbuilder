@@ -4,6 +4,53 @@ import { useState, useEffect, useMemo } from 'react'
 import { useDashboardStore } from '@/lib/store'
 import { Building2, Users } from 'lucide-react'
 
+const USD_TO_INR = 84
+
+// Detects if a cell value is a USD monetary value like "$2367388" or "$1,234.56"
+function parseUsdValue(val: string): number | null {
+  const cleaned = val.trim()
+  if (!cleaned.startsWith('$')) return null
+  const numeric = cleaned.slice(1).replace(/,/g, '')
+  const n = parseFloat(numeric)
+  return isNaN(n) ? null : n
+}
+
+// Detects if a header is a USD monetary column
+function isUsdMoneyHeader(header: string): boolean {
+  const h = header.toLowerCase()
+  return h.includes('us$') || h.includes('usd') || h.includes('revenue') ||
+    h.includes('annual') || h.includes('salary') || h.includes('fee') ||
+    h.includes('price') || h.includes('amount') || h.includes('cost') ||
+    h.includes('income') || h.includes('value')
+}
+
+function formatInrCr(usdValue: number): string {
+  const inrCr = (usdValue * USD_TO_INR) / 10_000_000
+  return `₹ ${inrCr.toFixed(2)} Cr.`
+}
+
+function transformHeader(header: string, isINR: boolean): string {
+  if (!isINR) return header
+  // Replace USD/US$ labels in the header with INR Cr.
+  return header
+    .replace(/\bUS\$\b/gi, 'INR Cr.')
+    .replace(/\bUSD\b/gi, 'INR Cr.')
+    .replace(/\bMilli(on)?\b/gi, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim()
+}
+
+function renderCellValue(header: string, rawVal: any, isINR: boolean): string {
+  if (rawVal === undefined || rawVal === null || rawVal === '') return ''
+  const strVal = String(rawVal)
+  if (!isINR) return strVal
+  // Only convert cells in money-type columns
+  if (!isUsdMoneyHeader(header)) return strVal
+  const usdAmount = parseUsdValue(strVal)
+  if (usdAmount === null) return strVal
+  return formatInrCr(usdAmount)
+}
+
 interface ParentHeader {
   name: string
   startCol: number
@@ -40,7 +87,10 @@ function buildMarketLine(
     (dashboardName && dashboardName.trim()) ||
     (data as { metadata?: { market_name?: string } } | null)?.metadata?.market_name ||
     'Market'
-  if (geo) return `${geo} ${market}`
+  // Don't prepend geography if the dashboard name already starts with it
+  if (geo && !market.toLowerCase().startsWith(geo.toLowerCase())) {
+    return `${geo} ${market}`
+  }
   return market
 }
 
@@ -67,13 +117,16 @@ function PropositionTableDashboard({
   tier,
   bannerTitle,
   showDemoNote,
+  isINR,
 }: {
   data: PropositionData
   tier: TierKey
   bannerTitle: string
   showDemoNote: boolean
+  isINR: boolean
 }) {
-  const headers = data.headers?.length ? data.headers : Object.keys(data.rows[0] || {})
+  const rawHeaders = data.headers?.length ? data.headers : Object.keys(data.rows[0] || {})
+  const headers = rawHeaders
   const parentHeaders = data.parentHeaders
 
   const tierLabel = tier === 'premium' ? 'Premium' : tier === 'advance' ? 'Advance' : 'Standard'
@@ -126,9 +179,9 @@ function PropositionTableDashboard({
                 <th
                   key={index}
                   className="px-3 py-2.5 text-left text-xs font-semibold border-r border-sky-200/80 last:border-r-0 max-w-[14rem] truncate"
-                  title={header}
+                  title={transformHeader(header, isINR)}
                 >
-                  {header}
+                  {transformHeader(header, isINR)}
                 </th>
               ))}
             </tr>
@@ -145,8 +198,8 @@ function PropositionTableDashboard({
                     className="px-3 py-2.5 text-sm text-slate-800 border-b border-slate-100 border-r border-slate-100/80 last:border-r-0 align-top max-w-[18rem]"
                   >
                     {row[header] !== undefined && row[header] !== null && row[header] !== '' ? (
-                      <span className="line-clamp-3" title={String(row[header])}>
-                        {String(row[header])}
+                      <span className="line-clamp-3" title={renderCellValue(header, row[header], isINR)}>
+                        {renderCellValue(header, row[header], isINR)}
                       </span>
                     ) : (
                       <span className="text-slate-400">—</span>
@@ -184,7 +237,10 @@ export function CustomerIntelligenceTable({
     data,
     filters,
     showDemoNote,
+    currency,
   } = useDashboardStore()
+
+  const isINR = (currency || data?.metadata?.currency || 'USD') === 'INR'
 
   const p1 = intelligenceSource === 'distributor' ? distributorRawIntelligenceData : rawIntelligenceData
   const p2 = intelligenceSource === 'distributor' ? distributorProposition2Data : proposition2Data
@@ -382,6 +438,7 @@ export function CustomerIntelligenceTable({
           tier={activeTier}
           bannerTitle={bannerTitle}
           showDemoNote={showDemoNote}
+          isINR={isINR}
         />
       )}
 

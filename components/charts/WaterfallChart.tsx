@@ -31,7 +31,7 @@ interface WaterfallDataPoint {
 }
 
 export function WaterfallChart({ title, height = 400 }: WaterfallChartProps) {
-  const { data, filters } = useDashboardStore()
+  const { data, filters, currency } = useDashboardStore()
 
   const chartData = useMemo(() => {
     if (!data) return { data: [], totalChange: 0 }
@@ -121,17 +121,20 @@ export function WaterfallChart({ title, height = 400 }: WaterfallChartProps) {
     )
   }
 
+  const selectedCurrency = currency || data.metadata.currency || 'USD'
+  const isINR = selectedCurrency === 'INR'
+  const unitLabel = filters.dataType === 'value'
+    ? isINR ? 'INR Cr.' : `${data.metadata.currency} ${data.metadata.value_unit}`
+    : data.metadata.volume_unit
   const yAxisLabel = filters.dataType === 'value'
-    ? `Market Value (${data.metadata.currency} ${data.metadata.value_unit})`
+    ? `Market Value (${unitLabel})`
     : `Market Volume (${data.metadata.volume_unit})`
 
   // Custom tooltip for waterfall
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length && data) {
       const pointData = payload[0].payload as WaterfallDataPoint
-      const unit = filters.dataType === 'value'
-        ? `${data.metadata.currency} ${data.metadata.value_unit}`
-        : data.metadata.volume_unit
+      const unit = unitLabel
       
       return (
         <div className="bg-white p-4 border border-gray-200 rounded-lg shadow-lg min-w-[280px]">

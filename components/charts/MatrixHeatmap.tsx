@@ -10,7 +10,7 @@ interface MatrixHeatmapProps {
 }
 
 export function MatrixHeatmap({ title, height = 600 }: MatrixHeatmapProps) {
-  const { data, filters } = useDashboardStore()
+  const { data, filters, currency } = useDashboardStore()
   const [hoveredCell, setHoveredCell] = useState<{ geo: string; year: number; segment: string; value: number; x: number; y: number } | null>(null)
 
   const matrixData = useMemo(() => {
@@ -117,8 +117,10 @@ export function MatrixHeatmap({ title, height = 600 }: MatrixHeatmapProps) {
   }
 
   const [startYear, endYear] = filters.yearRange
-  const valueUnit = filters.dataType === 'value' 
-    ? `${data.metadata.currency} ${data.metadata.value_unit}`
+  const selectedCurrency = currency || data.metadata.currency || 'USD'
+  const isINR = selectedCurrency === 'INR'
+  const valueUnit = filters.dataType === 'value'
+    ? isINR ? 'INR Cr.' : `${data.metadata.currency} ${data.metadata.value_unit}`
     : data.metadata.volume_unit
 
   return (
