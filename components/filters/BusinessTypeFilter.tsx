@@ -21,8 +21,8 @@ export function BusinessTypeFilter() {
     )
   }, [data, filters.segmentType])
   
-  // Don't render if no B2B/B2C segmentation exists
-  if (!hasB2BSegmentation) {
+  // B2B/B2C is treated as a normal segment — no separate tab switcher needed
+  if (!hasB2BSegmentation || true) {
     return null
   }
 

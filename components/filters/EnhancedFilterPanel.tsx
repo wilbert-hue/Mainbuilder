@@ -62,91 +62,23 @@ export function EnhancedFilterPanel() {
     }
   }, [filters.segmentType, data])
   
-  // Clear selected segments when business type changes and segment type has B2B/B2C
+  // Always use main hierarchy — B2B/B2C treated as normal segments
   const segmentDimension = data?.dimensions?.segments?.[selectedSegmentType]
-  const hasB2BSegmentation = segmentDimension && (
-    (segmentDimension.b2b_hierarchy && Object.keys(segmentDimension.b2b_hierarchy).length > 0) ||
-    (segmentDimension.b2c_hierarchy && Object.keys(segmentDimension.b2c_hierarchy).length > 0) ||
-    (segmentDimension.b2b_items && segmentDimension.b2b_items.length > 0) ||
-    (segmentDimension.b2c_items && segmentDimension.b2c_items.length > 0)
-  )
-  
-  useEffect(() => {
-    if (hasB2BSegmentation && selectedSegments.length > 0) {
-      // Clear segments when business type changes for this segment type
-      setSelectedSegments([])
-      setCurrentSegmentSelection('')
-    }
-  }, [filters.businessType, selectedSegmentType, hasB2BSegmentation, selectedSegments.length])
+  const hasB2BSegmentation = false
 
-  // Use business-type specific hierarchy if available, otherwise use main hierarchy
-  let hierarchy = segmentDimension?.hierarchy || {}
-  if (hasB2BSegmentation) {
-    if (filters.businessType === 'B2B' && segmentDimension?.b2b_hierarchy) {
-      hierarchy = segmentDimension.b2b_hierarchy
-    } else if (filters.businessType === 'B2C' && segmentDimension?.b2c_hierarchy) {
-      hierarchy = segmentDimension.b2c_hierarchy
-    }
-  }
-  
-  // Filter available segments based on business type hierarchy
-  // Use the business-type specific items array if available (from new API)
-  let availableSegments: string[] = []
-  if (hasB2BSegmentation && (filters.businessType === 'B2B' || filters.businessType === 'B2C')) {
-    // Use the business-type specific items array from API if available
-    if (filters.businessType === 'B2B' && segmentDimension?.b2b_items) {
-      availableSegments = segmentDimension.b2b_items
-    } else if (filters.businessType === 'B2C' && segmentDimension?.b2c_items) {
-      availableSegments = segmentDimension.b2c_items
-      } else {
-        // Fallback: Extract all items from the business-type specific hierarchy ONLY
-        // Use array instead of Set to preserve intentional duplicates from JSON
-        const allHierarchyItems: string[] = []
-        
-        // Only process the selected business type hierarchy
-        const businessTypeRoot = filters.businessType
-        if (hierarchy[businessTypeRoot]) {
-          // Add root children - preserve duplicates if present
-          hierarchy[businessTypeRoot].forEach(item => allHierarchyItems.push(item))
-          
-          // Recursively add all descendants - preserve duplicates
-          const addDescendants = (parent: string) => {
-            if (hierarchy[parent]) {
-              hierarchy[parent].forEach(child => {
-                allHierarchyItems.push(child) // Allow duplicates
-                addDescendants(child)
-              })
-            }
-          }
-          hierarchy[businessTypeRoot].forEach(rootChild => addDescendants(rootChild))
-        }
-        
-        // Also add all keys from hierarchy that are not the business type root
-        Object.keys(hierarchy).forEach(key => {
-          if (key !== businessTypeRoot && key !== 'B2B' && key !== 'B2C') {
-            allHierarchyItems.push(key) // Allow duplicates
-          }
-        })
-        
-        availableSegments = allHierarchyItems // Preserve duplicates from JSON
+  const hierarchy = segmentDimension?.hierarchy || {}
+
+  // Use main items array; fall back to extracting all keys+values from hierarchy
+  let availableSegments: string[] = segmentDimension?.items || []
+  if (availableSegments.length === 0 && Object.keys(hierarchy).length > 0) {
+    const allSegmentsFromHierarchy = new Set<string>()
+    Object.keys(hierarchy).forEach(key => allSegmentsFromHierarchy.add(key))
+    Object.values(hierarchy).forEach((children: any) => {
+      if (Array.isArray(children)) {
+        children.forEach((child: string) => allSegmentsFromHierarchy.add(child))
       }
-  } else {
-    // Use items array from segment dimension, or extract from hierarchy if items is empty
-    availableSegments = segmentDimension?.items || []
-    
-    // If items is empty but hierarchy exists, extract all segments from hierarchy
-    if (availableSegments.length === 0 && hierarchy && Object.keys(hierarchy).length > 0) {
-      const allSegmentsFromHierarchy = new Set<string>()
-      // Add all keys (parents)
-      Object.keys(hierarchy).forEach(key => allSegmentsFromHierarchy.add(key))
-      // Add all values (children)
-      Object.values(hierarchy).forEach((children: any) => {
-        if (Array.isArray(children)) {
-          children.forEach((child: string) => allSegmentsFromHierarchy.add(child))
-        }
-      })
-      availableSegments = Array.from(allSegmentsFromHierarchy)
-    }
+    })
+    availableSegments = Array.from(allSegmentsFromHierarchy)
   }
 
   // ── Filter to only segments that have actual data in the selected data type ──
@@ -225,10 +157,9 @@ export function EnhancedFilterPanel() {
         availableSegmentsCount: availableSegments.length,
         hierarchicalOptionsCount: hierarchicalOptions.length,
         businessType: filters.businessType,
-        hasB2BSegmentation
       })
     }
-  }, [data, selectedSegmentType, availableSegments.length, hierarchicalOptions.length, filters.businessType, hasB2BSegmentation])
+  }, [data, selectedSegmentType, availableSegments.length, hierarchicalOptions.length, filters.businessType])
 
   // Add segment to selection
   const handleAddSegment = () => {

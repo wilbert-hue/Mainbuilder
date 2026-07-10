@@ -31,68 +31,9 @@ export function SegmentMultiSelect() {
     
     const segmentDimension = data.dimensions.segments[filters.segmentType]
     
-    // Check if this segment type has B2B/B2C segmentation
-    const hasB2BSegmentation = segmentDimension && (
-      (segmentDimension.b2b_hierarchy && Object.keys(segmentDimension.b2b_hierarchy).length > 0) ||
-      (segmentDimension.b2c_hierarchy && Object.keys(segmentDimension.b2c_hierarchy).length > 0) ||
-      (segmentDimension.b2b_items && segmentDimension.b2b_items.length > 0) ||
-      (segmentDimension.b2c_items && segmentDimension.b2c_items.length > 0)
-    )
-    
-    // Use business-type specific hierarchy if available, otherwise use main hierarchy
-    let hierarchy = segmentDimension?.hierarchy || {}
-    if (hasB2BSegmentation) {
-      if (filters.businessType === 'B2B' && segmentDimension?.b2b_hierarchy) {
-        hierarchy = segmentDimension.b2b_hierarchy
-      } else if (filters.businessType === 'B2C' && segmentDimension?.b2c_hierarchy) {
-        hierarchy = segmentDimension.b2c_hierarchy
-      }
-    }
-    
-    // Filter items based on business type hierarchy
-    // Use the business-type specific items array if available (from new API)
-    let items: string[] = []
-    if (hasB2BSegmentation && (filters.businessType === 'B2B' || filters.businessType === 'B2C')) {
-      // Use the business-type specific items array from API if available
-      if (filters.businessType === 'B2B' && segmentDimension?.b2b_items) {
-        items = segmentDimension.b2b_items
-      } else if (filters.businessType === 'B2C' && segmentDimension?.b2c_items) {
-        items = segmentDimension.b2c_items
-      } else {
-        // Fallback: Extract all items from the business-type specific hierarchy ONLY
-        // Use array instead of Set to preserve intentional duplicates from JSON
-        const allHierarchyItems: string[] = []
-        
-        // Only process the selected business type hierarchy
-        const businessTypeRoot = filters.businessType
-        if (hierarchy[businessTypeRoot]) {
-          // Add root children - preserve duplicates if present
-          hierarchy[businessTypeRoot].forEach(item => allHierarchyItems.push(item))
-          
-          // Recursively add all descendants - preserve duplicates
-          const addDescendants = (parent: string) => {
-            if (hierarchy[parent]) {
-              hierarchy[parent].forEach(child => {
-                allHierarchyItems.push(child) // Allow duplicates
-                addDescendants(child)
-              })
-            }
-          }
-          hierarchy[businessTypeRoot].forEach(rootChild => addDescendants(rootChild))
-        }
-        
-        // Also add all keys from hierarchy that are not the business type root
-        Object.keys(hierarchy).forEach(key => {
-          if (key !== businessTypeRoot && key !== 'B2B' && key !== 'B2C') {
-            allHierarchyItems.push(key) // Allow duplicates
-          }
-        })
-        
-        items = allHierarchyItems // Preserve duplicates from JSON
-      }
-    } else {
-      items = segmentDimension?.items || []
-    }
+    // Always use main hierarchy and items — B2B/B2C treated as normal segments
+    const hierarchy = segmentDimension?.hierarchy || {}
+    const items: string[] = segmentDimension?.items || []
     
     // Build hierarchical structure with indentation levels
     const structuredSegments: Array<{name: string, level: number, isParent: boolean, uniqueKey: string}> = []
@@ -124,37 +65,21 @@ export function SegmentMultiSelect() {
     
     // Find root segments (those that are parents but not children of any other)
     const allChildren = new Set(Object.values(hierarchy).flat())
-    let rootSegments: string[] = []
-    
-    // For B2B/B2C hierarchies, skip the business type root and start from its children
-    if (hasB2BSegmentation && (filters.businessType === 'B2B' || filters.businessType === 'B2C')) {
-      const businessTypeRoot = filters.businessType
-      if (hierarchy[businessTypeRoot] && hierarchy[businessTypeRoot].length > 0) {
-        // Start from the children of B2B/B2C instead of B2B/B2C itself
-        rootSegments = hierarchy[businessTypeRoot]
-      } else {
-        // Fallback: find segments that are parents but not children
-        Object.keys(hierarchy).forEach(parent => {
-          if (!allChildren.has(parent)) {
-            rootSegments.push(parent)
-          }
-        })
+    const rootSegments: string[] = []
+
+    // Find segments that are parents but not children
+    Object.keys(hierarchy).forEach(parent => {
+      if (!allChildren.has(parent)) {
+        rootSegments.push(parent)
       }
-    } else {
-      // First, find segments that are parents but not children
-      Object.keys(hierarchy).forEach(parent => {
-        if (!allChildren.has(parent)) {
-          rootSegments.push(parent)
-        }
-      })
-      
-      // Then, find leaf segments that have no parent
-      items.forEach((segment: string) => {
-        if (!allChildren.has(segment) && !hierarchy[segment]) {
-          rootSegments.push(segment)
-        }
-      })
-    }
+    })
+
+    // Also find leaf segments that have no parent
+    items.forEach((segment: string) => {
+      if (!allChildren.has(segment) && !hierarchy[segment]) {
+        rootSegments.push(segment)
+      }
+    })
     
     // Process each root segment with its hierarchy
     rootSegments.forEach(segment => {
@@ -169,7 +94,7 @@ export function SegmentMultiSelect() {
     }
     
     return structuredSegments
-  }, [data, filters.segmentType, filters.businessType])
+  }, [data, filters.segmentType])
 
   const handleToggle = (segment: string) => {
     const current = filters.segments

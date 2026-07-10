@@ -207,17 +207,8 @@ export function filterData(
       }
     }
     
-    // 4. Business type filter - only apply if the record actually has B2B/B2C in its hierarchy
-    let businessTypeMatch = true
-    const recordBusinessType = record.segment_hierarchy?.level_1
-    if (recordBusinessType === 'B2B' || recordBusinessType === 'B2C') {
-      businessTypeMatch = recordBusinessType === filters.businessType
-    }
-    
-    if (!businessTypeMatch) {
-      return false
-    }
-    
+    // 4. (B2B/B2C treated as normal segments — no separate businessType filter)
+
     // 5. Segment filter - handle both advancedSegments and regular segments
     let segmentMatch = true
     
