@@ -304,6 +304,41 @@ export function EnhancedFilterPanel() {
   return (
     <div className="bg-white rounded-lg shadow-sm p-2.5 space-y-2">
 
+      {/* Data Type Toggle */}
+      {(hasValue || hasVolume) && (
+        <div>
+          <label className="text-xs font-medium text-black uppercase">
+            Data Type
+          </label>
+          <div className="flex gap-1 mt-1">
+            {hasValue && (
+              <button
+                onClick={() => updateFilters({ dataType: 'value' })}
+                className={`flex-1 py-1.5 px-2 rounded text-xs font-medium transition-colors ${
+                  filters.dataType === 'value'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-black hover:bg-gray-200'
+                }`}
+              >
+                Value
+              </button>
+            )}
+            {hasVolume && (
+              <button
+                onClick={() => updateFilters({ dataType: 'volume' })}
+                className={`flex-1 py-1.5 px-2 rounded text-xs font-medium transition-colors ${
+                  filters.dataType === 'volume'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-black hover:bg-gray-200'
+                }`}
+              >
+                Volume
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* View Mode */}
       <div>
         <label className="text-xs font-medium text-black uppercase">

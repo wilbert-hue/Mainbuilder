@@ -43,6 +43,41 @@ export function FilterPanel() {
       </div>
 
 
+      {/* Data Type Toggle */}
+      {(hasValue || hasVolume) && (
+        <div>
+          <label className="block text-sm font-medium text-black mb-2">
+            Data Type
+          </label>
+          <div className="flex gap-2">
+            {hasValue && (
+              <button
+                onClick={() => handleDataTypeChange('value')}
+                className={`flex-1 py-2 px-3 rounded text-sm font-medium transition-colors ${
+                  filters.dataType === 'value'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-black hover:bg-gray-200'
+                }`}
+              >
+                Value
+              </button>
+            )}
+            {hasVolume && (
+              <button
+                onClick={() => handleDataTypeChange('volume')}
+                className={`flex-1 py-2 px-3 rounded text-sm font-medium transition-colors ${
+                  filters.dataType === 'volume'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-black hover:bg-gray-200'
+                }`}
+              >
+                Volume
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* View Mode Selector */}
       <div>
         <label className="block text-sm font-medium text-black mb-2">
