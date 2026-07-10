@@ -234,10 +234,14 @@ export function generateDemoValue(
   const market = parseMarketContext(ctx.marketName)
   const h = header.toLowerCase().trim()
 
-  // If the header lists allowed options in parentheses like "Field (A, B, C)", use those.
+  // If the header lists allowed options in parentheses like "Field (A, B, C)" or "Field (A / B / C)", use those.
   const bracketMatch = header.match(/\(([^)]+)\)/)
   if (bracketMatch) {
-    const options = bracketMatch[1].split(',').map(s => s.trim()).filter(Boolean)
+    let options = bracketMatch[1].split(',').map(s => s.trim()).filter(Boolean)
+    if (options.length < 2) {
+      // Try "/" as separator (e.g. "Industry Vertical (IT and ITES / Banking / Manufacturing)")
+      options = bracketMatch[1].split('/').map(s => s.trim()).filter(Boolean)
+    }
     if (options.length >= 2) {
       return pickVariant(options, rowIndex)
     }
@@ -253,7 +257,11 @@ export function generateDemoValue(
     h === 'name' ||
     h.includes('customer name') ||
     h.includes('contact name') ||
-    h.includes('client name')
+    h.includes('client name') ||
+    h.includes('contact person') ||
+    h.includes('key contact') ||
+    h.includes('decision maker') ||
+    h.includes('decision-maker')
   ) {
     return `${randomItem(DEMO_DATA.firstNames)} ${randomItem(DEMO_DATA.lastNames)}`
   }
@@ -291,16 +299,35 @@ export function generateDemoValue(
   if (h.includes('source') || h.includes('channel')) return randomItem(DEMO_DATA.sources)
   if (h.includes('date')) return randomDate()
   if (
-    h.includes('id') ||
+    /\bid\b/.test(h) ||
     h === 'no' ||
     h === 'no.' ||
     h === 'sr' ||
     h === 'sno' ||
     h === 's.no' ||
     h === 's.no.' ||
-    h.includes('serial')
+    /\bsr\.?\s*no\.?\b/.test(h) ||
+    h.includes('serial number') ||
+    h.includes('row no') ||
+    h.includes('sl no') ||
+    h.includes('sl. no')
   ) {
     return String(rowIndex + 1)
+  }
+  if (h.includes('overview') || h.includes('business profile') || h.includes('company profile') || h.includes('about')) {
+    const overviews = [
+      `Leading ${market.productTitle} provider with operations across ${market.region}`,
+      `Established ${market.productTitle} company focused on enterprise and institutional clients`,
+      `${market.region}-based organization specializing in ${market.productTitle} procurement`,
+      `Mid-tier ${market.productTitle} firm with a strong presence in the ${market.region} market`,
+      `Globally active enterprise with significant ${market.productTitle} requirements`,
+      `Fast-growing company in the ${market.productTitle} space with regional expansion plans`,
+    ]
+    return pickVariant(overviews, rowIndex)
+  }
+  if (h.includes('vertical') && !h.includes('industry')) return randomItem(DEMO_DATA.industries)
+  if (/\bsize\b/.test(h) || /\bscale\b/.test(h)) {
+    return pickVariant(['Small Enterprise', 'Medium Enterprise', 'Large Enterprise'], rowIndex)
   }
   if (h.includes('note') || h.includes('comment') || h.includes('remark') || h.includes('description')) {
     return `Relevant to ${market.marketLabel} — follow-up scheduled`
@@ -308,7 +335,7 @@ export function generateDemoValue(
   if (h.includes('revenue') || h.includes('value') || h.includes('amount')) {
     return `$${randomNumber(50000, 2500000)}`
   }
-  if (h.includes('capacity') || h.includes('volume') || h.includes('quantity') || h.includes('mtpa') || h.includes('mmbtu') || h.includes('tonnes')) {
+  if (h.includes('capacity') || h.includes('quantity') || h.includes('mtpa') || h.includes('mmbtu') || h.includes('tonnes')) {
     return randomNumber(1, 50, 1)
   }
 
