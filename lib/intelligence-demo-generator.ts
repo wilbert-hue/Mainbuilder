@@ -279,8 +279,8 @@ export function generateDemoValue(
   if (h.includes('address') || h.includes('street')) {
     return `${randomNumber(10, 999)} ${randomItem(DEMO_DATA.streets)}, ${randomItem(DEMO_DATA.cities)}`
   }
-  if (h.includes('city') || h.includes('town')) return randomItem(DEMO_DATA.cities)
-  if (h.includes('country') || h.includes('nation')) return randomItem(DEMO_DATA.countries)
+  if (/\bcity\b|\btown\b/.test(h)) return randomItem(DEMO_DATA.cities)
+  if (/\bcountry\b|\bnation\b/.test(h)) return randomItem(DEMO_DATA.countries)
   if (h.includes('region') || h.includes('territory')) return market.region
   if (h.includes('industry') || h.includes('sector')) return randomItem(DEMO_DATA.industries)
   if (h.includes('department') || h.includes('dept')) return randomItem(DEMO_DATA.departments)
@@ -307,6 +307,9 @@ export function generateDemoValue(
   }
   if (h.includes('revenue') || h.includes('value') || h.includes('amount')) {
     return `$${randomNumber(50000, 2500000)}`
+  }
+  if (h.includes('capacity') || h.includes('volume') || h.includes('quantity') || h.includes('mtpa') || h.includes('mmbtu') || h.includes('tonnes')) {
+    return randomNumber(1, 50, 1)
   }
 
   return `${market.productTitle} insight ${rowIndex + 1} (${market.region})`
