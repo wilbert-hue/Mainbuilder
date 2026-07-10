@@ -30,7 +30,7 @@ const PROTECTED_API_PREFIXES = [
   '/api/extract-regions',
 ]
 
-const PROTECTED_PAGE_PREFIXES = ['/dashboard-builder']
+const PROTECTED_PAGE_PREFIXES = ['/dashboard-builder', '/admin']
 
 function isProtectedApi(pathname: string): boolean {
   return PROTECTED_API_PREFIXES.some((p) => pathname.startsWith(p))
@@ -70,5 +70,5 @@ export async function proxy(request: NextRequest) {
 // so single-segment routes like /api/process-excel are reliably covered
 // (named-parameter matchers like "/api/process-:path*" don't bind those).
 export const config = {
-  matcher: ['/dashboard-builder/:path*', '/api/:path*'],
+  matcher: ['/dashboard-builder/:path*', '/admin/:path*', '/admin', '/api/:path*'],
 }

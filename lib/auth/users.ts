@@ -14,6 +14,7 @@ export interface UserDocument {
   email: string // stored lowercased
   passwordHash: string
   createdAt: string
+  role?: 'user' | 'admin'
 }
 
 export interface PublicUser {
@@ -76,6 +77,16 @@ export async function createUser(email: unknown, password: unknown): Promise<Cre
   }
 
   return { ok: true, user: { id: doc._id, email: doc.email } }
+}
+
+export async function getUserById(id: string): Promise<UserDocument | null> {
+  const col = await getUsers()
+  return col.findOne({ _id: id }) as Promise<UserDocument | null>
+}
+
+export async function isUserAdmin(uid: string): Promise<boolean> {
+  const user = await getUserById(uid)
+  return user?.role === 'admin'
 }
 
 export async function authenticateUser(email: unknown, password: unknown): Promise<PublicUser | null> {
