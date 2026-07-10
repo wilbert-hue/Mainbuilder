@@ -30,22 +30,47 @@ export default function AdminPage() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
+  const [deleting, setDeleting] = useState(false)
+  const [deleteMsg, setDeleteMsg] = useState<string | null>(null)
 
-  useEffect(() => {
-    fetch('/api/admin/stats')
-      .then(async (res) => {
-        if (res.status === 401) { router.push('/login'); return }
-        if (res.status === 403) { setError('Access denied — admin only.'); setLoading(false); return }
-        if (!res.ok) throw new Error('Failed to load stats')
-        const json = await res.json()
-        setData(json)
-        setLoading(false)
-      })
-      .catch(() => {
-        setError('Failed to load data. Please try again.')
-        setLoading(false)
-      })
-  }, [router])
+  const loadStats = async () => {
+    try {
+      const res = await fetch('/api/admin/stats')
+      if (res.status === 401) { router.push('/login'); return }
+      if (res.status === 403) { setError('Access denied — admin only.'); setLoading(false); return }
+      if (!res.ok) throw new Error('Failed to load stats')
+      const json = await res.json()
+      setData(json)
+    } catch {
+      setError('Failed to load data. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => { loadStats() }, [])
+
+  const deleteUnknown = async () => {
+    const unknownRow = data?.stats.find(r => !r.ownerId)
+    const count = unknownRow?.count ?? 0
+    const confirmed = window.confirm(
+      `Permanently delete ${count} ownerless dashboard${count !== 1 ? 's' : ''}? This cannot be undone.`
+    )
+    if (!confirmed) return
+    setDeleting(true)
+    setDeleteMsg(null)
+    try {
+      const res = await fetch('/api/admin/cleanup', { method: 'DELETE' })
+      const body = await res.json()
+      if (!res.ok) throw new Error(body.error || 'Delete failed')
+      setDeleteMsg(`Deleted ${body.deletedCount} ownerless dashboard${body.deletedCount !== 1 ? 's' : ''}.`)
+      await loadStats()
+    } catch (e: any) {
+      setDeleteMsg(`Error: ${e.message}`)
+    } finally {
+      setDeleting(false)
+    }
+  }
 
   const toggleExpand = (ownerId: string) => {
     setExpanded(prev => {
@@ -118,6 +143,28 @@ export default function AdminPage() {
             <p className="text-4xl font-bold text-white">{data.totalUsers}</p>
           </div>
         </div>
+
+        {/* Delete unknown action */}
+        {data.stats.some(r => !r.ownerId) && (
+          <div className="flex items-center justify-between bg-red-950/30 border border-red-900/40 rounded-xl px-5 py-3">
+            <div>
+              <p className="text-sm font-medium text-red-400">Ownerless dashboards found</p>
+              <p className="text-xs text-slate-400 mt-0.5">
+                {data.stats.find(r => !r.ownerId)?.count} dashboards have no linked user account (created before auth was added).
+              </p>
+            </div>
+            <button
+              onClick={deleteUnknown}
+              disabled={deleting}
+              className="ml-4 shrink-0 text-xs font-medium px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white transition-colors"
+            >
+              {deleting ? 'Deleting…' : 'Delete all unknown'}
+            </button>
+          </div>
+        )}
+        {deleteMsg && (
+          <p className="text-sm text-green-400 text-center">{deleteMsg}</p>
+        )}
 
         {/* Per-user table */}
         <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
