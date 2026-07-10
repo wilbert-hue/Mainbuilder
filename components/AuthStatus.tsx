@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 export function AuthStatus({ className = '' }: { className?: string }) {
   const router = useRouter()
   const [email, setEmail] = useState<string | null>(null)
+  const [isAdmin, setIsAdmin] = useState(false)
   const [busy, setBusy] = useState(false)
 
   useEffect(() => {
@@ -14,7 +15,10 @@ export function AuthStatus({ className = '' }: { className?: string }) {
     fetch('/api/auth/me')
       .then((r) => r.json())
       .then((d) => {
-        if (active) setEmail(d?.user?.email ?? null)
+        if (active) {
+          setEmail(d?.user?.email ?? null)
+          setIsAdmin(d?.user?.isAdmin ?? false)
+        }
       })
       .catch(() => {})
     return () => {
@@ -40,6 +44,15 @@ export function AuthStatus({ className = '' }: { className?: string }) {
       <span className="hidden text-sm text-slate-400 sm:inline" title={email}>
         {email}
       </span>
+      {isAdmin && (
+        <button
+          type="button"
+          onClick={() => router.push('/admin')}
+          className="builder-btn-ghost shrink-0 text-sm text-blue-400 hover:text-blue-300"
+        >
+          Admin Panel
+        </button>
+      )}
       <button
         type="button"
         onClick={logout}

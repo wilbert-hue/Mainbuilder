@@ -30,6 +30,16 @@ function LoginForm() {
         setError(body.error || 'Something went wrong. Please try again.')
         return
       }
+      // Check if user is admin and redirect accordingly
+      if (mode === 'login') {
+        const meRes = await fetch('/api/auth/me')
+        const meBody = await meRes.json().catch(() => ({}))
+        if (meBody?.user?.isAdmin) {
+          router.push('/admin')
+          router.refresh()
+          return
+        }
+      }
       router.push(next)
       router.refresh()
     } catch {
