@@ -15,6 +15,17 @@ export function GeographyMultiSelect() {
   const [isOpen, setIsOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set(['Global']))
+
+  // Auto-expand root nodes when tree first loads
+  useEffect(() => {
+    if (tree.length > 0) {
+      setExpandedNodes(prev => {
+        const next = new Set(prev)
+        tree.forEach(node => next.add(node.name))
+        return next
+      })
+    }
+  }, [tree])
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   // Close dropdown when clicking outside
@@ -41,12 +52,37 @@ export function GeographyMultiSelect() {
     const hierarchy = data.dimensions.geographies.geography_hierarchy
     const allGeos = data.dimensions.geographies.all_geographies || []
 
-    // If we have a proper hierarchy with Global → Regions → Countries
-    if (hierarchy && Object.keys(hierarchy).length > 0 && hierarchy['Global']) {
-      const globalNode: TreeNode = {
-        name: 'Global',
-        level: 'global',
-        children: (hierarchy['Global'] || []).map(regionName => ({
+    if (hierarchy && Object.keys(hierarchy).length > 0) {
+      // Case 1: Global → Regions → Countries (3-level)
+      if (hierarchy['Global']) {
+        const globalNode: TreeNode = {
+          name: 'Global',
+          level: 'global',
+          children: (hierarchy['Global'] || []).map(regionName => ({
+            name: regionName,
+            level: 'region' as const,
+            children: (hierarchy[regionName] || []).map(countryName => ({
+              name: countryName,
+              level: 'country' as const,
+              children: [],
+            })),
+          })),
+        }
+        return [globalNode]
+      }
+
+      // Case 2: Regions → Countries (2-level, no Global root)
+      // Root regions = hierarchy keys that are not children of any other key
+      const allChildren = new Set(Object.values(hierarchy).flat())
+      const rootRegions = Object.keys(hierarchy).filter(k => !allChildren.has(k))
+
+      if (rootRegions.length > 0) {
+        // Preserve original ordering from all_geographies when possible
+        const orderedRoots = allGeos.filter(g => rootRegions.includes(g))
+        const remaining = rootRegions.filter(r => !orderedRoots.includes(r))
+        const finalRoots = [...orderedRoots, ...remaining]
+
+        return finalRoots.map(regionName => ({
           name: regionName,
           level: 'region' as const,
           children: (hierarchy[regionName] || []).map(countryName => ({
@@ -54,9 +90,8 @@ export function GeographyMultiSelect() {
             level: 'country' as const,
             children: [],
           })),
-        })),
+        }))
       }
-      return [globalNode]
     }
 
     // Fallback: flat list (no hierarchy)
@@ -185,7 +220,7 @@ export function GeographyMultiSelect() {
   if (!data) return null
 
   const selectedCount = filters.geographies.length
-  const hasHierarchy = tree.length === 1 && tree[0].children.length > 0
+  const hasHierarchy = tree.some(n => n.children.length > 0)
 
   // Render a tree node
   const renderNode = (node: TreeNode, depth: number = 0) => {
