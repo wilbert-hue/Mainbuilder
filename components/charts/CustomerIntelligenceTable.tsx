@@ -44,6 +44,41 @@ export const STATIC_PROP1_DATA: PropositionData = {
   parentHeaders: STATIC_PROP1_PARENT_HEADERS,
 }
 
+// ---------------------------------------------------------------------------
+// Static Distributor Proposition 1 data
+// ---------------------------------------------------------------------------
+export const STATIC_DISTRIBUTOR_PROP1_PARENT_HEADERS: ParentHeader[] = [
+  { name: 'S. No.',                   startCol: 0, colSpan: 1 },
+  { name: 'Distributor Information',  startCol: 1, colSpan: 6 },
+  { name: 'Contact Details',          startCol: 7, colSpan: 6 },
+]
+
+export const STATIC_DISTRIBUTOR_PROP1_HEADERS = [
+  'S.No.',
+  'Distributor/Company Name',
+  'Distributor Type',
+  'Product/Brand Portfolio',
+  'Application/Use',
+  'Headquarter/Geographic Coverage',
+  'Key Industries/End Users Served',
+  'Key Contact Person',
+  'Designation/Role',
+  'Email Address',
+  'Phone No. (Direct/Alternate)',
+  'LinkedIn Profile',
+  'Website URL',
+]
+
+export const STATIC_DISTRIBUTOR_PROP1_DATA: PropositionData = {
+  headers: STATIC_DISTRIBUTOR_PROP1_HEADERS,
+  rows: Array.from({ length: 20 }, (_, i) => {
+    const row: Record<string, any> = { 'S.No.': i + 1 }
+    STATIC_DISTRIBUTOR_PROP1_HEADERS.slice(1).forEach((h) => { row[h] = 'xx' })
+    return row
+  }),
+  parentHeaders: STATIC_DISTRIBUTOR_PROP1_PARENT_HEADERS,
+}
+
 const USD_TO_INR = 84
 
 // Detects if a cell value is a USD monetary value like "$2367388" or "$1,234.56"
@@ -279,6 +314,7 @@ export function CustomerIntelligenceTable({
     showDemoNote,
     currency,
     staticCustomerProp1,
+    staticDistributorProp1,
   } = useDashboardStore()
 
   const isINR = (currency || data?.metadata?.currency || 'USD') === 'INR'
@@ -300,7 +336,8 @@ export function CustomerIntelligenceTable({
 
   const [activeTab, setActiveTab] = useState<TabType>(getDefaultTab())
   // staticProp1 comes from the store (set via the builder toggle)
-  const staticProp1 = intelligenceSource === 'customer' ? staticCustomerProp1 : false
+  const staticProp1 = intelligenceSource === 'customer' ? staticCustomerProp1 : staticDistributorProp1
+  const staticData = intelligenceSource === 'distributor' ? STATIC_DISTRIBUTOR_PROP1_DATA : STATIC_PROP1_DATA
 
   useEffect(() => {
     const currentTabHasData =
@@ -390,7 +427,7 @@ export function CustomerIntelligenceTable({
         </div>
 
         <PropositionTableDashboard
-          data={STATIC_PROP1_DATA}
+          data={staticData}
           tier="standard"
           bannerTitle={bannerTitle}
           showDemoNote={false}

@@ -35,6 +35,7 @@ interface DashboardStore {
   currency: 'USD' | 'INR' // Currency preference
   showDemoNote: boolean // Toggle for demo data disclaimer note
   staticCustomerProp1: boolean // When true, render static 20-row Proposition 1 template instead of uploaded data
+  staticDistributorProp1: boolean // Same for distributor intelligence
   dashboardId: string | null // MongoDB document ID assigned after first save
 
   // Actions
@@ -72,6 +73,7 @@ interface DashboardStore {
   setCurrency: (currency: 'USD' | 'INR') => void
   setShowDemoNote: (show: boolean) => void
   setStaticCustomerProp1: (val: boolean) => void
+  setStaticDistributorProp1: (val: boolean) => void
   setDashboardId: (id: string | null) => void
 }
 
@@ -262,6 +264,7 @@ export const useDashboardStore = create<DashboardStore>((set, get) => ({
   currency: 'USD',
   showDemoNote: false,
   staticCustomerProp1: false,
+  staticDistributorProp1: false,
   dashboardId: null,
   
   setData: (data) => {
@@ -523,6 +526,7 @@ export const useDashboardStore = create<DashboardStore>((set, get) => ({
 
   setShowDemoNote: (show) => set({ showDemoNote: show }),
   setStaticCustomerProp1: (val) => set({ staticCustomerProp1: val }),
+  setStaticDistributorProp1: (val) => set({ staticDistributorProp1: val }),
   setDashboardId: (id) => set({ dashboardId: id }),
   
   setLoading: (loading) => set({ isLoading: loading }),

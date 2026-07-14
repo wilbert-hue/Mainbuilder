@@ -7,7 +7,7 @@ import Image from 'next/image'
 import { useDashboardStore } from '@/lib/store'
 import type { ComparisonData } from '@/lib/types'
 import { IntelligenceDataInput, type IntelligenceMode } from '@/components/dashboard-builder/IntelligenceDataInput'
-import { STATIC_PROP1_DATA } from '@/components/charts/CustomerIntelligenceTable'
+import { STATIC_PROP1_DATA, STATIC_DISTRIBUTOR_PROP1_DATA } from '@/components/charts/CustomerIntelligenceTable'
 import { postDashboardSave } from '@/lib/share-upload'
 import { AuthStatus } from '@/components/AuthStatus'
 import { PreviousDashboards } from '@/components/PreviousDashboards'
@@ -41,6 +41,8 @@ export default function DashboardBuilderPage() {
     setShowDemoNote,
     staticCustomerProp1,
     setStaticCustomerProp1,
+    staticDistributorProp1,
+    setStaticDistributorProp1,
     setDashboardId,
     dashboardName: storedDashboardName,
   } = useDashboardStore()
@@ -1448,10 +1450,25 @@ export default function DashboardBuilderPage() {
 
               {intelMode.distributor && (
                 <div className="builder-panel-nested space-y-4">
-                  <div className="flex items-center gap-2">
-                    <Building2 className="h-5 w-5 text-violet-400/80" />
-                    <h4 className="text-sm font-semibold text-slate-100">Distributor intelligence workbook</h4>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <Building2 className="h-5 w-5 text-violet-400/80" />
+                      <h4 className="text-sm font-semibold text-slate-100">Distributor intelligence workbook</h4>
+                    </div>
+                    {/* Static Proposition 1 toggle */}
+                    <label className="flex items-center gap-2 cursor-pointer select-none shrink-0">
+                      <span className="text-xs font-medium text-slate-300">Static Proposition 1</span>
+                      <div className="relative" onClick={() => setStaticDistributorProp1(!staticDistributorProp1)}>
+                        <div className={`w-10 h-5 rounded-full transition-colors ${staticDistributorProp1 ? 'bg-teal-500' : 'bg-slate-600'}`} />
+                        <div className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${staticDistributorProp1 ? 'translate-x-5' : 'translate-x-0'}`} />
+                      </div>
+                    </label>
                   </div>
+                  {staticDistributorProp1 && (
+                    <div className="rounded-md border border-teal-500/30 bg-teal-500/10 px-3 py-2 text-xs text-teal-300">
+                      Static Proposition 1 is ON — the distributor intelligence tab will show the 20-row reference template instead of uploaded data.
+                    </div>
+                  )}
                   <label className="block text-sm font-medium text-slate-200 mb-2">
                     Distributor workbook <span className="text-red-500">*</span>
                   </label>
@@ -1513,14 +1530,30 @@ export default function DashboardBuilderPage() {
                   {renderIntelStatusBlock(distributorIntelStatus, distributorIntelStatusMessage)}
                   <button
                     type="button"
-                    onClick={() => handleProcessIntelligenceForTarget('distributor')}
-                    disabled={!distributorIntelFileData || intelProcessing !== null}
+                    onClick={() => {
+                      if (staticDistributorProp1) {
+                        setDistributorRawIntelligenceData(STATIC_DISTRIBUTOR_PROP1_DATA)
+                        setDistributorProposition2Data(null)
+                        setDistributorProposition3Data(null)
+                        setIntelligenceType(modeToStoreType(intelMode))
+                        setDistributorIntelStatus('success')
+                        setDistributorIntelStatusMessage('Static Proposition 1 template loaded — 20 rows ready.')
+                      } else {
+                        handleProcessIntelligenceForTarget('distributor')
+                      }
+                    }}
+                    disabled={(!distributorIntelFileData && !staticDistributorProp1) || intelProcessing !== null}
                     className="builder-btn-primary"
                   >
                     {intelProcessing === 'distributor' ? (
                       <>
                         <Loader2 className="w-5 h-5 animate-spin" />
                         Processing...
+                      </>
+                    ) : staticDistributorProp1 ? (
+                      <>
+                        <Upload className="w-5 h-5" />
+                        Load Static Proposition 1
                       </>
                     ) : (
                       <>
