@@ -4,6 +4,46 @@ import { useState, useEffect, useMemo } from 'react'
 import { useDashboardStore } from '@/lib/store'
 import { Building2, Users } from 'lucide-react'
 
+// ---------------------------------------------------------------------------
+// Static Proposition 1 data — exact format from the reference template
+// Exported so the builder page can load it into the store directly.
+// ---------------------------------------------------------------------------
+export const STATIC_PROP1_PARENT_HEADERS: ParentHeader[] = [
+  { name: 'S. No.',                startCol: 0, colSpan: 1 },
+  { name: 'Customer Information',  startCol: 1, colSpan: 6 },
+  { name: 'Contact Details',       startCol: 7, colSpan: 6 },
+]
+
+export const STATIC_PROP1_HEADERS = [
+  'S.No.',
+  'Customer Name/Company Name',
+  'Business Overview',
+  'Industry/Sector',
+  'Annual Revenue (US$ Million)',
+  'Headquarter/Location',
+  'Annual Procurement Volume/Value (Estimated)',
+  'Key Contact Person',
+  'Designation/Role',
+  'Email Address',
+  'Phone No. (Direct/Alternate)',
+  'LinkedIn Profile',
+  'Website URL',
+]
+
+function buildStaticProp1Rows(): Record<string, any>[] {
+  return Array.from({ length: 20 }, (_, i) => {
+    const row: Record<string, any> = { 'S.No.': i + 1 }
+    STATIC_PROP1_HEADERS.slice(1).forEach((h) => { row[h] = 'xx' })
+    return row
+  })
+}
+
+export const STATIC_PROP1_DATA: PropositionData = {
+  headers: STATIC_PROP1_HEADERS,
+  rows: buildStaticProp1Rows(),
+  parentHeaders: STATIC_PROP1_PARENT_HEADERS,
+}
+
 const USD_TO_INR = 84
 
 // Detects if a cell value is a USD monetary value like "$2367388" or "$1,234.56"
@@ -238,6 +278,7 @@ export function CustomerIntelligenceTable({
     filters,
     showDemoNote,
     currency,
+    staticCustomerProp1,
   } = useDashboardStore()
 
   const isINR = (currency || data?.metadata?.currency || 'USD') === 'INR'
@@ -258,6 +299,8 @@ export function CustomerIntelligenceTable({
   }
 
   const [activeTab, setActiveTab] = useState<TabType>(getDefaultTab())
+  // staticProp1 comes from the store (set via the builder toggle)
+  const staticProp1 = intelligenceSource === 'customer' ? staticCustomerProp1 : false
 
   useEffect(() => {
     const currentTabHasData =
@@ -332,6 +375,30 @@ export function CustomerIntelligenceTable({
     const d = activeTab === 'prop1' ? p1 : activeTab === 'prop2' ? p2 : p3
     return buildIncludesSummary(d as PropositionData | null)
   }, [activeTab, p1, p2, p3])
+
+  // When static mode is on, render the fixed template immediately
+  if (staticProp1) {
+    return (
+      <div className="w-full space-y-5">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">{heading}</h2>
+          <p className="text-sm text-slate-500 mt-1.5">{subtitle}</p>
+        </div>
+
+        <div className="rounded-lg border border-teal-200 bg-teal-50 px-4 py-2 text-sm text-teal-800">
+          Showing static template — 20-row reference layout for Proposition 1.
+        </div>
+
+        <PropositionTableDashboard
+          data={STATIC_PROP1_DATA}
+          tier="standard"
+          bannerTitle={bannerTitle}
+          showDemoNote={false}
+          isINR={isINR}
+        />
+      </div>
+    )
+  }
 
   if (!hasData) {
     const EmptyIcon = intelligenceSource === 'distributor' ? Building2 : Users
