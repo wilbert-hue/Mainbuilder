@@ -1124,7 +1124,7 @@ export async function processJsonDataAsync(
       'U.S.': 'North America', 'USA': 'North America', 'United States': 'North America',
       'Canada': 'North America', 'Mexico': 'North America',
       // Europe
-      'Germany': 'Europe', 'UK': 'Europe', 'United Kingdom': 'Europe', 'France': 'Europe',
+      'Germany': 'Europe', 'UK': 'Europe', 'U.K.': 'Europe', 'United Kingdom': 'Europe', 'France': 'Europe',
       'Italy': 'Europe', 'Spain': 'Europe', 'Russia': 'Europe', 'Netherlands': 'Europe',
       'Sweden': 'Europe', 'Switzerland': 'Europe', 'Belgium': 'Europe', 'Austria': 'Europe',
       'Poland': 'Europe', 'Norway': 'Europe', 'Denmark': 'Europe', 'Finland': 'Europe',
@@ -1141,8 +1141,9 @@ export async function processJsonDataAsync(
       'Brazil': 'Latin America', 'Argentina': 'Latin America', 'Chile': 'Latin America',
       'Colombia': 'Latin America', 'Peru': 'Latin America', 'Venezuela': 'Latin America',
       'Rest of Latin America': 'Latin America', 'Rest of South America': 'Latin America',
-      // Middle East & Africa
+      // Middle East & Africa (also handles files that use "Middle East" without Africa)
       'Saudi Arabia': 'Middle East & Africa', 'UAE': 'Middle East & Africa',
+      'United Arab Emirates': 'Middle East & Africa',
       'Israel': 'Middle East & Africa', 'South Africa': 'Middle East & Africa',
       'Egypt': 'Middle East & Africa', 'Turkey': 'Middle East & Africa',
       'Iran': 'Middle East & Africa', 'Iraq': 'Middle East & Africa',
@@ -1380,14 +1381,28 @@ export async function processJsonDataAsync(
 
       for (const geo of geographies) {
         if (geo.toLowerCase() === 'global') continue
-        const parentRegion = countryToRegionMap[geo]
-        if (parentRegion && geographies.includes(parentRegion)) {
+        const mappedRegion = countryToRegionMap[geo]
+        // Exact match first; then try prefix match for region name variants
+        // e.g. map says "Middle East & Africa" but file has "Middle East"
+        let parentRegion: string | undefined = undefined
+        if (mappedRegion) {
+          if (geographies.includes(mappedRegion)) {
+            parentRegion = mappedRegion
+          } else {
+            // Try to find a geography that the mapped region starts with or vice versa
+            parentRegion = geographies.find(g =>
+              g !== geo &&
+              (mappedRegion.startsWith(g) || g.startsWith(mappedRegion))
+            )
+          }
+        }
+        if (parentRegion) {
           // This geography is a country under an existing region
           if (!hierarchy[parentRegion]) hierarchy[parentRegion] = []
           if (!hierarchy[parentRegion].includes(geo)) hierarchy[parentRegion].push(geo)
           countries.add(geo)
           regions.add(parentRegion)
-        } else if (!parentRegion) {
+        } else if (!mappedRegion) {
           // Not in the map — could be a region itself
           regions.add(geo)
         }

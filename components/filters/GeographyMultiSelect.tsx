@@ -15,17 +15,6 @@ export function GeographyMultiSelect() {
   const [isOpen, setIsOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set(['Global']))
-
-  // Auto-expand root nodes when tree first loads
-  useEffect(() => {
-    if (tree.length > 0) {
-      setExpandedNodes(prev => {
-        const next = new Set(prev)
-        tree.forEach(node => next.add(node.name))
-        return next
-      })
-    }
-  }, [tree])
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   // Close dropdown when clicking outside
@@ -101,6 +90,17 @@ export function GeographyMultiSelect() {
       children: [],
     }))
   }, [data])
+
+  // Auto-expand root nodes when tree first loads so hierarchy is immediately visible
+  useEffect(() => {
+    if (tree.length > 0) {
+      setExpandedNodes(prev => {
+        const next = new Set(prev)
+        tree.forEach(node => next.add(node.name))
+        return next
+      })
+    }
+  }, [tree])
 
   // Self + all descendant names (walk subtree) — used for parent indeterminate state
   const getAllDescendants = useCallback((node: TreeNode): string[] => {
