@@ -56,11 +56,11 @@ interface Props {
 
 function DemoBadge() {
   return (
-    <span className="absolute top-2 right-2 z-10 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200 select-none pointer-events-none">
-      <svg className="h-3 w-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+    <span className="absolute top-2 right-2 z-10 inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-semibold bg-amber-50 text-amber-700 border border-amber-200 select-none pointer-events-none">
+      <svg className="h-4 w-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
         <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
       </svg>
-      Demo Data
+      Demo Data (Dummy Data): *The data is for illustration purpose only*
     </span>
   )
 }
@@ -221,12 +221,12 @@ export function DashboardShell({ readOnly = false }: Props) {
         <div className="mb-6">
           <GlobalKPICards />
           {showDemoNote && (
-            <div className="mt-3 mx-1 flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-4 py-2.5">
-              <svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
+            <div className="mt-3 mx-1 flex items-start gap-3 rounded-md border border-amber-400 bg-amber-100 px-5 py-3.5">
+              <svg className="mt-0.5 h-5 w-5 flex-shrink-0 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
               </svg>
-              <p className="text-xs text-amber-800">
-                <span className="font-semibold">NOTE:</span> All the data in the dashboard is demo data. No real world data is related to this.
+              <p className="text-sm text-amber-900 font-medium">
+                <span className="font-bold">NOTE:</span> All the data in the dashboard is demo data. No real world data is related to this.
               </p>
             </div>
           )}
