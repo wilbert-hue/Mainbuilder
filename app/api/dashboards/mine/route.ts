@@ -10,6 +10,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getCurrentUser } from '@/lib/auth/current-user'
 import { listDashboardsByOwner } from '@/lib/dashboard-mongo'
 import { getPublicAppOrigin } from '@/lib/app-origin'
+
+function slugify(name: string): string {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) || 'dashboard'
+}
 import { getMongoUri } from '@/lib/mongo-config'
 import { getPublicMongoErrorMessage } from '@/lib/mongo-errors'
 
@@ -32,7 +36,7 @@ export async function GET(request: NextRequest) {
       id: d._id,
       name: d.name || 'Untitled Dashboard',
       accessCode: d.accessCode ?? null,
-      shareUrl: origin ? `${origin}/shared/${d._id}` : `/shared/${d._id}`,
+      shareUrl: origin ? `${origin}/shared/${slugify(d.name || '')}--${d._id}` : `/shared/${d._id}`,
       createdAt: d.createdAt,
       updatedAt: d.updatedAt,
       readCount: d.readCount ?? 0,

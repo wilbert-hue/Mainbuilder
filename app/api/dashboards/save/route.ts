@@ -18,6 +18,10 @@ import {
 } from '@/lib/dashboard-snapshot-persist'
 import { getCurrentUser } from '@/lib/auth/current-user'
 import { generateAccessCode, hashAccessCode } from '@/lib/auth/access-code'
+
+function slugify(name: string): string {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) || 'dashboard'
+}
 import type { ComparisonData } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
@@ -149,7 +153,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const shareUrl = `${origin}/shared/${id}`
+    const shareUrl = `${origin}/shared/${slugify(body.name || 'dashboard')}--${id}`
     // accessCode is now stored in plaintext, so we can always return it (the
     // owner can also re-view it later in "Previous Dashboards").
     return NextResponse.json(

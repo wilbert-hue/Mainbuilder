@@ -9,7 +9,11 @@ import { parseIntelligenceSheet } from '@/lib/intelligence-sheet-types'
 
 export default function SharedDashboardPage() {
   const params = useParams()
-  const id = params?.id as string
+  const rawParam = params?.id as string
+  // Support both formats:
+  //   new: "global-market-of-asp--cdabd5ce93d5f120ffddd3ee"  → extract after last "--"
+  //   old: "cdabd5ce93d5f120ffddd3ee"                        → use as-is
+  const id = rawParam?.includes('--') ? rawParam.split('--').pop()! : rawParam
 
   const {
     setData,
