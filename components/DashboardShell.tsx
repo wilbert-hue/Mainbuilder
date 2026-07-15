@@ -54,6 +54,17 @@ interface Props {
   readOnly?: boolean
 }
 
+function DemoBadge() {
+  return (
+    <span className="absolute top-2 right-2 z-10 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200 select-none pointer-events-none">
+      <svg className="h-3 w-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+      </svg>
+      Demo Data
+    </span>
+  )
+}
+
 export function DashboardShell({ readOnly = false }: Props) {
   const router = useRouter()
   const {
@@ -309,44 +320,47 @@ export function DashboardShell({ readOnly = false }: Props) {
               <div className="p-6">
                 {viewMode === 'tabs' ? (
                   <>
-                    {activeTab === 'bar' && <div id="grouped-bar-chart"><GroupedBarChart title="Comparative Analysis - Grouped Bars" height={450} /></div>}
-                    {activeTab === 'line' && <div id="line-chart"><MultiLineChart title="Trend Analysis - Multiple Series" height={450} /></div>}
-                    {activeTab === 'heatmap' && <div id="heatmap-chart"><MatrixHeatmap title="Matrix View - Geography x Segment" height={450} /></div>}
-                    {activeTab === 'table' && <div id="comparison-table"><ComparisonTable title="Data Comparison Table" height={500} /></div>}
-                    {activeTab === 'waterfall' && <div id="waterfall-chart"><WaterfallChart title="Contribution Analysis - Waterfall Chart" height={450} /></div>}
-                    {activeTab === 'bubble' && <div id="bubble-chart"><D3BubbleChartIndependent title="Coherent Opportunity Matrix" height={500} /></div>}
-                    {activeTab === 'competitive-intelligence' && <div id="competitive-intelligence-chart"><CompetitiveIntelligence height={600} /></div>}
+                    {activeTab === 'bar' && <div id="grouped-bar-chart" className="relative">{showDemoNote && <DemoBadge />}<GroupedBarChart title="Comparative Analysis - Grouped Bars" height={450} /></div>}
+                    {activeTab === 'line' && <div id="line-chart" className="relative">{showDemoNote && <DemoBadge />}<MultiLineChart title="Trend Analysis - Multiple Series" height={450} /></div>}
+                    {activeTab === 'heatmap' && <div id="heatmap-chart" className="relative">{showDemoNote && <DemoBadge />}<MatrixHeatmap title="Matrix View - Geography x Segment" height={450} /></div>}
+                    {activeTab === 'table' && <div id="comparison-table" className="relative">{showDemoNote && <DemoBadge />}<ComparisonTable title="Data Comparison Table" height={500} /></div>}
+                    {activeTab === 'waterfall' && <div id="waterfall-chart" className="relative">{showDemoNote && <DemoBadge />}<WaterfallChart title="Contribution Analysis - Waterfall Chart" height={450} /></div>}
+                    {activeTab === 'bubble' && <div id="bubble-chart" className="relative">{showDemoNote && <DemoBadge />}<D3BubbleChartIndependent title="Coherent Opportunity Matrix" height={500} /></div>}
+                    {activeTab === 'competitive-intelligence' && <div id="competitive-intelligence-chart" className="relative">{showDemoNote && <DemoBadge />}<CompetitiveIntelligence height={600} /></div>}
                     {activeTab === 'customer-intelligence' && (
-                      <div id="customer-intelligence-chart">
+                      <div id="customer-intelligence-chart" className="relative">
+                        {showDemoNote && <DemoBadge />}
                         <IntelligenceDatabaseViews preferredSource="customer" />
                       </div>
                     )}
                     {activeTab === 'distributor-intelligence' && (
-                      <div id="distributor-intelligence-chart">
+                      <div id="distributor-intelligence-chart" className="relative">
+                        {showDemoNote && <DemoBadge />}
                         <IntelligenceDatabaseViews preferredSource="distributor" />
                       </div>
                     )}
-                    {activeTab === 'pricing-bar' && <div id="pricing-bar-chart"><PricingAnalysisView activeTab="bar" /></div>}
-                    {activeTab === 'pricing-line' && <div id="pricing-line-chart"><PricingAnalysisView activeTab="line" /></div>}
-                    {activeTab === 'pricing-heatmap' && <div id="pricing-heatmap-chart"><PricingAnalysisView activeTab="heatmap" /></div>}
-                    {activeTab === 'pricing-table' && <div id="pricing-table-chart"><PricingAnalysisView activeTab="table" /></div>}
+                    {activeTab === 'pricing-bar' && <div id="pricing-bar-chart" className="relative">{showDemoNote && <DemoBadge />}<PricingAnalysisView activeTab="bar" /></div>}
+                    {activeTab === 'pricing-line' && <div id="pricing-line-chart" className="relative">{showDemoNote && <DemoBadge />}<PricingAnalysisView activeTab="line" /></div>}
+                    {activeTab === 'pricing-heatmap' && <div id="pricing-heatmap-chart" className="relative">{showDemoNote && <DemoBadge />}<PricingAnalysisView activeTab="heatmap" /></div>}
+                    {activeTab === 'pricing-table' && <div id="pricing-table-chart" className="relative">{showDemoNote && <DemoBadge />}<PricingAnalysisView activeTab="table" /></div>}
                   </>
                 ) : (
                   <div className="space-y-8">
-                    {isChartVisible('grouped-bar') && <div className="border-b pb-8"><h3 className="text-lg font-semibold text-black mb-4">Grouped Bar Chart</h3><GroupedBarChart title="Comparative Analysis - Grouped Bars" height={400} /></div>}
-                    {isChartVisible('multi-line') && <div className="border-b pb-8"><h3 className="text-lg font-semibold text-black mb-4">Line Chart</h3><MultiLineChart title="Trend Analysis - Multiple Series" height={400} /></div>}
-                    {isChartVisible('heatmap') && <div className="border-b pb-8"><h3 className="text-lg font-semibold text-black mb-4">Heatmap</h3><MatrixHeatmap title="Matrix View - Geography x Segment" height={400} /></div>}
-                    {isChartVisible('comparison-table') && <div className="border-b pb-8"><h3 className="text-lg font-semibold text-black mb-4">Data Table</h3><ComparisonTable title="Data Comparison Table" height={400} /></div>}
-                    {isChartVisible('waterfall') && <div className="border-b pb-8"><h3 className="text-lg font-semibold text-black mb-4">Waterfall Chart</h3><WaterfallChart title="Contribution Analysis - Waterfall Chart" height={400} /></div>}
-                    {isChartVisible('bubble') && <div className="border-b pb-8"><h3 className="text-lg font-semibold text-black mb-4">Bubble Chart</h3><D3BubbleChartIndependent title="Coherent Opportunity Matrix" height={450} /></div>}
-                    {isChartVisible('competitive-intelligence') && <div className="border-b pb-8"><CompetitiveIntelligence height={600} /></div>}
+                    {isChartVisible('grouped-bar') && <div className="border-b pb-8 relative">{showDemoNote && <DemoBadge />}<h3 className="text-lg font-semibold text-black mb-4">Grouped Bar Chart</h3><GroupedBarChart title="Comparative Analysis - Grouped Bars" height={400} /></div>}
+                    {isChartVisible('multi-line') && <div className="border-b pb-8 relative">{showDemoNote && <DemoBadge />}<h3 className="text-lg font-semibold text-black mb-4">Line Chart</h3><MultiLineChart title="Trend Analysis - Multiple Series" height={400} /></div>}
+                    {isChartVisible('heatmap') && <div className="border-b pb-8 relative">{showDemoNote && <DemoBadge />}<h3 className="text-lg font-semibold text-black mb-4">Heatmap</h3><MatrixHeatmap title="Matrix View - Geography x Segment" height={400} /></div>}
+                    {isChartVisible('comparison-table') && <div className="border-b pb-8 relative">{showDemoNote && <DemoBadge />}<h3 className="text-lg font-semibold text-black mb-4">Data Table</h3><ComparisonTable title="Data Comparison Table" height={400} /></div>}
+                    {isChartVisible('waterfall') && <div className="border-b pb-8 relative">{showDemoNote && <DemoBadge />}<h3 className="text-lg font-semibold text-black mb-4">Waterfall Chart</h3><WaterfallChart title="Contribution Analysis - Waterfall Chart" height={400} /></div>}
+                    {isChartVisible('bubble') && <div className="border-b pb-8 relative">{showDemoNote && <DemoBadge />}<h3 className="text-lg font-semibold text-black mb-4">Bubble Chart</h3><D3BubbleChartIndependent title="Coherent Opportunity Matrix" height={450} /></div>}
+                    {isChartVisible('competitive-intelligence') && <div className="border-b pb-8 relative">{showDemoNote && <DemoBadge />}<CompetitiveIntelligence height={600} /></div>}
                     {(isChartVisible('customer-intelligence') ||
                       isChartVisible('distributor-intelligence')) && (
-                      <div className="border-b pb-8">
+                      <div className="border-b pb-8 relative">
+                        {showDemoNote && <DemoBadge />}
                         <IntelligenceDatabaseViews />
                       </div>
                     )}
-                    {isChartVisible('pricing-grouped-bar') && <div className="border-b pb-8"><PricingAnalysisView activeTab="bar" /></div>}
+                    {isChartVisible('pricing-grouped-bar') && <div className="border-b pb-8 relative">{showDemoNote && <DemoBadge />}<PricingAnalysisView activeTab="bar" /></div>}
                   </div>
                 )}
               </div>
