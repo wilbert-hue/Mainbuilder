@@ -184,7 +184,7 @@ export function ComparisonTable({ title, height = 600 }: ComparisonTableProps) {
           {showDemoNote && (
             <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-semibold bg-amber-50 text-amber-700 border border-amber-200 select-none">
               <AlertTriangle className="h-4 w-4 flex-shrink-0" />
-              Demo Data (Dummy Data): *The data is for illustration purpose only*
+              Demo Data (Dummy Data): The data is for illustration purpose only
             </span>
           )}
           <button
