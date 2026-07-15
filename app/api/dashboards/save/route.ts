@@ -153,7 +153,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const shareUrl = `${origin}/shared/${slugify(body.name || 'dashboard')}--${id}`
+    const shareUrl = `${origin}/shared/${slugify(payload.name)}--${id}`
     // accessCode is now stored in plaintext, so we can always return it (the
     // owner can also re-view it later in "Previous Dashboards").
     return NextResponse.json(
