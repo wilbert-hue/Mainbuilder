@@ -109,6 +109,10 @@ function getDefaultFilters(data: ComparisonData | null): FilterState {
   const startYear = data.metadata.start_year
   const baseYear = data.metadata.base_year
   const forecastYear = data.metadata.forecast_year
+  const forecastStart =
+    data.metadata.forecast_years?.length > 0
+      ? Math.min(...data.metadata.forecast_years)
+      : baseYear + 1
   
   // Get first geography for default view
   const firstGeography = data.dimensions.geographies.all_geographies?.[0] || ''
@@ -127,7 +131,7 @@ function getDefaultFilters(data: ComparisonData | null): FilterState {
     geographies: firstGeography ? [firstGeography] : [],
     segments: firstSegments,
     segmentType: firstSegmentType,
-    yearRange: [baseYear, Math.min(baseYear + 4, forecastYear)],
+    yearRange: [startYear, forecastStart],
     dataType: 'value',
     viewMode: 'segment-mode',
     businessType: defaultBusinessType,
