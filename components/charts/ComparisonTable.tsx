@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { useDashboardStore } from '@/lib/store'
+import { AlertTriangle } from 'lucide-react'
 import { filterData } from '@/lib/data-processor'
 import {
   METRICS_END_YEAR,
@@ -17,7 +18,7 @@ interface ComparisonTableProps {
 }
 
 export function ComparisonTable({ title, height = 600 }: ComparisonTableProps) {
-  const { data, filters, currency } = useDashboardStore()
+  const { data, filters, currency, showDemoNote } = useDashboardStore()
   const [sortField, setSortField] = useState<string>('geography')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
 
@@ -169,7 +170,7 @@ export function ComparisonTable({ title, height = 600 }: ComparisonTableProps) {
 
   return (
     <div className="w-full min-w-0 overflow-hidden">
-      <div className="mb-4 flex justify-between items-center">
+      <div className="mb-4 flex justify-between items-center gap-3">
         <div>
           <h3 className="text-lg font-semibold text-black">
             {title || 'Data Comparison Table'}
@@ -179,13 +180,21 @@ export function ComparisonTable({ title, height = 600 }: ComparisonTableProps) {
             {METRICS_END_YEAR}
           </p>
         </div>
-        <button
-          onClick={exportToCSV}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-        >
-          <Download className="h-4 w-4" />
-          Export CSV
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          {showDemoNote && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200 select-none">
+              <AlertTriangle className="h-3 w-3 flex-shrink-0" />
+              Demo Data
+            </span>
+          )}
+          <button
+            onClick={exportToCSV}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+          >
+            <Download className="h-4 w-4" />
+            Export CSV
+          </button>
+        </div>
       </div>
 
       <div className="overflow-auto border rounded-lg" style={{ maxHeight: height }}>
