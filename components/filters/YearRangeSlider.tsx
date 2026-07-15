@@ -28,13 +28,22 @@ export function YearRangeSlider() {
     }
   }
 
+  const historicalEnd =
+    data.metadata.historical_years?.length > 0
+      ? Math.max(...data.metadata.historical_years)
+      : base_year
+  const forecastStart =
+    data.metadata.forecast_years?.length > 0
+      ? Math.min(...data.metadata.forecast_years)
+      : base_year + 1
+
   const setPredefinedRange = (range: 'historical' | 'forecast' | 'all') => {
     switch (range) {
       case 'historical':
-        updateFilters({ yearRange: [start_year, base_year] })
+        updateFilters({ yearRange: [start_year, historicalEnd] })
         break
       case 'forecast':
-        updateFilters({ yearRange: [base_year + 1, forecast_year] })
+        updateFilters({ yearRange: [forecastStart, forecast_year] })
         break
       case 'all':
         updateFilters({ yearRange: [start_year, forecast_year] })

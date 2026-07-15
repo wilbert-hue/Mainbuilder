@@ -488,17 +488,23 @@ export function CompactFilterPanel() {
         </div>
         <div className="flex gap-1 mt-1">
           <button
-            onClick={() => updateFilters({
-              yearRange: [data.metadata.start_year, data.metadata.base_year]
-            })}
+            onClick={() => {
+              const histEnd = data.metadata.historical_years?.length > 0
+                ? Math.max(...data.metadata.historical_years)
+                : data.metadata.base_year
+              updateFilters({ yearRange: [data.metadata.start_year, histEnd] })
+            }}
             className="flex-1 text-xs px-2 py-0.5 bg-gray-100 rounded hover:bg-gray-200"
           >
             Historical
           </button>
           <button
-            onClick={() => updateFilters({
-              yearRange: [data.metadata.base_year + 1, data.metadata.forecast_year]
-            })}
+            onClick={() => {
+              const forecastStart = data.metadata.forecast_years?.length > 0
+                ? Math.min(...data.metadata.forecast_years)
+                : data.metadata.base_year + 1
+              updateFilters({ yearRange: [forecastStart, data.metadata.forecast_year] })
+            }}
             className="flex-1 text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
           >
             Forecast
