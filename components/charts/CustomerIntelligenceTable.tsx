@@ -155,18 +155,13 @@ function buildGeographyLabel(filters: { geographies: string[] }, data: unknown):
 function buildMarketLine(
   dashboardName: string | null,
   data: unknown,
-  filters: { geographies: string[] }
+  _filters: { geographies: string[] }
 ): string {
-  const geo = buildGeographyLabel(filters, data)
-  const market =
+  return (
     (dashboardName && dashboardName.trim()) ||
     (data as { metadata?: { market_name?: string } } | null)?.metadata?.market_name ||
     'Market'
-  // Don't prepend geography if the dashboard name already starts with it
-  if (geo && !market.toLowerCase().startsWith(geo.toLowerCase())) {
-    return `${geo} ${market}`
-  }
-  return market
+  )
 }
 
 function buildIncludesSummary(d: PropositionData | null): string {
