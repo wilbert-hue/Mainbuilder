@@ -34,6 +34,7 @@ interface DashboardStore {
   dashboardName: string | null // Custom dashboard name
   currency: 'USD' | 'INR' // Currency preference
   showDemoNote: boolean // Toggle for demo data disclaimer note
+  logoChoice: 'coherent' | 'wmr' // Which logo to show in the dashboard header
   staticCustomerProp1: boolean // When true, render static 20-row Proposition 1 template instead of uploaded data
   staticDistributorProp1: boolean // Same for distributor intelligence
   dashboardId: string | null // MongoDB document ID assigned after first save
@@ -72,6 +73,7 @@ interface DashboardStore {
   setDashboardName: (name: string | null) => void
   setCurrency: (currency: 'USD' | 'INR') => void
   setShowDemoNote: (show: boolean) => void
+  setLogoChoice: (choice: 'coherent' | 'wmr') => void
   setStaticCustomerProp1: (val: boolean) => void
   setStaticDistributorProp1: (val: boolean) => void
   setDashboardId: (id: string | null) => void
@@ -109,10 +111,6 @@ function getDefaultFilters(data: ComparisonData | null): FilterState {
   const startYear = data.metadata.start_year
   const baseYear = data.metadata.base_year
   const forecastYear = data.metadata.forecast_year
-  const forecastStart =
-    data.metadata.forecast_years?.length > 0
-      ? Math.min(...data.metadata.forecast_years)
-      : baseYear + 1
   
   // Get first geography for default view
   const firstGeography = data.dimensions.geographies.all_geographies?.[0] || ''
@@ -131,7 +129,7 @@ function getDefaultFilters(data: ComparisonData | null): FilterState {
     geographies: firstGeography ? [firstGeography] : [],
     segments: firstSegments,
     segmentType: firstSegmentType,
-    yearRange: [startYear, forecastStart],
+    yearRange: [startYear, baseYear],
     dataType: 'value',
     viewMode: 'segment-mode',
     businessType: defaultBusinessType,
@@ -267,6 +265,7 @@ export const useDashboardStore = create<DashboardStore>((set, get) => ({
   dashboardName: null,
   currency: 'USD',
   showDemoNote: false,
+  logoChoice: 'coherent' as const,
   staticCustomerProp1: false,
   staticDistributorProp1: false,
   dashboardId: null,
@@ -529,6 +528,7 @@ export const useDashboardStore = create<DashboardStore>((set, get) => ({
   setCurrency: (currency) => set({ currency }),
 
   setShowDemoNote: (show) => set({ showDemoNote: show }),
+  setLogoChoice: (choice) => set({ logoChoice: choice }),
   setStaticCustomerProp1: (val) => set({ staticCustomerProp1: val }),
   setStaticDistributorProp1: (val) => set({ staticDistributorProp1: val }),
   setDashboardId: (id) => set({ dashboardId: id }),

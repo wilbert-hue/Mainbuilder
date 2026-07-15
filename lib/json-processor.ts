@@ -1059,7 +1059,7 @@ export async function processJsonDataAsync(
     }
     const startYear = Math.min(...allYears)
     const forecastYear = Math.max(...allYears)
-    const baseYear = startYear + 4
+    const baseYear = startYear + 5
     console.log(`Years: ${startYear} to ${forecastYear}, base: ${baseYear}`)
     
     // Extract geographies from segmentation data (first level keys)

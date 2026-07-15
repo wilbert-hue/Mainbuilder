@@ -28,6 +28,7 @@ export default function SharedDashboardPage() {
     setDistributorProposition3Data,
     setPricingAnalysisData,
     setShowDemoNote,
+    setLogoChoice,
     loadDefaultFilters,
     clearData,
   } = useDashboardStore()
@@ -86,6 +87,7 @@ export default function SharedDashboardPage() {
         if (distProp3) setDistributorProposition3Data(distProp3)
       if (snapshot.pricingAnalysisData) setPricingAnalysisData(snapshot.pricingAnalysisData)
       setShowDemoNote(snapshot.showDemoNote || false)
+      setLogoChoice(snapshot.logoChoice === 'wmr' ? 'wmr' : 'coherent')
 
       setStatus('ready')
     } catch (err) {

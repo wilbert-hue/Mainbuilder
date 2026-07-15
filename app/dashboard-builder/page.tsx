@@ -39,6 +39,8 @@ export default function DashboardBuilderPage() {
     setDashboardName,
     setCurrency,
     setShowDemoNote,
+    logoChoice,
+    setLogoChoice,
     staticCustomerProp1,
     setStaticCustomerProp1,
     staticDistributorProp1,
@@ -339,6 +341,7 @@ export default function DashboardBuilderPage() {
       distributorProposition3Data,
       pricingAnalysisData,
       showDemoNote,
+      logoChoice,
     } = storeState
 
     if (!data && !rawIntelligenceData && !pricingAnalysisData) {
@@ -365,6 +368,7 @@ export default function DashboardBuilderPage() {
         distributorProposition3Data,
         pricingAnalysisData,
         showDemoNote,
+        logoChoice,
       }
 
       const serialised = JSON.stringify(payload)
@@ -939,27 +943,49 @@ export default function DashboardBuilderPage() {
                   <h2 className="text-2xl font-bold text-white mb-2">1. Market Intelligence</h2>
                   <p className="text-sm text-slate-400">Upload your value and volume sheets to build the market analysis dashboard</p>
                 </div>
-                {/* Demo Note Toggle */}
-                <div className="flex items-center gap-3 ml-6 flex-shrink-0">
-                  <span className="text-sm text-slate-400 font-medium">Show Demo Note</span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const next = !showDemoNoteToggle
-                      setShowDemoNoteToggle(next)
-                      setShowDemoNote(next)
-                    }}
-                    className={`builder-toggle focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 focus:ring-offset-slate-900 ${
-                      showDemoNoteToggle ? 'builder-toggle-on' : 'builder-toggle-off'
-                    }`}
-                    aria-pressed={showDemoNoteToggle}
-                  >
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
-                        showDemoNoteToggle ? 'translate-x-6' : 'translate-x-1'
+                {/* Demo Note Toggle + Logo Toggle */}
+                <div className="flex items-center gap-5 ml-6 flex-shrink-0">
+                  {/* Logo selector */}
+                  <div className="flex items-center gap-2">
+                    <span className={`text-sm font-medium ${logoChoice === 'coherent' ? 'text-sky-400' : 'text-slate-400'}`}>Coherent</span>
+                    <button
+                      type="button"
+                      onClick={() => setLogoChoice(logoChoice === 'coherent' ? 'wmr' : 'coherent')}
+                      className={`builder-toggle focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 focus:ring-offset-slate-900 ${
+                        logoChoice === 'wmr' ? 'builder-toggle-on' : 'builder-toggle-off'
                       }`}
-                    />
-                  </button>
+                      aria-pressed={logoChoice === 'wmr'}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                          logoChoice === 'wmr' ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                    <span className={`text-sm font-medium ${logoChoice === 'wmr' ? 'text-sky-400' : 'text-slate-400'}`}>WMR</span>
+                  </div>
+                  {/* Demo note toggle */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-slate-400 font-medium">Show Demo Note</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const next = !showDemoNoteToggle
+                        setShowDemoNoteToggle(next)
+                        setShowDemoNote(next)
+                      }}
+                      className={`builder-toggle focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 focus:ring-offset-slate-900 ${
+                        showDemoNoteToggle ? 'builder-toggle-on' : 'builder-toggle-off'
+                      }`}
+                      aria-pressed={showDemoNoteToggle}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                          showDemoNoteToggle ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

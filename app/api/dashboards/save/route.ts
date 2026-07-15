@@ -117,6 +117,7 @@ export async function POST(request: NextRequest) {
       pricingAnalysisCompressed: pricingPersist.compressed,
       pricingAnalysisS3Key: pricingPersist.s3Key,
       showDemoNote: body.showDemoNote === true,
+      logoChoice: (body.logoChoice === 'wmr' ? 'wmr' : 'coherent') as 'coherent' | 'wmr',
       ownerId,
       accessCodeHash,
       accessCode: plainAccessCode,

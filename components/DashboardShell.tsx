@@ -81,6 +81,7 @@ export function DashboardShell({ readOnly = false }: Props) {
     intelligenceType,
     pricingAnalysisData,
     showDemoNote,
+    logoChoice,
   } = useDashboardStore()
 
   const [activeTab, setActiveTab] = useState<ActiveTab>('bar')
@@ -159,11 +160,11 @@ export function DashboardShell({ readOnly = false }: Props) {
         <div className="container mx-auto px-6 py-6 flex-1">
           <div className="mb-6 flex items-center justify-between gap-4">
             <div className="flex-shrink-0">
-              <Image src="/logo.png" alt="Coherent Market Insights Logo" width={150} height={60} unoptimized className="h-auto w-auto max-w-[150px]" priority />
+              <Image src={logoChoice === 'wmr' ? '/wmr-logo.png' : '/logo.png'} alt={logoChoice === 'wmr' ? 'Worldwide Market Reports Logo' : 'Coherent Market Insights Logo'} width={150} height={60} unoptimized className="h-auto w-auto max-w-[150px]" priority />
             </div>
             <div className="flex-1 flex justify-center">
               <div className="text-center">
-                <h1 className="text-2xl font-bold text-black mb-1">Coherent Dashboard</h1>
+                <h1 className="text-2xl font-bold text-black mb-1">{logoChoice === 'wmr' ? 'WMR Dashboard' : 'Coherent Dashboard'}</h1>
                 <h2 className="text-sm text-black">{dashboardName || `${typeLabel} Intelligence`}</h2>
               </div>
             </div>
@@ -195,11 +196,11 @@ export function DashboardShell({ readOnly = false }: Props) {
         {/* Header */}
         <div className="mb-6 flex items-center justify-between gap-4">
           <div className="flex-shrink-0">
-            <Image src="/logo.png" alt="Coherent Market Insights Logo" width={150} height={60} unoptimized className="h-auto w-auto max-w-[150px]" priority />
+            <Image src={logoChoice === 'wmr' ? '/wmr-logo.png' : '/logo.png'} alt={logoChoice === 'wmr' ? 'Worldwide Market Reports Logo' : 'Coherent Market Insights Logo'} width={150} height={60} unoptimized className="h-auto w-auto max-w-[150px]" priority />
           </div>
           <div className="flex-1 flex justify-center">
             <div className="text-center">
-              <h1 className="text-2xl font-bold text-black mb-1">Coherent Dashboard</h1>
+              <h1 className="text-2xl font-bold text-black mb-1">{logoChoice === 'wmr' ? 'WMR Dashboard' : 'Coherent Dashboard'}</h1>
               <h2 className="text-sm text-black">{dashboardName || ' Market Analysis'}</h2>
             </div>
           </div>

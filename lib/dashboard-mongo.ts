@@ -58,6 +58,7 @@ export interface DashboardDocument {
   /** Object-storage key for pricing blob when offloaded to R2/S3 */
   pricingAnalysisS3Key?: string | null
   showDemoNote: boolean
+  logoChoice?: 'coherent' | 'wmr'
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
