@@ -3,6 +3,7 @@ import * as XLSX from 'xlsx'
 import {
   DEFAULT_INTELLIGENCE_DEMO_ROW_COUNT,
   ensureIntelligenceRows,
+  isPlaceholderValue,
   type DemoGenerationContext,
 } from '@/lib/intelligence-demo-generator'
 
@@ -137,7 +138,8 @@ function findHeaderBlockStartRow(rows: any[][]): number {
 }
 
 function pickPropositionSheetName(sheetNames: string[], propositionNumber: number): string | null {
-  const re = new RegExp(`proposition\\s*${propositionNumber}(?!\\d)`, 'i')
+  // Match both "Proposition N" and "Preposition N" (common Excel naming typo)
+  const re = new RegExp(`p(?:ro|re)position\\s*${propositionNumber}(?!\\d)`, 'i')
   const matches = sheetNames.filter((n) => re.test(n))
   return matches[0] || null
 }
@@ -197,7 +199,30 @@ function processIntelligenceJsonGrid(
   })
 
   const rawRows = jsonData.slice(dataStartRow).filter((row) => {
-    return row.some((cell) => cell !== undefined && cell !== null && String(cell).trim() !== '')
+    // Must have at least one non-empty value in a header column
+    const populated = headerIndices.filter((i) => {
+      const cell = row[i]
+      return cell !== undefined && cell !== null && String(cell).trim() !== ''
+    })
+    if (populated.length === 0) return false
+
+    // Skip phantom header rows (every filled cell == its column header name)
+    const allMatchHeader = populated.every((originalIndex) => {
+      const colIdx = headerIndices.indexOf(originalIndex)
+      return String(row[originalIndex]).trim().toLowerCase() === (filteredHeaders[colIdx] ?? '').toLowerCase()
+    })
+    if (allMatchHeader) return false
+
+    // The second column (company/customer name) must be non-empty.
+    // Rows with only S.No. filled are empty rows with no useful data.
+    if (headerIndices.length >= 2) {
+      const secondCell = row[headerIndices[1]]
+      if (secondCell === undefined || secondCell === null || String(secondCell).trim() === '') {
+        return false
+      }
+    }
+
+    return true
   }).map((row: any[]) => {
     const rowData: Record<string, unknown> = {}
     filteredHeaders.forEach((header, idx) => {
@@ -546,8 +571,27 @@ export async function POST(request: NextRequest) {
 
     console.log(`Headers found:`, filteredHeaders)
 
-    const rawRows = jsonData.slice(dataStartRow).filter(row => {
-      return row.some(cell => cell !== undefined && cell !== null && String(cell).trim() !== '')
+    const rawRows = jsonData.slice(dataStartRow).filter((row) => {
+      const populated = headerIndices.filter((i) => {
+        const cell = row[i]
+        return cell !== undefined && cell !== null && String(cell).trim() !== ''
+      })
+      if (populated.length === 0) return false
+
+      const allMatchHeader = populated.every((originalIndex) => {
+        const colIdx = headerIndices.indexOf(originalIndex)
+        return String(row[originalIndex]).trim().toLowerCase() === (filteredHeaders[colIdx] ?? '').toLowerCase()
+      })
+      if (allMatchHeader) return false
+
+      if (headerIndices.length >= 2) {
+        const secondCell = row[headerIndices[1]]
+        if (secondCell === undefined || secondCell === null || String(secondCell).trim() === '') {
+          return false
+        }
+      }
+
+      return true
     }).map((row: any[]) => {
       const rowData: Record<string, unknown> = {}
       filteredHeaders.forEach((header, idx) => {
