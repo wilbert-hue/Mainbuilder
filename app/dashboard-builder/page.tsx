@@ -946,23 +946,21 @@ export default function DashboardBuilderPage() {
                 {/* Demo Note Toggle + Logo Toggle */}
                 <div className="flex items-center gap-5 ml-6 flex-shrink-0">
                   {/* Logo selector */}
-                  <div className="flex items-center gap-2">
-                    <span className={`text-sm font-medium ${logoChoice === 'coherent' ? 'text-sky-400' : 'text-slate-400'}`}>Coherent</span>
-                    <button
-                      type="button"
-                      onClick={() => setLogoChoice(logoChoice === 'coherent' ? 'wmr' : 'coherent')}
-                      className={`builder-toggle focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 focus:ring-offset-slate-900 ${
-                        logoChoice === 'wmr' ? 'builder-toggle-on' : 'builder-toggle-off'
-                      }`}
-                      aria-pressed={logoChoice === 'wmr'}
-                    >
-                      <span
-                        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
-                          logoChoice === 'wmr' ? 'translate-x-6' : 'translate-x-1'
+                  <div className="flex items-center gap-1 bg-slate-800 rounded-lg p-1">
+                    {(['coherent', 'mi', 'wmr'] as const).map((choice) => (
+                      <button
+                        key={choice}
+                        type="button"
+                        onClick={() => setLogoChoice(choice)}
+                        className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+                          logoChoice === choice
+                            ? 'bg-sky-500 text-white'
+                            : 'text-slate-400 hover:text-slate-200'
                         }`}
-                      />
-                    </button>
-                    <span className={`text-sm font-medium ${logoChoice === 'wmr' ? 'text-sky-400' : 'text-slate-400'}`}>WMR</span>
+                      >
+                        {choice === 'coherent' ? 'Coherent' : choice === 'mi' ? 'Coherent MI' : 'WMR'}
+                      </button>
+                    ))}
                   </div>
                   {/* Demo note toggle */}
                   <div className="flex items-center gap-2">

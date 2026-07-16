@@ -34,7 +34,7 @@ interface DashboardStore {
   dashboardName: string | null // Custom dashboard name
   currency: 'USD' | 'INR' // Currency preference
   showDemoNote: boolean // Toggle for demo data disclaimer note
-  logoChoice: 'coherent' | 'wmr' // Which logo to show in the dashboard header
+  logoChoice: 'coherent' | 'wmr' | 'mi' // Which logo to show in the dashboard header
   staticCustomerProp1: boolean // When true, render static 20-row Proposition 1 template instead of uploaded data
   staticDistributorProp1: boolean // Same for distributor intelligence
   dashboardId: string | null // MongoDB document ID assigned after first save
@@ -73,7 +73,7 @@ interface DashboardStore {
   setDashboardName: (name: string | null) => void
   setCurrency: (currency: 'USD' | 'INR') => void
   setShowDemoNote: (show: boolean) => void
-  setLogoChoice: (choice: 'coherent' | 'wmr') => void
+  setLogoChoice: (choice: 'coherent' | 'wmr' | 'mi') => void
   setStaticCustomerProp1: (val: boolean) => void
   setStaticDistributorProp1: (val: boolean) => void
   setDashboardId: (id: string | null) => void

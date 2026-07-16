@@ -87,7 +87,7 @@ export default function SharedDashboardPage() {
         if (distProp3) setDistributorProposition3Data(distProp3)
       if (snapshot.pricingAnalysisData) setPricingAnalysisData(snapshot.pricingAnalysisData)
       setShowDemoNote(snapshot.showDemoNote || false)
-      setLogoChoice(snapshot.logoChoice === 'wmr' ? 'wmr' : 'coherent')
+      setLogoChoice((snapshot.logoChoice === 'wmr' || snapshot.logoChoice === 'mi') ? snapshot.logoChoice : 'coherent')
 
       setStatus('ready')
     } catch (err) {
