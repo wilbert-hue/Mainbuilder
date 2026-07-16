@@ -432,42 +432,60 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Excel: if the workbook defines Proposition 1–3 sheets (e.g. sample framework), process all three at once
+    // Excel: detect and process any Proposition-named sheets (1, 2, 3); works even if only some are present
     if (!isCsv) {
       const names = workbook.SheetNames
       const s1 = pickPropositionSheetName(names, 1)
       const s2 = pickPropositionSheetName(names, 2)
       const s3 = pickPropositionSheetName(names, 3)
-      if (s1 && s2 && s3) {
-        try {
-          const out = processMultiPropositionWorkbook(workbook, intelligenceType, demoContext)
-          return createResponse(out)
-        } catch (e: any) {
-          return createResponse(
-            { error: e?.message || 'Failed to process multi-proposition workbook' },
-            400
-          )
+
+      const emptyPayload = (n: number): IntelligenceSheetPayload => ({
+        type: intelligenceType,
+        headers: [],
+        parentHeaders: null,
+        rows: [],
+        rowCount: 0,
+        sheetName: `Proposition ${n}`,
+      })
+
+      if (s1 || s2 || s3) {
+        const processSheet = (sheetName: string | null, propNum: number): IntelligenceSheetPayload => {
+          if (!sheetName) return emptyPayload(propNum)
+          try {
+            const grid = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1, raw: true }) as any[][]
+            return processIntelligenceJsonGrid(grid, intelligenceType, sheetName, demoContext)
+          } catch {
+            return emptyPayload(propNum)
+          }
         }
-      }
-      if (s1) {
-        const grid = XLSX.utils.sheet_to_json(workbook.Sheets[s1], { header: 1, raw: true }) as any[][]
-        try {
-          const payload = processIntelligenceJsonGrid(grid, intelligenceType, s1, demoContext)
+
+        const p1 = processSheet(s1, 1)
+        const p2 = processSheet(s2, 2)
+        const p3 = processSheet(s3, 3)
+
+        // If only prop1 was found and is the sole sheet, return single-sheet format for backward compat
+        if (s1 && !s2 && !s3) {
           return createResponse({
             success: true,
             data: {
-              type: payload.type,
-              headers: payload.headers,
-              parentHeaders: payload.parentHeaders,
-              rows: payload.rows,
-              rowCount: payload.rowCount,
-              sheetName: payload.sheetName,
+              type: p1.type,
+              headers: p1.headers,
+              parentHeaders: p1.parentHeaders,
+              rows: p1.rows,
+              rowCount: p1.rowCount,
+              sheetName: p1.sheetName,
             },
-            message: `Processed ${payload.rowCount} rows from ${payload.sheetName}`,
+            message: `Processed ${p1.rowCount} rows from ${p1.sheetName}`,
           })
-        } catch (e: any) {
-          return createResponse({ error: e?.message || 'Failed to process sheet' }, 400)
         }
+
+        return createResponse({
+          success: true,
+          multiPropositionFramework: true,
+          proposition1: p1,
+          proposition2: p2,
+          proposition3: p3,
+        })
       }
     }
 

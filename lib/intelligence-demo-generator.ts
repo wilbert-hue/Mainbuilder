@@ -377,28 +377,16 @@ export function generateDemoRows(
 export function ensureIntelligenceRows(
   headers: string[],
   rows: Record<string, unknown>[],
-  ctx: DemoGenerationContext
+  _ctx: DemoGenerationContext
 ): Record<string, string>[] {
-  const target =
-    ctx.targetRowCount && ctx.targetRowCount > 0
-      ? ctx.targetRowCount
-      : rows.length > 0
-        ? rows.length
-        : DEFAULT_INTELLIGENCE_DEMO_ROW_COUNT
-
   if (headers.length === 0) return []
-
-  if (rows.length === 0) {
-    return generateDemoRows(headers, target, ctx)
-  }
-
-  const filled = rows.map((row, i) => fillEmptyCellsInRow(row, headers, i, ctx))
-
-  while (filled.length < target) {
-    filled.push(
-      fillEmptyCellsInRow({}, headers, filled.length, ctx)
-    )
-  }
-
-  return filled
+  // Return actual rows as-is — no demo data injection, no padding
+  return rows.map((row) => {
+    const out: Record<string, string> = {}
+    for (const header of headers) {
+      const raw = row[header]
+      out[header] = (raw === null || raw === undefined) ? '' : String(raw).trim()
+    }
+    return out
+  })
 }
