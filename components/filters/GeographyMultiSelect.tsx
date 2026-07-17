@@ -42,22 +42,14 @@ export function GeographyMultiSelect() {
     const allGeos = data.dimensions.geographies.all_geographies || []
 
     if (hierarchy && Object.keys(hierarchy).length > 0) {
-      // Case 1: Global → Regions → Countries (3-level)
+      // Case 1: Global → Regions → Countries (3-level, with recursive sub-children)
       if (hierarchy['Global']) {
-        const globalNode: TreeNode = {
-          name: 'Global',
-          level: 'global',
-          children: (hierarchy['Global'] || []).map(regionName => ({
-            name: regionName,
-            level: 'region' as const,
-            children: (hierarchy[regionName] || []).map(countryName => ({
-              name: countryName,
-              level: 'country' as const,
-              children: [],
-            })),
-          })),
-        }
-        return [globalNode]
+        const buildNode = (name: string, depth: number): TreeNode => ({
+          name,
+          level: depth === 0 ? 'global' : depth === 1 ? 'region' : 'country',
+          children: (hierarchy[name] || []).map(child => buildNode(child, depth + 1)),
+        })
+        return [buildNode('Global', 0)]
       }
 
       // Case 2: Regions → Countries (2-level, no Global root)
@@ -77,15 +69,14 @@ export function GeographyMultiSelect() {
         const remaining = allRootCandidates.filter(r => !orderedRoots.includes(r))
         const finalRoots = [...orderedRoots, ...remaining]
 
-        return finalRoots.map(regionName => ({
-          name: regionName,
-          level: 'region' as const,
-          children: (hierarchy[regionName] || []).map(countryName => ({
-            name: countryName,
-            level: 'country' as const,
-            children: [],
-          })),
-        }))
+        // Recursive builder — handles 3+ level hierarchies (e.g. Asia Pacific → South Asia → India)
+        const buildNode = (name: string, depth: number): TreeNode => ({
+          name,
+          level: depth === 0 ? 'region' : 'country',
+          children: (hierarchy[name] || []).map(child => buildNode(child, depth + 1)),
+        })
+
+        return finalRoots.map(regionName => buildNode(regionName, 0))
       }
     }
 
