@@ -1372,8 +1372,9 @@ export async function processJsonDataAsync(
         key !== 'Global' && !Object.values(hierarchy).some(children => children.includes(key))
       )
       console.log('Multi-geo hierarchy:', JSON.stringify(hierarchy, null, 2))
-    } else if (isMultiGeography && !countrySegmentType && !geographyDimension.geography_hierarchy?.['Global']) {
+    } else if (isMultiGeography && !countrySegmentType && (!geographyDimension.geography_hierarchy || Object.keys(geographyDimension.geography_hierarchy).length === 0)) {
       // No "By Country" or "By Region" segments — auto-detect hierarchy from countryToRegionMap
+      // Only run if no hierarchy was already built (e.g. from "By Region" segment)
       console.log('No geography segments found, auto-detecting hierarchy from region column...')
       const hierarchy: Record<string, string[]> = {}
       const regions = new Set<string>()
