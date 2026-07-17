@@ -65,10 +65,16 @@ export function GeographyMultiSelect() {
       const allChildren = new Set(Object.values(hierarchy).flat())
       const rootRegions = Object.keys(hierarchy).filter(k => !allChildren.has(k))
 
-      if (rootRegions.length > 0) {
+      // Also include standalone geographies from all_geographies that aren't
+      // children of any region and aren't already root regions (e.g. "U.S." in a
+      // single-country dataset where By Region only covers other regions).
+      const standaloneGeos = allGeos.filter(g => !allChildren.has(g) && !rootRegions.includes(g))
+      const allRootCandidates = [...rootRegions, ...standaloneGeos]
+
+      if (allRootCandidates.length > 0) {
         // Preserve original ordering from all_geographies when possible
-        const orderedRoots = allGeos.filter(g => rootRegions.includes(g))
-        const remaining = rootRegions.filter(r => !orderedRoots.includes(r))
+        const orderedRoots = allGeos.filter(g => allRootCandidates.includes(g))
+        const remaining = allRootCandidates.filter(r => !orderedRoots.includes(r))
         const finalRoots = [...orderedRoots, ...remaining]
 
         return finalRoots.map(regionName => ({
