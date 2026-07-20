@@ -184,6 +184,27 @@ function processIntelligenceJsonGrid(
   if (hasParentHeaders) {
     headers = (jsonData[headerStart + 1] || []).map((h: any) => String(h || '').trim())
     dataStartRow = headerStart + 2
+
+    // Detect a 3rd header row: some Excel templates have a secondary/duplicate header
+    // row right after the column-name row (e.g. partial repeats with wrong values).
+    // Skip it when ≥60% of its non-empty cells match the column headers from row 1.
+    const tempIndices: number[] = []
+    const tempHeaders: string[] = []
+    headers.forEach((h, i) => { if (h) { tempHeaders.push(h); tempIndices.push(i) } })
+    const candidate = jsonData[dataStartRow] || []
+    const nonEmpty = tempIndices.filter(i => {
+      const c = candidate[i]
+      return c !== undefined && c !== null && String(c).trim() !== ''
+    })
+    if (nonEmpty.length > 0) {
+      const matches = nonEmpty.filter(i => {
+        const colIdx = tempIndices.indexOf(i)
+        return String(candidate[i]).trim().toLowerCase() === (tempHeaders[colIdx] ?? '').toLowerCase()
+      })
+      if (matches.length / nonEmpty.length >= 0.6) {
+        dataStartRow = headerStart + 3
+      }
+    }
   } else {
     headers = (jsonData[headerStart] || []).map((h: any) => String(h || '').trim())
     dataStartRow = headerStart + 1
@@ -550,6 +571,27 @@ export async function POST(request: NextRequest) {
       console.log('Using two-row header structure')
       console.log('Parent headers:', parentHeaders)
       console.log('Child headers:', headers)
+
+      // Detect a 3rd header row (secondary/duplicate header row in some templates).
+      // Skip it when ≥60% of its non-empty cells match the column headers from row 1.
+      const tempIndices2: number[] = []
+      const tempHeaders2: string[] = []
+      headers.forEach((h, i) => { if (h) { tempHeaders2.push(h); tempIndices2.push(i) } })
+      const candidate2 = jsonData[dataStartRow] || []
+      const nonEmpty2 = tempIndices2.filter(i => {
+        const c = candidate2[i]
+        return c !== undefined && c !== null && String(c).trim() !== ''
+      })
+      if (nonEmpty2.length > 0) {
+        const matches2 = nonEmpty2.filter(i => {
+          const colIdx = tempIndices2.indexOf(i)
+          return String(candidate2[i]).trim().toLowerCase() === (tempHeaders2[colIdx] ?? '').toLowerCase()
+        })
+        if (matches2.length / nonEmpty2.length >= 0.6) {
+          dataStartRow = 3
+          console.log('Detected 3rd header row (secondary duplicate), skipping it. Data starts at row 3.')
+        }
+      }
     } else {
       // Single-row header structure
       headers = (jsonData[0] || []).map((h: any) =>
