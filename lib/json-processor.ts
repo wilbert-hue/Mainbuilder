@@ -1197,14 +1197,17 @@ export async function processJsonDataAsync(
             return !/^\d{4}$/.test(key) && key !== 'CAGR' && key !== '_aggregated' && key !== '_level'
           })
 
-          // Check if first level items are countries (using our mapping)
-          const areCountries = firstLevelItems.some(item => countryToRegionMap[item] !== undefined)
+          // Check if first level items are countries (using our mapping).
+          // Exclude self-references (e.g. India's By Region starts with "India → sub-regions")
+          // so that a geography is never mis-classified as a country under its own parent.
+          const areCountries = firstLevelItems.some(item => item !== geo && countryToRegionMap[item] !== undefined)
 
           if (areCountries) {
             // First level items are countries - auto-group them into regions
             console.log('Detected countries at first level, auto-grouping into regions...')
 
             for (const country of firstLevelItems) {
+              if (country === geo) continue  // skip self-references
               const regionName = countryToRegionMap[country] || 'Other'
 
               // Add region to hierarchy if not exists
