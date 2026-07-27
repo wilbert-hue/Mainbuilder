@@ -598,16 +598,19 @@ export default function DashboardBuilderPage() {
         headers: p1.headers || [],
         rows: p1.rows || [],
         parentHeaders: p1.parentHeaders ?? null,
+        sheetLabel: p1.sheetLabel || undefined,
       })
       setP2({
         headers: p2.headers || [],
         rows: p2.rows || [],
         parentHeaders: p2.parentHeaders ?? null,
+        sheetLabel: p2.sheetLabel || undefined,
       })
       setP3({
         headers: p3.headers || [],
         rows: p3.rows || [],
         parentHeaders: p3.parentHeaders ?? null,
+        sheetLabel: p3.sheetLabel || undefined,
       })
       setIntelligenceType(modeToStoreType(intelMode))
       onSuccessMessage(
@@ -626,6 +629,7 @@ export default function DashboardBuilderPage() {
       headers: processedData.headers || [],
       rows: processedData.rows || [],
       parentHeaders: processedData.parentHeaders || null,
+      sheetLabel: processedData.sheetLabel || undefined,
     })
     setP2(null)
     setP3(null)

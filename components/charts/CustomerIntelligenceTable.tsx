@@ -380,9 +380,9 @@ export function CustomerIntelligenceTable({
     hasData: boolean
     count: number
   }[] = [
-    { id: 'prop1', label: 'Proposition 1', tier: 'standard', hasData: !!hasProp1, count: p1?.rows?.length || 0 },
-    { id: 'prop2', label: 'Proposition 2', tier: 'advance', hasData: !!hasProp2, count: p2?.rows?.length || 0 },
-    { id: 'prop3', label: 'Proposition 3', tier: 'premium', hasData: !!hasProp3, count: p3?.rows?.length || 0 },
+    { id: 'prop1', label: (p1 as any)?.sheetLabel || 'Proposition 1', tier: 'standard', hasData: !!hasProp1, count: p1?.rows?.length || 0 },
+    { id: 'prop2', label: (p2 as any)?.sheetLabel || 'Proposition 2', tier: 'advance', hasData: !!hasProp2, count: p2?.rows?.length || 0 },
+    { id: 'prop3', label: (p3 as any)?.sheetLabel || 'Proposition 3', tier: 'premium', hasData: !!hasProp3, count: p3?.rows?.length || 0 },
   ]
 
   const tierLabelShort = (t: TierKey) =>

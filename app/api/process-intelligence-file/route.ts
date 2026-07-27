@@ -122,7 +122,7 @@ function normalizeFirstColCell(value: any): string {
  * Find the row index where the data table starts (parent / header row with S.No. etc.)
  */
 function findHeaderBlockStartRow(rows: any[][]): number {
-  const markers = ['s.no.', 's.no', 's no.', 's no', 'sr.', 'sr no', 'serial no.', 'serial no']
+  const markers = ['s.no.', 's.no', 's no.', 's no', 'sr.', 'sr no', 'sr. no', 'sr.no', 'serial no.', 'serial no']
   for (let i = 0; i < Math.max(0, rows.length - 1); i++) {
     const c0 = normalizeFirstColCell(rows[i]?.[0])
     const normalized = c0.replace(/\.$/, '')
@@ -144,6 +144,36 @@ function pickPropositionSheetName(sheetNames: string[], propositionNumber: numbe
   return matches[0] || null
 }
 
+/**
+ * Strip leading ordinal prefixes from sheet names to produce a clean display label.
+ * "1. Engines" → "Engines", "Proposition 1" → "Proposition 1"
+ */
+function deriveSheetLabel(sheetName: string): string {
+  return sheetName.replace(/^\d+\.\s*/, '').trim()
+}
+
+/**
+ * Return the first N sheets that contain at least one non-empty row,
+ * optionally skipping sheets by name (e.g. "Home", "List").
+ */
+function findDataSheets(
+  workbook: XLSX.WorkBook,
+  limit: number,
+  skipNames: string[] = ['home', 'list', 'cover', 'index', 'contents']
+): string[] {
+  const result: string[] = []
+  for (const name of workbook.SheetNames) {
+    if (result.length >= limit) break
+    if (skipNames.includes(name.toLowerCase())) continue
+    const ws = workbook.Sheets[name]
+    if (!ws) continue
+    const grid = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' }) as any[][]
+    const hasContent = grid.some(row => row.some(cell => cell !== '' && cell !== null && cell !== undefined))
+    if (hasContent) result.push(name)
+  }
+  return result
+}
+
 type IntelligenceSheetPayload = {
   type: string
   headers: string[]
@@ -151,6 +181,7 @@ type IntelligenceSheetPayload = {
   rows: Record<string, any>[]
   rowCount: number
   sheetName: string
+  sheetLabel: string
 }
 
 /**
@@ -291,6 +322,7 @@ function processIntelligenceJsonGrid(
     rows,
     rowCount: rows.length,
     sheetName,
+    sheetLabel: deriveSheetLabel(sheetName),
   }
 }
 
@@ -492,19 +524,20 @@ export async function POST(request: NextRequest) {
         rows: [],
         rowCount: 0,
         sheetName: `Proposition ${n}`,
+        sheetLabel: `Proposition ${n}`,
       })
 
-      if (s1 || s2 || s3) {
-        const processSheet = (sheetName: string | null, propNum: number): IntelligenceSheetPayload => {
-          if (!sheetName) return emptyPayload(propNum)
-          try {
-            const grid = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1, raw: true }) as any[][]
-            return processIntelligenceJsonGrid(grid, intelligenceType, sheetName, demoContext)
-          } catch {
-            return emptyPayload(propNum)
-          }
+      const processSheet = (sheetName: string | null, propNum: number): IntelligenceSheetPayload => {
+        if (!sheetName) return emptyPayload(propNum)
+        try {
+          const grid = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1, raw: true }) as any[][]
+          return processIntelligenceJsonGrid(grid, intelligenceType, sheetName, demoContext)
+        } catch {
+          return emptyPayload(propNum)
         }
+      }
 
+      if (s1 || s2 || s3) {
         const p1 = processSheet(s1, 1)
         const p2 = processSheet(s2, 2)
         const p3 = processSheet(s3, 3)
@@ -520,6 +553,41 @@ export async function POST(request: NextRequest) {
               rows: p1.rows,
               rowCount: p1.rowCount,
               sheetName: p1.sheetName,
+              sheetLabel: p1.sheetLabel,
+            },
+            message: `Processed ${p1.rowCount} rows from ${p1.sheetName}`,
+          })
+        }
+
+        return createResponse({
+          success: true,
+          multiPropositionFramework: true,
+          proposition1: p1,
+          proposition2: p2,
+          proposition3: p3,
+        })
+      }
+
+      // No "Proposition N" sheets found — auto-detect the first 3 data sheets
+      const dataSheets = findDataSheets(workbook, 3)
+      if (dataSheets.length > 0) {
+        const [ds1, ds2, ds3] = dataSheets
+        const p1 = processSheet(ds1 || null, 1)
+        const p2 = processSheet(ds2 || null, 2)
+        const p3 = processSheet(ds3 || null, 3)
+
+        // Single data sheet → return single-sheet format for backward compat
+        if (dataSheets.length === 1) {
+          return createResponse({
+            success: true,
+            data: {
+              type: p1.type,
+              headers: p1.headers,
+              parentHeaders: p1.parentHeaders,
+              rows: p1.rows,
+              rowCount: p1.rowCount,
+              sheetName: p1.sheetName,
+              sheetLabel: p1.sheetLabel,
             },
             message: `Processed ${p1.rowCount} rows from ${p1.sheetName}`,
           })
