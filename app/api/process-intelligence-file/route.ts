@@ -197,11 +197,20 @@ function processIntelligenceJsonGrid(
     throw new Error(`Sheet "${sheetName}" has no rows`)
   }
 
-  const headerStart = findHeaderBlockStartRow(jsonData)
+  let headerStart = findHeaderBlockStartRow(jsonData)
+
+  // Fallback: no S.No. marker and no parent/child header pair found.
+  // Treat the first non-empty row as a plain header row.
   if (headerStart < 0) {
-    throw new Error(
-      `Sheet "${sheetName}": could not find table headers. Expected a row starting with S.No. (or a two-row parent/child header block).`
-    )
+    for (let i = 0; i < jsonData.length; i++) {
+      if (jsonData[i].some((c: any) => c !== undefined && c !== null && String(c).trim() !== '')) {
+        headerStart = i
+        break
+      }
+    }
+    if (headerStart < 0) {
+      throw new Error(`Sheet "${sheetName}": no data found.`)
+    }
   }
 
   const { hasParentHeaders, parentHeaders } = detectParentHeaders(
