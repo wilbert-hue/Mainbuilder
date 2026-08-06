@@ -17,7 +17,6 @@ import {
   persistJsonField,
 } from '@/lib/dashboard-snapshot-persist'
 import { getCurrentUser } from '@/lib/auth/current-user'
-import { generateAccessCode, hashAccessCode } from '@/lib/auth/access-code'
 
 function slugify(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) || 'dashboard'
@@ -71,27 +70,16 @@ export async function POST(request: NextRequest) {
     // the existing id (and its partition); for new dashboards we mint one.
     let partitionKey = 0
     let id: string
-    // Access code: new dashboards get a fresh one (returned once); updates keep
-    // the existing code so previously-shared links keep working.
-    let accessCodeHash: string | null = null
-    let plainAccessCode: string | null = null
     let ownerId: string = currentUser.uid
 
     if (existingId) {
       const existing = await getDashboard(existingId)
       partitionKey = existing?.partitionKey ?? (await assignPartition())
       id = existingId
-      accessCodeHash = existing?.accessCodeHash ?? null
-      plainAccessCode = existing?.accessCode ?? null
       ownerId = existing?.ownerId ?? currentUser.uid
     } else {
       partitionKey = await assignPartition()
       id = newDashboardId()
-    }
-
-    if (!accessCodeHash) {
-      plainAccessCode = generateAccessCode()
-      accessCodeHash = await hashAccessCode(plainAccessCode)
     }
 
     const [marketPersist, pricingPersist] = await Promise.all([
@@ -119,8 +107,6 @@ export async function POST(request: NextRequest) {
       showDemoNote: body.showDemoNote === true,
       logoChoice: (['wmr', 'mi'].includes(body.logoChoice as string) ? body.logoChoice : 'coherent') as 'coherent' | 'wmr' | 'mi',
       ownerId,
-      accessCodeHash,
-      accessCode: plainAccessCode,
     }
 
     await upsertDashboardWithId(id, existingId, payload)
@@ -155,10 +141,8 @@ export async function POST(request: NextRequest) {
     }
 
     const shareUrl = `${origin}/shared/${slugify(payload.name)}--${id}`
-    // accessCode is now stored in plaintext, so we can always return it (the
-    // owner can also re-view it later in "Previous Dashboards").
     return NextResponse.json(
-      { id, shareUrl, accessCode: plainAccessCode },
+      { id, shareUrl },
       { status: 201 }
     )
   } catch (err) {

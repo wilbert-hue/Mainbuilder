@@ -35,7 +35,6 @@ export async function GET(request: NextRequest) {
     const dashboards = docs.map((d) => ({
       id: d._id,
       name: d.name || 'Untitled Dashboard',
-      accessCode: d.accessCode ?? null,
       shareUrl: origin ? `${origin}/shared/${slugify(d.name || '')}--${d._id}` : `/shared/${d._id}`,
       createdAt: d.createdAt,
       updatedAt: d.updatedAt,

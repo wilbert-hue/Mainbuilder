@@ -6,7 +6,6 @@ import { Loader2, ExternalLink, Copy, Check, RefreshCw, Trash2 } from 'lucide-re
 interface MineItem {
   id: string
   name: string
-  accessCode: string | null
   shareUrl: string
   createdAt: string
   updatedAt: string
@@ -193,32 +192,15 @@ export function PreviousDashboards() {
                 </div>
               </div>
 
-              <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto] sm:items-center">
-                {/* Share link */}
-                <div className="flex items-center gap-2">
-                  <span className="shrink-0 text-xs text-slate-500">Link</span>
-                  <input
-                    readOnly
-                    value={d.shareUrl}
-                    onClick={(e) => (e.target as HTMLInputElement).select()}
-                    className="min-w-0 flex-1 rounded-md border border-white/10 bg-black/20 px-2 py-1.5 font-mono text-xs text-slate-200 outline-none select-all"
-                  />
-                  <CopyButton value={d.shareUrl} label="link" />
-                </div>
-                {/* Access code */}
-                <div className="flex items-center gap-2 sm:justify-end">
-                  <span className="shrink-0 text-xs text-slate-500">Code</span>
-                  {d.accessCode ? (
-                    <>
-                      <code className="rounded-md border border-amber-500/30 bg-amber-500/10 px-2.5 py-1.5 font-mono text-sm tracking-widest text-amber-200">
-                        {d.accessCode}
-                      </code>
-                      <CopyButton value={d.accessCode} label="code" />
-                    </>
-                  ) : (
-                    <span className="text-xs italic text-slate-500">set at creation</span>
-                  )}
-                </div>
+              <div className="mt-3 flex items-center gap-2">
+                <span className="shrink-0 text-xs text-slate-500">Link</span>
+                <input
+                  readOnly
+                  value={d.shareUrl}
+                  onClick={(e) => (e.target as HTMLInputElement).select()}
+                  className="min-w-0 flex-1 rounded-md border border-white/10 bg-black/20 px-2 py-1.5 font-mono text-xs text-slate-200 outline-none select-all"
+                />
+                <CopyButton value={d.shareUrl} label="link" />
               </div>
             </div>
           ))}

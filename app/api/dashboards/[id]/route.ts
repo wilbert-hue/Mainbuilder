@@ -17,7 +17,6 @@ import {
 } from '@/lib/dashboard-mongo'
 import { hydrateDashboardDocument } from '@/lib/dashboard-snapshot-persist'
 import { cacheGet, cacheSet, cacheInvalidate } from '@/lib/slave-cache'
-import { verifyAccessCode } from '@/lib/auth/access-code'
 import { getCurrentUser } from '@/lib/auth/current-user'
 import { deleteBlob, isBlobStoreEnabled } from '@/lib/blob-store'
 import type { DashboardDocument } from '@/lib/dashboard-mongo'
@@ -37,7 +36,6 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
-  const code = request.nextUrl.searchParams.get('code')
 
   if (!id) {
     return NextResponse.json({ error: 'Missing dashboard ID.' }, { status: 400 })
@@ -100,33 +98,6 @@ export async function GET(
 
       // Store in the correct partition cache for future requests
       cacheSet(id, doc.partitionKey ?? 0, doc)
-    }
-
-    // ── Access control ───────────────────────────────────────────────────
-    // The owner (logged in) always has access. Everyone else must supply the
-    // correct per-link access code. Dashboards with no code (legacy/test) are
-    // treated as protected too — they require a code that doesn't exist, so a
-    // signed-in owner is the only way in. Adjust here to grandfather legacy.
-    if (doc.accessCodeHash) {
-      const user = await getCurrentUser()
-      const isOwner = !!user && !!doc.ownerId && user.uid === doc.ownerId
-      if (!isOwner) {
-        const codeOk = await verifyAccessCode(code, doc.accessCodeHash)
-        if (!codeOk) {
-          return NextResponse.json(
-            {
-              error: 'access_code_required',
-              // Dashboard name is not sensitive — surface it so the protected
-              // page can greet the viewer with which dashboard they're opening.
-              name: doc.name ?? null,
-              detail: code
-                ? 'That access code is incorrect.'
-                : 'This dashboard is protected. Enter the access code to view it.',
-            },
-            { status: 401 }
-          )
-        }
-      }
     }
 
     // ── Increment read counter (fire-and-forget, non-blocking) ───────────

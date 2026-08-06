@@ -33,28 +33,12 @@ export default function SharedDashboardPage() {
     clearData,
   } = useDashboardStore()
 
-  const [status, setStatus] = useState<'loading' | 'ready' | 'error' | 'code'>('loading')
+  const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
   const [errorMsg, setErrorMsg] = useState('')
-  const [code, setCode] = useState('')
-  const [codeError, setCodeError] = useState('')
-  const [verifying, setVerifying] = useState(false)
-  const [protectedName, setProtectedName] = useState<string | null>(null)
 
-  async function load(accessCode?: string) {
+  async function load() {
     try {
-      const url = accessCode
-        ? `/api/dashboards/${id}?code=${encodeURIComponent(accessCode)}`
-        : `/api/dashboards/${id}`
-      const res = await fetch(url)
-
-      if (res.status === 401) {
-        const body = await res.json().catch(() => ({}))
-        // Protected dashboard — prompt for the access code.
-        if (body.name) setProtectedName(body.name)
-        if (accessCode) setCodeError(body.detail || 'That access code is incorrect.')
-        setStatus('code')
-        return
-      }
+      const res = await fetch(`/api/dashboards/${id}`)
 
       if (!res.ok) {
         const body = await res.json().catch(() => ({}))
@@ -94,8 +78,6 @@ export default function SharedDashboardPage() {
       const msg = err instanceof Error ? err.message : 'Failed to load dashboard'
       setErrorMsg(msg)
       setStatus('error')
-    } finally {
-      setVerifying(false)
     }
   }
 
@@ -108,51 +90,6 @@ export default function SharedDashboardPage() {
     load()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
-
-  async function submitCode(e: React.FormEvent) {
-    e.preventDefault()
-    if (!code.trim()) return
-    setVerifying(true)
-    setCodeError('')
-    await load(code.trim())
-  }
-
-  if (status === 'code') {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50 px-4">
-        <div className="w-full max-w-sm bg-white rounded-xl shadow-sm border border-gray-200 p-8 text-center">
-          <div className="text-4xl mb-3">🔒</div>
-          <h1 className="text-xl font-bold text-gray-900 mb-1">
-            {protectedName || 'Protected dashboard'}
-          </h1>
-          <p className="text-sm text-gray-500 mb-6">
-            {protectedName
-              ? 'This dashboard is protected. Enter the access code you received to view it.'
-              : 'Enter the access code you received to view this dashboard.'}
-          </p>
-          <form onSubmit={submitCode} className="space-y-4">
-            <input
-              type="text"
-              value={code}
-              onChange={(e) => setCode(e.target.value.toUpperCase())}
-              placeholder="Enter access code"
-              className="w-full px-3 py-2.5 border border-gray-300 rounded-md text-center font-mono uppercase bg-white text-gray-900 placeholder-gray-400 placeholder:tracking-normal placeholder:normal-case tracking-[0.3em] focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-              autoFocus
-              maxLength={16}
-            />
-            {codeError && <p className="text-sm text-red-600">{codeError}</p>}
-            <button
-              type="submit"
-              disabled={verifying || !code.trim()}
-              className="w-full py-2.5 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 disabled:opacity-60 transition-colors"
-            >
-              {verifying ? 'Checking…' : 'View dashboard'}
-            </button>
-          </form>
-        </div>
-      </div>
-    )
-  }
 
   if (status === 'loading') {
     return (
