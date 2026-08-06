@@ -1771,7 +1771,7 @@ export default function DashboardBuilderPage() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => { setShareUrl(null); setAccessCode(null); setLinkCopied(false); setShareLinkError(null) }}
+                        onClick={() => { setShareUrl(null); setLinkCopied(false); setShareLinkError(null) }}
                         className="builder-btn-ghost text-emerald-300 border-emerald-500/30"
                         title="Generate a new link"
                       >
