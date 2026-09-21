@@ -14,6 +14,7 @@ import {
 import { CHART_THEME, getChartColor } from '@/lib/chart-theme'
 import { filterData, prepareLineChartData, prepareIntelligentMultiLevelData, getUniqueGeographies, getUniqueSegments } from '@/lib/data-processor'
 import { useDashboardStore } from '@/lib/store'
+import { getCurrencySymbol } from '@/lib/utils'
 
 interface MultiLineChartProps {
   title?: string
@@ -85,9 +86,9 @@ export function MultiLineChart({ title, height = 400 }: MultiLineChartProps) {
 
   const selectedCurrency = currency || data.metadata.currency || 'USD'
   const isINR = selectedCurrency === 'INR'
-  const currencySymbol = isINR ? '₹' : '$'
+  const currencySymbol = getCurrencySymbol(selectedCurrency as 'USD' | 'INR' | 'EUR')
   const unitLabel = isINR ? '' : (data.metadata.value_unit || 'Million')
-  
+
   const yAxisLabel = filters.dataType === 'value'
     ? isINR 
       ? `Market Value (${currencySymbol})`
@@ -136,7 +137,7 @@ export function MultiLineChart({ title, height = 400 }: MultiLineChartProps) {
                 const year = label
                 const selectedCurrency = currency || data.metadata.currency || 'USD'
                 const isINR = selectedCurrency === 'INR'
-                const currencySymbol = isINR ? '₹' : '$'
+                const currencySymbol = getCurrencySymbol(selectedCurrency as 'USD' | 'INR' | 'EUR')
                 const unitText = isINR ? '' : (data.metadata.value_unit || 'Million')
                 
                 const unit = filters.dataType === 'value'

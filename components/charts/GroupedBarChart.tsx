@@ -13,6 +13,7 @@ import {
 } from 'recharts'
 import { CHART_THEME, getChartColor, CHART_COLORS } from '@/lib/chart-theme'
 import { filterData, prepareGroupedBarData, prepareIntelligentMultiLevelData, getUniqueGeographies, getUniqueSegments } from '@/lib/data-processor'
+import { getCurrencySymbol } from '@/lib/utils'
 import { useDashboardStore } from '@/lib/store'
 import type { DataRecord } from '@/lib/types'
 
@@ -179,9 +180,9 @@ export function GroupedBarChart({ title, height = 400 }: GroupedBarChartProps) {
 
   const selectedCurrency = currency || data.metadata.currency || 'USD'
   const isINR = selectedCurrency === 'INR'
-  const currencySymbol = isINR ? '₹' : '$'
+  const currencySymbol = getCurrencySymbol(selectedCurrency as 'USD' | 'INR' | 'EUR')
   const unitLabel = isINR ? '' : (data.metadata.value_unit || 'Million')
-  
+
   const yAxisLabel = filters.dataType === 'value'
     ? isINR 
       ? `Market Value (${currencySymbol})`
@@ -212,7 +213,7 @@ export function GroupedBarChart({ title, height = 400 }: GroupedBarChartProps) {
     const year = label
     const selectedCurrency = currency || data.metadata.currency || 'USD'
     const isINR = selectedCurrency === 'INR'
-    const currencySymbol = isINR ? '₹' : '$'
+    const currencySymbol = getCurrencySymbol(selectedCurrency as 'USD' | 'INR' | 'EUR')
     const unitText = isINR ? '' : (data.metadata.value_unit || 'Million')
     
     const unit = filters.dataType === 'value'

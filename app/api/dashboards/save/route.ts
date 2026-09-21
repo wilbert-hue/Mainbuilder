@@ -89,7 +89,10 @@ export async function POST(request: NextRequest) {
 
     const payload = {
       name: typeof body.name === 'string' ? body.name : 'Untitled Dashboard',
-      currency: body.currency === 'INR' ? ('INR' as const) : ('USD' as const),
+      currency:
+        body.currency === 'INR' ? ('INR' as const) :
+        body.currency === 'EUR' ? ('EUR' as const) :
+        ('USD' as const),
       partitionKey,
       data: marketPersist.data,
       dataCompressed: marketPersist.dataCompressed,

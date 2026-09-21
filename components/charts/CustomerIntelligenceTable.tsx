@@ -80,6 +80,9 @@ export const STATIC_DISTRIBUTOR_PROP1_DATA: PropositionData = {
 }
 
 const USD_TO_INR = 84
+const USD_TO_EUR = 0.92
+
+type TableCurrency = 'USD' | 'INR' | 'EUR'
 
 // Detects if a cell value is a USD monetary value like "$2367388" or "$1,234.56"
 function parseUsdValue(val: string): number | null {
@@ -104,26 +107,39 @@ function formatInrCr(usdValue: number): string {
   return `₹ ${inrCr.toFixed(2)} Cr.`
 }
 
-function transformHeader(header: string, isINR: boolean): string {
-  if (!isINR) return header
-  // Replace USD/US$ labels in the header with INR Cr.
+function formatEur(usdValue: number): string {
+  const eurValue = usdValue * USD_TO_EUR
+  return `€ ${eurValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+}
+
+function transformHeader(header: string, currency: TableCurrency): string {
+  if (currency === 'USD') return header
+  if (currency === 'INR') {
+    // Replace USD/US$ labels in the header with INR Cr.
+    return header
+      .replace(/\bUS\$\b/gi, 'INR Cr.')
+      .replace(/\bUSD\b/gi, 'INR Cr.')
+      .replace(/\bMilli(on)?\b/gi, '')
+      .replace(/\s{2,}/g, ' ')
+      .trim()
+  }
+  // EUR: keep the "Million" unit, just relabel the currency
   return header
-    .replace(/\bUS\$\b/gi, 'INR Cr.')
-    .replace(/\bUSD\b/gi, 'INR Cr.')
-    .replace(/\bMilli(on)?\b/gi, '')
+    .replace(/\bUS\$\b/gi, 'EUR')
+    .replace(/\bUSD\b/gi, 'EUR')
     .replace(/\s{2,}/g, ' ')
     .trim()
 }
 
-function renderCellValue(header: string, rawVal: any, isINR: boolean): string {
+function renderCellValue(header: string, rawVal: any, currency: TableCurrency): string {
   if (rawVal === undefined || rawVal === null || rawVal === '') return ''
   const strVal = String(rawVal)
-  if (!isINR) return strVal
+  if (currency === 'USD') return strVal
   // Only convert cells in money-type columns
   if (!isUsdMoneyHeader(header)) return strVal
   const usdAmount = parseUsdValue(strVal)
   if (usdAmount === null) return strVal
-  return formatInrCr(usdAmount)
+  return currency === 'INR' ? formatInrCr(usdAmount) : formatEur(usdAmount)
 }
 
 interface ParentHeader {
@@ -187,13 +203,13 @@ function PropositionTableDashboard({
   tier,
   bannerTitle,
   showDemoNote,
-  isINR,
+  currency,
 }: {
   data: PropositionData
   tier: TierKey
   bannerTitle: string
   showDemoNote: boolean
-  isINR: boolean
+  currency: TableCurrency
 }) {
   const rawHeaders = data.headers?.length ? data.headers : Object.keys(data.rows[0] || {})
   const headers = rawHeaders
@@ -249,9 +265,9 @@ function PropositionTableDashboard({
                 <th
                   key={index}
                   className="px-3 py-2.5 text-left text-xs font-semibold border-r border-sky-200/80 last:border-r-0 max-w-[14rem] truncate"
-                  title={transformHeader(header, isINR)}
+                  title={transformHeader(header, currency)}
                 >
-                  {transformHeader(header, isINR)}
+                  {transformHeader(header, currency)}
                 </th>
               ))}
             </tr>
@@ -268,8 +284,8 @@ function PropositionTableDashboard({
                     className="px-3 py-2.5 text-sm text-slate-800 border-b border-slate-100 border-r border-slate-100/80 last:border-r-0 align-top max-w-[18rem]"
                   >
                     {row[header] !== undefined && row[header] !== null && row[header] !== '' ? (
-                      <span className="line-clamp-3" title={renderCellValue(header, row[header], isINR)}>
-                        {renderCellValue(header, row[header], isINR)}
+                      <span className="line-clamp-3" title={renderCellValue(header, row[header], currency)}>
+                        {renderCellValue(header, row[header], currency)}
                       </span>
                     ) : (
                       <span className="text-slate-400">—</span>
@@ -312,7 +328,7 @@ export function CustomerIntelligenceTable({
     staticDistributorProp1,
   } = useDashboardStore()
 
-  const isINR = (currency || data?.metadata?.currency || 'USD') === 'INR'
+  const tableCurrency = (currency || data?.metadata?.currency || 'USD') as TableCurrency
 
   const p1 = intelligenceSource === 'distributor' ? distributorRawIntelligenceData : rawIntelligenceData
   const p2 = intelligenceSource === 'distributor' ? distributorProposition2Data : proposition2Data
@@ -426,7 +442,7 @@ export function CustomerIntelligenceTable({
           tier="standard"
           bannerTitle={bannerTitle}
           showDemoNote={false}
-          isINR={isINR}
+          currency={tableCurrency}
         />
       </div>
     )
@@ -537,7 +553,7 @@ export function CustomerIntelligenceTable({
           tier={activeTier}
           bannerTitle={bannerTitle}
           showDemoNote={showDemoNote}
-          isINR={isINR}
+          currency={tableCurrency}
         />
       )}
 

@@ -3,7 +3,7 @@
 import { useMemo } from 'react'
 import { useDashboardStore } from '@/lib/store'
 import { TrendingUp, DollarSign, Calendar, Activity } from 'lucide-react'
-import { formatIndianNumber, formatIndianNumberWithCommas, formatCurrencyValue, formatLargeNumber } from '@/lib/utils'
+import { formatIndianNumber, formatIndianNumberWithCommas, formatCurrencyValue, formatLargeNumber, getCurrencySymbol } from '@/lib/utils'
 import { METRICS_END_YEAR, METRICS_START_YEAR, calculateCAGRFromTimeSeries } from '@/lib/metrics-calculator'
 
 export function GlobalKPICards() {
@@ -241,6 +241,7 @@ export function GlobalKPICards() {
       absoluteGrowth: absoluteGrowthDisplay,
       growthPercentage,
       currency: selectedCurrency,
+      currencySymbol: getCurrencySymbol(selectedCurrency as 'USD' | 'INR' | 'EUR'),
       unit: isINR ? '' : (unit || 'Million'),
       dataTypeLabel,
       geographyLabel,
@@ -274,8 +275,8 @@ export function GlobalKPICards() {
           {/* Market Size Start Year */}
           <div className="flex items-center gap-2">
             <div className="p-1.5 bg-blue-100 rounded">
-              {kpiData.currency === 'INR' ? (
-                <span className="text-blue-600 font-bold text-lg">₹</span>
+              {kpiData.currency === 'INR' || kpiData.currency === 'EUR' ? (
+                <span className="text-blue-600 font-bold text-lg">{kpiData.currencySymbol}</span>
               ) : (
                 <DollarSign className="h-4 w-4 text-blue-600" />
               )}
@@ -288,7 +289,7 @@ export function GlobalKPICards() {
                 {kpiData.dataType === 'value' && kpiData.isINR
                   ? `₹ ${kpiData.marketSizeStart.toFixed(2)} Cr.`
                   : kpiData.dataType === 'value'
-                  ? `$ ${formatLargeNumber(kpiData.marketSizeStart, 1)} ${kpiData.unit}`
+                  ? `${kpiData.currencySymbol} ${formatLargeNumber(kpiData.marketSizeStart, 1)} ${kpiData.unit}`
                   : `${formatLargeNumber(kpiData.marketSizeStart, 1)} ${kpiData.unit}`}
               </p>
             </div>
@@ -307,7 +308,7 @@ export function GlobalKPICards() {
                 {kpiData.dataType === 'value' && kpiData.isINR
                   ? `₹ ${kpiData.marketSizeEnd.toFixed(2)} Cr.`
                   : kpiData.dataType === 'value'
-                  ? `$ ${formatLargeNumber(kpiData.marketSizeEnd, 1)} ${kpiData.unit}`
+                  ? `${kpiData.currencySymbol} ${formatLargeNumber(kpiData.marketSizeEnd, 1)} ${kpiData.unit}`
                   : `${formatLargeNumber(kpiData.marketSizeEnd, 1)} ${kpiData.unit}`}
               </p>
             </div>
@@ -341,7 +342,7 @@ export function GlobalKPICards() {
                 {kpiData.dataType === 'value' && kpiData.isINR
                   ? `₹ ${kpiData.absoluteGrowth.toFixed(2)} Cr.`
                   : kpiData.dataType === 'value'
-                  ? `$ ${formatLargeNumber(kpiData.absoluteGrowth, 1)} ${kpiData.unit}`
+                  ? `${kpiData.currencySymbol} ${formatLargeNumber(kpiData.absoluteGrowth, 1)} ${kpiData.unit}`
                   : `${formatLargeNumber(kpiData.absoluteGrowth, 1)} ${kpiData.unit}`}
               </p>
               <p className="text-[10px] text-gray-600 mt-0.5">

@@ -22,7 +22,7 @@ export interface DashboardDocument {
   /** 24-char hex – used as MongoDB _id */
   _id: string
   name: string
-  currency: 'USD' | 'INR'
+  currency: 'USD' | 'INR' | 'EUR'
   createdAt: string
   updatedAt: string
   /** Partition this dashboard belongs to (0–7). Assigned by master at creation. */

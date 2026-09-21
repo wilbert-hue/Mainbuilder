@@ -32,7 +32,7 @@ interface DashboardStore {
   pricingFilters: FilterState // Pricing analysis filters
   pricingFiltersLoaded: boolean // Track if pricing filters are loaded
   dashboardName: string | null // Custom dashboard name
-  currency: 'USD' | 'INR' // Currency preference
+  currency: 'USD' | 'INR' | 'EUR' // Currency preference
   showDemoNote: boolean // Toggle for demo data disclaimer note
   logoChoice: 'coherent' | 'wmr' | 'mi' // Which logo to show in the dashboard header
   staticCustomerProp1: boolean // When true, render static 20-row Proposition 1 template instead of uploaded data
@@ -71,7 +71,7 @@ interface DashboardStore {
   resetPricingFilters: () => void
   loadDefaultPricingFilters: () => void
   setDashboardName: (name: string | null) => void
-  setCurrency: (currency: 'USD' | 'INR') => void
+  setCurrency: (currency: 'USD' | 'INR' | 'EUR') => void
   setShowDemoNote: (show: boolean) => void
   setLogoChoice: (choice: 'coherent' | 'wmr' | 'mi') => void
   setStaticCustomerProp1: (val: boolean) => void

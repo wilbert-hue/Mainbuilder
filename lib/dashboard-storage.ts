@@ -28,7 +28,7 @@ export interface DashboardSnapshot {
   id: string
   createdAt: string
   name: string
-  currency: 'USD' | 'INR'
+  currency: 'USD' | 'INR' | 'EUR'
   data: ComparisonData | null
   intelligenceType: 'customer' | 'distributor' | 'both' | null
   rawIntelligenceData: unknown

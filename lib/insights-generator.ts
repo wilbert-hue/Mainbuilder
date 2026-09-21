@@ -22,7 +22,7 @@ export interface Insight {
 export function generateInsights(
   records: DataRecord[],
   filters: FilterState,
-  currency: 'USD' | 'INR' = 'USD'
+  currency: 'USD' | 'INR' | 'EUR' = 'USD'
 ): Insight[] {
   const insights: Insight[] = []
   
@@ -58,7 +58,7 @@ export function generateInsights(
 /**
  * Find the top performing geography or segment
  */
-function findTopPerformer(records: DataRecord[], filters: FilterState, currency: 'USD' | 'INR' = 'USD'): Insight | null {
+function findTopPerformer(records: DataRecord[], filters: FilterState, currency: 'USD' | 'INR' | 'EUR' = 'USD'): Insight | null {
   const [startYear, endYear] = filters.yearRange
   const currentYear = endYear
   
@@ -104,11 +104,12 @@ function findTopPerformer(records: DataRecord[], filters: FilterState, currency:
         valueDisplay = `₹${(inrValue * 10000000).toFixed(2)}`
       }
     } else {
-      // Data is already in USD millions, display directly
+      // Data is already in USD/EUR millions, display directly
+      const label = currency === 'EUR' ? 'EUR' : 'USD'
       if (topValue >= 1000) {
-        valueDisplay = `${(topValue / 1000).toFixed(2)} USD Bn`
+        valueDisplay = `${(topValue / 1000).toFixed(2)} ${label} Bn`
       } else {
-        valueDisplay = `${topValue.toFixed(2)} USD Mn`
+        valueDisplay = `${topValue.toFixed(2)} ${label} Mn`
       }
     }
   } else {

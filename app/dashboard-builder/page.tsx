@@ -51,7 +51,7 @@ export default function DashboardBuilderPage() {
   
   // Section 1: Market Intelligence
   const [dashboardNameInput, setDashboardNameInput] = useState('India Market Analysis')
-  const [currencyInput, setCurrencyInput] = useState<'USD' | 'INR'>('USD')
+  const [currencyInput, setCurrencyInput] = useState<'USD' | 'INR' | 'EUR'>('USD')
   const [volumeUnitInput, setVolumeUnitInput] = useState<
     'million-units' | 'units' | 'th-units' | 'tons'
   >('units')
@@ -1032,6 +1032,17 @@ export default function DashboardBuilderPage() {
                       className="builder-radio"
                     />
                     <span className="text-sm font-medium text-slate-200">INR Cr. (₹)</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="currency"
+                      value="EUR"
+                      checked={currencyInput === 'EUR'}
+                      onChange={() => setCurrencyInput('EUR')}
+                      className="builder-radio"
+                    />
+                    <span className="text-sm font-medium text-slate-200">EUR (€)</span>
                   </label>
                 </div>
                 <p className="mt-1 text-xs text-slate-500">
