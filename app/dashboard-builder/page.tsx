@@ -803,18 +803,21 @@ export default function DashboardBuilderPage() {
         rows: p1.rows || [],
         parentHeaders: p1.parentHeaders ?? null,
         sheetLabel: p1.sheetLabel || undefined,
+        notes: p1.notes || undefined,
       })
       setP2({
         headers: p2.headers || [],
         rows: p2.rows || [],
         parentHeaders: p2.parentHeaders ?? null,
         sheetLabel: p2.sheetLabel || undefined,
+        notes: p2.notes || undefined,
       })
       setP3({
         headers: p3.headers || [],
         rows: p3.rows || [],
         parentHeaders: p3.parentHeaders ?? null,
         sheetLabel: p3.sheetLabel || undefined,
+        notes: p3.notes || undefined,
       })
       setIntelligenceType(modeToStoreType(intelMode))
       onSuccessMessage(
@@ -834,6 +837,7 @@ export default function DashboardBuilderPage() {
       rows: processedData.rows || [],
       parentHeaders: processedData.parentHeaders || null,
       sheetLabel: processedData.sheetLabel || undefined,
+      notes: processedData.notes || undefined,
     })
     setP2(null)
     setP3(null)
@@ -1002,6 +1006,99 @@ export default function DashboardBuilderPage() {
     }
   }
 
+  // ── Process everything in one pass ───────────────────────────────────────
+  // Each tab's processor already guards on its own file and cleans up in a
+  // finally block, so they can be driven in sequence from one control instead
+  // of making the user visit every tab to click its own button.
+  const [isProcessingAll, setIsProcessingAll] = useState(false)
+  const [processAllStep, setProcessAllStep] = useState('')
+
+  type QueuedUpload = {
+    key: string
+    label: string
+    tab: 'market' | 'intelligence' | 'pricing' | 'survey' | 'quadrant'
+    /** Already loaded — shown for context, not re-processed. */
+    done: boolean
+    run?: () => Promise<void>
+  }
+
+  const queuedUploads: QueuedUpload[] = [
+    {
+      key: 'market',
+      label: 'Market Intelligence',
+      tab: 'market',
+      done: marketStatus === 'success',
+      run: valueFile ? handleProcessMarketIntelligence : undefined,
+    },
+    {
+      key: 'customer',
+      label: 'Customer Intelligence',
+      tab: 'intelligence',
+      done: customerIntelStatus === 'success',
+      run:
+        intelMode.customer && (customerIntelFileData || staticCustomerProp1)
+          ? () => handleProcessIntelligenceForTarget('customer')
+          : undefined,
+    },
+    {
+      key: 'distributor',
+      label: 'Distributor Intelligence',
+      tab: 'intelligence',
+      done: distributorIntelStatus === 'success',
+      run:
+        intelMode.distributor && (distributorIntelFileData || staticDistributorProp1)
+          ? () => handleProcessIntelligenceForTarget('distributor')
+          : undefined,
+    },
+    {
+      key: 'pricing',
+      label: 'Pricing Analysis',
+      tab: 'pricing',
+      done: pricingStatus === 'success',
+      run: pricingFile ? handleProcessPricingAnalysis : undefined,
+    },
+    // JSON uploads parse in the browser the moment they are chosen, so by the
+    // time this bar is used they are already loaded; list them for context.
+    { key: 'b2b', label: 'B2B Survey', tab: 'survey', done: b2bSurveyStatus === 'success' },
+    { key: 'b2c', label: 'B2C Survey', tab: 'survey', done: b2cSurveyStatus === 'success' },
+    { key: 'quadrant', label: 'Coherent Quadrant', tab: 'quadrant', done: quadrantStatus === 'success' },
+  ]
+
+  /** Staged but not yet processed. */
+  const pendingUploads = queuedUploads.filter((u) => u.run && !u.done)
+  const loadedUploads = queuedUploads.filter((u) => u.done)
+
+  /** Small dot on a tab button: amber = staged, green = processed. */
+  const tabIndicator = (tab: QueuedUpload['tab']) => {
+    const forTab = queuedUploads.filter((u) => u.tab === tab && (u.run || u.done))
+    if (forTab.length === 0) return null
+    const pending = forTab.some((u) => u.run && !u.done)
+    return (
+      <span
+        className={`ml-1.5 h-2 w-2 shrink-0 rounded-full ${
+          pending ? 'bg-amber-400' : 'bg-emerald-400'
+        }`}
+        title={pending ? 'File staged, not yet processed' : 'Processed'}
+      />
+    )
+  }
+
+  const handleProcessAll = async () => {
+    if (pendingUploads.length === 0) return
+    setIsProcessingAll(true)
+    try {
+      // Sequential, and market first: its processor calls clearData(), which
+      // resets the selected chart group and dashboard id.
+      for (const item of pendingUploads) {
+        setProcessAllStep(item.label)
+        await item.run!()
+      }
+    } finally {
+      setProcessAllStep('')
+      setIsProcessingAll(false)
+    }
+  }
+
   const hadIntelligenceUploadSuccess =
     (intelMode.customer && customerIntelStatus === 'success') ||
     (intelMode.distributor && distributorIntelStatus === 'success')
@@ -1114,6 +1211,7 @@ export default function DashboardBuilderPage() {
                 >
                   <FileSpreadsheet className="h-5 w-5" />
                   1. Market Intelligence
+                  {tabIndicator('market')}
                 </button>
                 <button
                   type="button"
@@ -1124,6 +1222,7 @@ export default function DashboardBuilderPage() {
                 >
                   <Users className="h-5 w-5" />
                   2. Customer/Distributor Intelligence
+                  {tabIndicator('intelligence')}
                 </button>
                 <button
                   type="button"
@@ -1134,6 +1233,7 @@ export default function DashboardBuilderPage() {
                 >
                   <DollarSign className="h-5 w-5" />
                   3. Pricing Analysis
+                  {tabIndicator('pricing')}
                 </button>
                 <button
                   type="button"
@@ -1144,6 +1244,7 @@ export default function DashboardBuilderPage() {
                 >
                   <FileJson className="h-5 w-5" />
                   4. B2B / B2C Survey
+                  {tabIndicator('survey')}
                 </button>
                 <button
                   type="button"
@@ -1154,6 +1255,7 @@ export default function DashboardBuilderPage() {
                 >
                   <Grid2x2 className="h-5 w-5" />
                   5. Coherent Quadrant
+                  {tabIndicator('quadrant')}
                 </button>
                 <button
                   type="button"
@@ -2171,6 +2273,83 @@ export default function DashboardBuilderPage() {
           )}
 
           {activeTab === 'previous' && <PreviousDashboards />}
+
+          {/* Process-all bar: stage files across every tab, then run them all
+              from one place rather than visiting each tab to click its button. */}
+          {activeTab !== 'previous' && (pendingUploads.length > 0 || loadedUploads.length > 0) && (
+            <div className="sticky bottom-4 z-30 mt-6">
+              <div className="builder-card border border-sky-500/30 bg-slate-900/95 p-4 shadow-xl backdrop-blur">
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-6">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-sm font-semibold text-sky-300">
+                      {pendingUploads.length > 0
+                        ? `${pendingUploads.length} file${pendingUploads.length === 1 ? '' : 's'} ready to process`
+                        : 'All uploaded files processed'}
+                    </h3>
+
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {queuedUploads
+                        .filter((u) => u.done || u.run)
+                        .map((u) => {
+                          const isRunning = isProcessingAll && processAllStep === u.label
+                          return (
+                            <button
+                              key={u.key}
+                              type="button"
+                              onClick={() => setActiveTab(u.tab)}
+                              title={`Go to ${u.label}`}
+                              className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs transition-colors ${
+                                u.done
+                                  ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300'
+                                  : isRunning
+                                  ? 'border-sky-400/50 bg-sky-500/10 text-sky-300'
+                                  : 'border-amber-500/40 bg-amber-500/10 text-amber-300'
+                              }`}
+                            >
+                              {isRunning ? (
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                              ) : u.done ? (
+                                <CheckCircle2 className="h-3 w-3" />
+                              ) : (
+                                <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                              )}
+                              {u.label}
+                            </button>
+                          )
+                        })}
+                    </div>
+                  </div>
+
+                  {/* Not builder-btn-primary: that class hard-codes width:100%,
+                      which would squeeze the summary beside it. */}
+                  <button
+                    type="button"
+                    onClick={handleProcessAll}
+                    disabled={
+                      pendingUploads.length === 0 ||
+                      isProcessingAll ||
+                      isProcessingMarket ||
+                      intelProcessing !== null ||
+                      isProcessingPricing
+                    }
+                    className="flex w-full shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-gradient-to-r from-sky-500 via-indigo-500 to-violet-500 px-6 py-3 font-semibold text-white shadow-lg transition-transform hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:translate-y-0 lg:w-auto"
+                  >
+                    {isProcessingAll ? (
+                      <>
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                        Processing {processAllStep}…
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="h-5 w-5" />
+                        Process All ({pendingUploads.length})
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* View Dashboard Button - Shows when any data is processed (hidden on Previous tab) */}
@@ -2178,8 +2357,8 @@ export default function DashboardBuilderPage() {
           <div className="mt-6 space-y-4">
             {/* View Dashboard */}
             <div className="builder-callout-ready">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
+                <div className="min-w-0 flex-1">
                   <h3 className="text-sm font-semibold text-sky-300 mb-1">Ready to View Dashboard</h3>
                   <p className="text-sm text-slate-400">
                     {[
@@ -2191,10 +2370,12 @@ export default function DashboardBuilderPage() {
                     ].filter(Boolean).join(', ')} data processed. Open your workspace when you are ready.
                   </p>
                 </div>
+                {/* Plain Tailwind rather than builder-btn-primary, whose
+                    width:100% overrode w-auto and crushed the text beside it. */}
                 <button
                   type="button"
                   onClick={handleViewDashboard}
-                  className="builder-btn-primary w-auto shrink-0 px-6"
+                  className="flex w-full shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-gradient-to-r from-sky-500 via-indigo-500 to-violet-500 px-6 py-3 font-semibold text-white shadow-lg transition-transform hover:-translate-y-px sm:w-auto"
                 >
                   <Eye className="h-5 w-5" />
                   View Dashboard

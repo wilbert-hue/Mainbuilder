@@ -123,6 +123,50 @@ function normalizeFirstColCell(value: any): string {
     .replace(/\r\n/g, '\n')
 }
 
+/** Number of populated cells in a grid row. */
+function populatedCellCount(row: any[] = []): number {
+  return row.filter((c) => c !== undefined && c !== null && String(c).trim() !== '').length
+}
+
+/** Length of the longest populated cell in a grid row, in characters. */
+function longestCellLength(row: any[] = []): number {
+  return row.reduce((max: number, c: any) => {
+    const s = c === undefined || c === null ? '' : String(c).trim()
+    return s.length > max ? s.length : max
+  }, 0)
+}
+
+// Column labels are short. A banner or definition paragraph is not, so its
+// length is what separates a header row from prose sitting above the table.
+const MAX_HEADER_LABEL_CHARS = 150
+
+/**
+ * Find a plain column-header row sitting beneath a block of title/notes rows.
+ *
+ * Research exports routinely open with a market title and one or two definition
+ * paragraphs, each merged across the full width of the sheet. In the parsed grid
+ * those arrive as a single populated cell followed by blanks, so neither the
+ * S.No. marker nor the parent/child detector fires — and the old fallback then
+ * promoted the title row to headers, yielding a one-column table with the notes
+ * rendered as data rows.
+ *
+ * A genuine header row populates several columns, carries short labels rather
+ * than prose, and is followed by a data row of comparable width.
+ */
+function findPlainHeaderRow(rows: any[][], searchRows = 15): number {
+  const limit = Math.min(rows.length - 1, searchRows)
+  for (let i = 0; i < limit; i++) {
+    const here = populatedCellCount(rows[i])
+    if (here < 3) continue                                       // merged title/note row
+    if (longestCellLength(rows[i]) > MAX_HEADER_LABEL_CHARS) continue // prose, not labels
+    const next = populatedCellCount(rows[i + 1])
+    if (next < 3) continue                                       // nothing tabular below
+    if (next * 2 < here) continue                                // narrow row under a wide one
+    return i
+  }
+  return -1
+}
+
 /**
  * Find the row index where the data table starts (parent / header row with S.No. etc.)
  */
@@ -144,7 +188,9 @@ function findHeaderBlockStartRow(rows: any[][]): number {
     const d = detectParentHeaders(rows[i] || [], rows[i + 1] || [])
     if (d.hasParentHeaders) return i
   }
-  return -1
+  // Last resort before the caller falls back to "first non-empty row": look for
+  // a single-row header block below any title/definition banner.
+  return findPlainHeaderRow(rows)
 }
 
 function pickPropositionSheetName(sheetNames: string[], propositionNumber: number): string | null {
@@ -192,6 +238,28 @@ type IntelligenceSheetPayload = {
   rowCount: number
   sheetName: string
   sheetLabel: string
+  /** Title / definition lines that sit above the table in the source sheet. */
+  notes: string[]
+}
+
+/**
+ * Text of the banner rows sitting above the header block.
+ *
+ * These carry the market title and the distributor/customer definition, which
+ * the sheet merges across its full width — so each row contributes one populated
+ * cell. They are not table data, but they are meaningful to the reader, so they
+ * are returned separately for the UI to show as a caption rather than dropped.
+ */
+function collectPreambleNotes(rows: any[][], headerStart: number): string[] {
+  const notes: string[] = []
+  for (let i = 0; i < headerStart; i++) {
+    const text = (rows[i] || [])
+      .map((c: any) => (c === undefined || c === null ? '' : String(c).trim()))
+      .filter(Boolean)
+      .join(' — ')
+    if (text) notes.push(text)
+  }
+  return notes
 }
 
 /**
@@ -342,6 +410,7 @@ function processIntelligenceJsonGrid(
     rowCount: rows.length,
     sheetName,
     sheetLabel: deriveSheetLabel(sheetName),
+    notes: collectPreambleNotes(jsonData, headerStart),
   }
 }
 
@@ -544,6 +613,7 @@ export async function POST(request: NextRequest) {
         rowCount: 0,
         sheetName: `Proposition ${n}`,
         sheetLabel: `Proposition ${n}`,
+        notes: [],
       })
 
       const processSheet = (sheetName: string | null, propNum: number): IntelligenceSheetPayload => {
@@ -573,6 +643,7 @@ export async function POST(request: NextRequest) {
               rowCount: p1.rowCount,
               sheetName: p1.sheetName,
               sheetLabel: p1.sheetLabel,
+              notes: p1.notes,
             },
             message: `Processed ${p1.rowCount} rows from ${p1.sheetName}`,
           })
@@ -607,6 +678,7 @@ export async function POST(request: NextRequest) {
               rowCount: p1.rowCount,
               sheetName: p1.sheetName,
               sheetLabel: p1.sheetLabel,
+              notes: p1.notes,
             },
             message: `Processed ${p1.rowCount} rows from ${p1.sheetName}`,
           })
@@ -643,18 +715,32 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Locate the header block — it is not always row 0, because exports may open
+    // with a title and definition rows above the table.
+    let headerStart = findHeaderBlockStartRow(jsonData)
+    if (headerStart < 0) {
+      headerStart = jsonData.findIndex((row) =>
+        (row || []).some((c: any) => c !== undefined && c !== null && String(c).trim() !== '')
+      )
+      if (headerStart < 0) headerStart = 0
+    }
+    console.log(`Header block starts at row ${headerStart}`)
+
     // Detect if we have parent headers (two-row header structure)
-    const { hasParentHeaders, parentHeaders } = detectParentHeaders(jsonData[0], jsonData[1])
+    const { hasParentHeaders, parentHeaders } = detectParentHeaders(
+      jsonData[headerStart],
+      jsonData[headerStart + 1]
+    )
 
     let headers: string[]
     let dataStartRow: number
 
     if (hasParentHeaders) {
-      // Two-row header structure: row 0 = parent headers, row 1 = child headers
-      headers = (jsonData[1] || []).map((h: any) =>
+      // Two-row header structure: parent headers, then child headers beneath
+      headers = (jsonData[headerStart + 1] || []).map((h: any) =>
         String(h || '').trim()
       )
-      dataStartRow = 2
+      dataStartRow = headerStart + 2
       console.log('Using two-row header structure')
       console.log('Parent headers:', parentHeaders)
       console.log('Child headers:', headers)
@@ -675,16 +761,16 @@ export async function POST(request: NextRequest) {
           return String(candidate2[i]).trim().toLowerCase() === (tempHeaders2[colIdx] ?? '').toLowerCase()
         })
         if (matches2.length / nonEmpty2.length >= 0.6) {
-          dataStartRow = 3
-          console.log('Detected 3rd header row (secondary duplicate), skipping it. Data starts at row 3.')
+          dataStartRow = headerStart + 3
+          console.log(`Detected 3rd header row (secondary duplicate), skipping it. Data starts at row ${dataStartRow}.`)
         }
       }
     } else {
       // Single-row header structure
-      headers = (jsonData[0] || []).map((h: any) =>
+      headers = (jsonData[headerStart] || []).map((h: any) =>
         String(h || '').trim()
       )
-      dataStartRow = 1
+      dataStartRow = headerStart + 1
       console.log('Using single-row header structure')
     }
 
@@ -776,7 +862,8 @@ export async function POST(request: NextRequest) {
         parentHeaders: hasParentHeaders ? adjustedParentHeaders : null,
         rows: rows,
         rowCount: rows.length,
-        sheetName: firstSheetName
+        sheetName: firstSheetName,
+        notes: collectPreambleNotes(jsonData, headerStart)
       },
       message: `Processed ${rows.length} rows from ${firstSheetName}`
     })

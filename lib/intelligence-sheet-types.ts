@@ -6,6 +6,8 @@ export interface IntelligenceSheetData {
   parentHeaders?: { name: string; startCol: number; colSpan: number }[] | null
   /** Human-readable sheet label (e.g. "Engines", "Filters"). Defaults to "Proposition N" in the UI when absent. */
   sheetLabel?: string
+  /** Title / definition lines that sit above the table in the source sheet. */
+  notes?: string[]
 }
 
 /** Validate API/Mongo payload before hydrating the client store. */
@@ -22,5 +24,8 @@ export function parseIntelligenceSheet(data: unknown): IntelligenceSheetData | n
         ? null
         : undefined,
     sheetLabel: typeof d.sheetLabel === 'string' ? d.sheetLabel : undefined,
+    notes: Array.isArray(d.notes)
+      ? (d.notes as unknown[]).filter((n): n is string => typeof n === 'string' && n.trim() !== '')
+      : undefined,
   }
 }

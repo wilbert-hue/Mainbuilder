@@ -152,6 +152,8 @@ interface PropositionData {
   headers: string[]
   rows: Record<string, any>[]
   parentHeaders?: ParentHeader[] | null
+  /** Title / definition lines that sat above the table in the source sheet. */
+  notes?: string[]
 }
 
 type TabType = 'prop1' | 'prop2' | 'prop3'
@@ -241,6 +243,26 @@ function PropositionTableDashboard({
           {tierLabel}
         </span>
       </div>
+
+      {/* Sheet preamble — the title/definition lines that sit above the table in
+          the source workbook. Rendered as a caption so they stay readable
+          instead of being forced into table cells. */}
+      {data.notes && data.notes.length > 0 && (
+        <div className="border-b border-sky-200 bg-sky-50 px-5 py-3 space-y-1.5">
+          {data.notes.map((note, i) => (
+            <p
+              key={i}
+              className={
+                i === 0
+                  ? 'text-sm font-semibold text-slate-900'
+                  : 'text-xs leading-relaxed text-slate-600'
+              }
+            >
+              {note}
+            </p>
+          ))}
+        </div>
+      )}
 
       <div className="overflow-x-auto">
         <table className="min-w-full border-collapse">
