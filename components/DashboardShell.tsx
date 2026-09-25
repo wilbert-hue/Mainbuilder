@@ -136,6 +136,9 @@ export function DashboardShell({ readOnly = false }: Props) {
     if (chartId === 'b2b-survey' && !hasB2bSurvey) return false
     if (chartId === 'b2c-survey' && !hasB2cSurvey) return false
     if (chartId === 'coherent-quadrant' && !hasQuadrant) return false
+    // Mirrors the tab rule in ChartGroupSelector: a loaded survey replaces the
+    // Opportunity Matrix, so the bubble chart is hidden in every layout too.
+    if (chartId === 'bubble' && (hasB2bSurvey || hasB2cSurvey)) return false
     return visibleCharts.includes(chartId)
   }
 
@@ -416,7 +419,7 @@ export function DashboardShell({ readOnly = false }: Props) {
                     {activeTab === 'heatmap' && <div id="heatmap-chart" className="relative">{showDemoNote && <DemoBadge />}<MatrixHeatmap title="Matrix View - Geography x Segment" height={450} /></div>}
                     {activeTab === 'table' && <div id="comparison-table"><ComparisonTable title="Data Comparison Table" height={500} /></div>}
                     {activeTab === 'waterfall' && <div id="waterfall-chart" className="relative">{showDemoNote && <DemoBadge />}<WaterfallChart title="Contribution Analysis - Waterfall Chart" height={450} /></div>}
-                    {activeTab === 'bubble' && <div id="bubble-chart" className="relative">{showDemoNote && <DemoBadge />}<D3BubbleChartIndependent title="Coherent Opportunity Matrix" height={500} /></div>}
+                    {activeTab === 'bubble' && isChartVisible('bubble') && <div id="bubble-chart" className="relative">{showDemoNote && <DemoBadge />}<D3BubbleChartIndependent title="Coherent Opportunity Matrix" height={500} /></div>}
                     {activeTab === 'competitive-intelligence' && <div id="competitive-intelligence-chart" className="relative">{showDemoNote && <DemoBadge />}<CompetitiveIntelligence height={600} /></div>}
                     {activeTab === 'customer-intelligence' && (
                       <div id="customer-intelligence-chart" className="relative">
