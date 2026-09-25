@@ -2,6 +2,8 @@ import { create } from 'zustand'
 import type { FilterState, ComparisonData } from './types'
 import type { ChartGroupId } from './chart-groups'
 import { DEFAULT_CHART_GROUP } from './chart-groups'
+import type { BuyerSurveyReport } from './buyer-survey-types'
+import type { QuadrantReport } from './quadrant-types'
 
 interface DashboardStore {
   data: ComparisonData | null
@@ -28,6 +30,14 @@ interface DashboardStore {
   distributorProposition2Data: { headers: string[]; rows: Record<string, any>[]; parentHeaders?: { name: string; startCol: number; colSpan: number }[] | null; sheetLabel?: string } | null
   distributorProposition3Data: { headers: string[]; rows: Record<string, any>[]; parentHeaders?: { name: string; startCol: number; colSpan: number }[] | null; sheetLabel?: string } | null
   competitiveIntelligenceData: { headers: string[]; rows: Record<string, any>[] } | null // Store competitive intelligence CSV data
+  /** Parsed B2B buyer-survey JSON report (Customer Intelligence B2B module) */
+  b2bSurveyData: BuyerSurveyReport | null
+  /** Parsed B2C buyer-survey JSON report */
+  b2cSurveyData: BuyerSurveyReport | null
+  /** Parsed Coherent Quadrant report (JSON export) */
+  quadrantData: QuadrantReport | null
+  /** Which buyer-survey reports the dashboard should include */
+  buyerSurveyType: 'b2b' | 'b2c' | 'both' | null
   pricingAnalysisData: any | null // Store pricing analysis data (similar structure to market data)
   pricingFilters: FilterState // Pricing analysis filters
   pricingFiltersLoaded: boolean // Track if pricing filters are loaded
@@ -66,6 +76,10 @@ interface DashboardStore {
   setDistributorProposition2Data: (data: { headers: string[]; rows: Record<string, any>[]; parentHeaders?: { name: string; startCol: number; colSpan: number }[] | null; sheetLabel?: string } | null) => void
   setDistributorProposition3Data: (data: { headers: string[]; rows: Record<string, any>[]; parentHeaders?: { name: string; startCol: number; colSpan: number }[] | null; sheetLabel?: string } | null) => void
   setCompetitiveIntelligenceData: (data: { headers: string[]; rows: Record<string, any>[] } | null) => void
+  setB2bSurveyData: (data: BuyerSurveyReport | null) => void
+  setB2cSurveyData: (data: BuyerSurveyReport | null) => void
+  setBuyerSurveyType: (type: 'b2b' | 'b2c' | 'both' | null) => void
+  setQuadrantData: (data: QuadrantReport | null) => void
   setPricingAnalysisData: (data: any | null) => void
   updatePricingFilters: (filters: Partial<FilterState>) => void
   resetPricingFilters: () => void
@@ -259,6 +273,10 @@ export const useDashboardStore = create<DashboardStore>((set, get) => ({
   distributorProposition2Data: null,
   distributorProposition3Data: null,
   competitiveIntelligenceData: null,
+  b2bSurveyData: null,
+  b2cSurveyData: null,
+  buyerSurveyType: null,
+  quadrantData: null,
   pricingAnalysisData: null,
   pricingFilters: getDefaultPricingFilters(null),
   pricingFiltersLoaded: false,
@@ -472,6 +490,14 @@ export const useDashboardStore = create<DashboardStore>((set, get) => ({
   setDistributorProposition3Data: (data) => set({ distributorProposition3Data: data }),
   
   setCompetitiveIntelligenceData: (data) => set({ competitiveIntelligenceData: data }),
+
+  setB2bSurveyData: (data) => set({ b2bSurveyData: data }),
+
+  setB2cSurveyData: (data) => set({ b2cSurveyData: data }),
+
+  setBuyerSurveyType: (type) => set({ buyerSurveyType: type }),
+
+  setQuadrantData: (data) => set({ quadrantData: data }),
 
   setPricingAnalysisData: (data) => {
     console.log('🔧 Store: setPricingAnalysisData called')

@@ -22,6 +22,9 @@ function DashboardPageContent() {
     distributorProposition2Data,
     distributorProposition3Data,
     pricingAnalysisData,
+    b2bSurveyData,
+    b2cSurveyData,
+    quadrantData,
   } = useDashboardStore()
   const [mounted, setMounted] = useState(false)
   const [hasCheckedStore, setHasCheckedStore] = useState(false)
@@ -36,7 +39,15 @@ function DashboardPageContent() {
     distributorProposition3Data?.rows?.length
   )
   const hasPricingData = !!(pricingAnalysisData?.data?.value?.geography_segment_matrix?.length)
-  const hasAnyData = hasMarketData || hasIntelligenceData || hasPricingData
+  // JSON-sourced views (buyer surveys, quadrant) stand on their own, so a
+  // dashboard built only from them must not fall through to the landing page.
+  const hasJsonReportData = !!(
+    b2bSurveyData?.segments?.length ||
+    b2cSurveyData?.segments?.length ||
+    quadrantData?.charted?.length ||
+    quadrantData?.others?.length
+  )
+  const hasAnyData = hasMarketData || hasIntelligenceData || hasPricingData || hasJsonReportData
 
   useEffect(() => {
     setMounted(true)
@@ -50,7 +61,10 @@ function DashboardPageContent() {
       storeState.proposition3Data ||
       storeState.distributorRawIntelligenceData ||
       storeState.distributorProposition2Data ||
-      storeState.distributorProposition3Data
+      storeState.distributorProposition3Data ||
+      storeState.b2bSurveyData ||
+      storeState.b2cSurveyData ||
+      storeState.quadrantData
 
     if ((existingData || existingIntelligence) && !hasCheckedStore) {
       // Data already exists from dashboard builder, don't reload

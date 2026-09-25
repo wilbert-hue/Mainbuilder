@@ -25,6 +25,10 @@ export function DashboardBuilderDownload() {
     distributorProposition2Data,
     distributorProposition3Data,
     pricingAnalysisData,
+    b2bSurveyData,
+    b2cSurveyData,
+    buyerSurveyType,
+    quadrantData,
     showDemoNote,
     dashboardId,
     setDashboardId,
@@ -38,12 +42,14 @@ export function DashboardBuilderDownload() {
   const [error, setError] = useState<string | null>(null)
   const [dismissed, setDismissed] = useState(false)
 
+  const hasSurveyData = !!(b2bSurveyData || b2cSurveyData || quadrantData)
+
   // Only show when actual data is present and originated from the builder
-  const hasData = !!(data || rawIntelligenceData?.rows?.length || pricingAnalysisData)
+  const hasData = !!(data || rawIntelligenceData?.rows?.length || pricingAnalysisData || hasSurveyData)
   const shouldShow =
     !dismissed &&
     hasData &&
-    (fromDashboardBuilder || dashboardBuilderFiles?.valueFile || rawIntelligenceData || pricingAnalysisData)
+    (fromDashboardBuilder || dashboardBuilderFiles?.valueFile || rawIntelligenceData || pricingAnalysisData || hasSurveyData)
 
   if (!shouldShow) return null
 
@@ -65,6 +71,10 @@ export function DashboardBuilderDownload() {
         distributorProposition2Data: distributorProposition2Data ?? null,
         distributorProposition3Data: distributorProposition3Data ?? null,
         pricingAnalysisData: pricingAnalysisData ?? null,
+        buyerSurveyType: buyerSurveyType ?? null,
+        b2bSurveyData: b2bSurveyData ?? null,
+        b2cSurveyData: b2cSurveyData ?? null,
+        quadrantData: quadrantData ?? null,
         showDemoNote: showDemoNote ?? false,
       }
 

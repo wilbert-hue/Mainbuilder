@@ -56,9 +56,14 @@ function detectParentHeaders(row1: any[], row2: any[]): { hasParentHeaders: bool
   const row1NonEmpty = row1.filter(cell => cell !== undefined && cell !== null && String(cell).trim() !== '').length
   const row2NonEmpty = row2.filter(cell => cell !== undefined && cell !== null && String(cell).trim() !== '').length
 
-  // If row1 has fewer than half the non-empty cells of row2, it likely has parent headers
-  // Also check if row2 looks like actual column headers (more specific text)
-  const hasParentHeaders = row1NonEmpty > 0 && row1NonEmpty < row2NonEmpty && row2NonEmpty >= 3
+  // A real parent-header row carries at most half as many labels as the column
+  // row beneath it, because every merged parent spans two or more columns.
+  //
+  // Requiring only "fewer cells" (the previous rule) matched ordinary ragged
+  // data too: a row with one blank cell followed by a fully-populated row looked
+  // like a parent/child pair, so a data row got promoted to headers.
+  const hasParentHeaders =
+    row1NonEmpty > 0 && row1NonEmpty * 2 <= row2NonEmpty && row2NonEmpty >= 3
 
   if (!hasParentHeaders) {
     return { hasParentHeaders: false, parentHeaders: [] }
@@ -130,7 +135,12 @@ function findHeaderBlockStartRow(rows: any[][]): number {
       if (normalized === m) return i
     }
   }
-  for (let i = 0; i < rows.length - 1; i++) {
+  // Parent headers are structural: they sit at the top of the sheet, above at
+  // most a few title/banner rows. Scanning the whole sheet let a sparse row in
+  // the middle of the data masquerade as a header block, so cap the search.
+  const PARENT_HEADER_SEARCH_ROWS = 10
+  const limit = Math.min(rows.length - 1, PARENT_HEADER_SEARCH_ROWS)
+  for (let i = 0; i < limit; i++) {
     const d = detectParentHeaders(rows[i] || [], rows[i + 1] || [])
     if (d.hasParentHeaders) return i
   }

@@ -7,7 +7,19 @@ import type { ComparisonData, DataRecord } from './types'
 import type { DashboardDocument } from './dashboard-mongo'
 import { isBlobStoreEnabled, putBlob, getBlob } from './blob-store'
 
-const INLINE_MAX_BYTES = 1_500_000
+/**
+ * Payloads at or below this size stay inline in the Mongo document; anything
+ * larger is gzipped and pushed to object storage (R2), leaving only a key.
+ *
+ * Kept deliberately small. At the previous 1.5 MB a typical dashboard (~470 KB)
+ * stayed inline, so 874 of them filled the Atlas 512 MB quota and blocked all
+ * writes. Offloading instead keeps Mongo documents to a few KB each and puts
+ * the bulk in R2, where the free allowance is 10 GB rather than 512 MB.
+ *
+ * Only genuinely tiny payloads are worth keeping inline, since those avoid a
+ * network round-trip on read for no meaningful storage cost.
+ */
+const INLINE_MAX_BYTES = 50_000
 const MONGO_DOC_SOFT_LIMIT = 15_000_000
 
 function slimRecords(records: DataRecord[]): DataRecord[] {
@@ -157,13 +169,28 @@ export function decodeSaveRequestBody(
 export async function hydrateDashboardDocument(
   doc: DashboardDocument
 ): Promise<DashboardDocument> {
-  const [data, pricingAnalysisData] = await Promise.all([
+  const [data, pricingAnalysisData, b2bSurveyData, b2cSurveyData, quadrantData] = await Promise.all([
     restoreMarketData(doc),
     restoreJsonField({
       inline: doc.pricingAnalysisData,
       compressed: doc.pricingAnalysisCompressed ?? null,
       s3Key: doc.pricingAnalysisS3Key ?? null,
     }),
+    restoreJsonField({
+      inline: doc.b2bSurveyData,
+      compressed: doc.b2bSurveyCompressed ?? null,
+      s3Key: doc.b2bSurveyS3Key ?? null,
+    }),
+    restoreJsonField({
+      inline: doc.b2cSurveyData,
+      compressed: doc.b2cSurveyCompressed ?? null,
+      s3Key: doc.b2cSurveyS3Key ?? null,
+    }),
+    restoreJsonField({
+      inline: doc.quadrantData,
+      compressed: doc.quadrantCompressed ?? null,
+      s3Key: doc.quadrantS3Key ?? null,
+    }),
   ])
-  return { ...doc, data, pricingAnalysisData }
+  return { ...doc, data, pricingAnalysisData, b2bSurveyData, b2cSurveyData, quadrantData }
 }

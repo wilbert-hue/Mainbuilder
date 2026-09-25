@@ -3,7 +3,7 @@
 import { useEffect } from 'react'
 import { useDashboardStore } from '@/lib/store'
 import { CHART_GROUPS, type ChartGroupId } from '@/lib/chart-groups'
-import { BarChart3, Target, Trophy, Users, Building2, DollarSign } from 'lucide-react'
+import { BarChart3, Target, Trophy, Users, Building2, DollarSign, Factory, ShoppingCart, Grid2x2 } from 'lucide-react'
 
 // Icon mapping for each chart group
 const iconMap: Record<string, any> = {
@@ -13,9 +13,21 @@ const iconMap: Record<string, any> = {
   'customer-intelligence': Users,
   'distributor-intelligence': Building2,
   'pricing-analysis': DollarSign,
+  'b2b-survey': Factory,
+  'b2c-survey': ShoppingCart,
+  'coherent-quadrant': Grid2x2,
 }
 
-export function ChartGroupSelector() {
+interface ChartGroupSelectorProps {
+  /**
+   * "vertical"   — the sidebar list (default).
+   * "horizontal" — a full-width strip above the dashboard, used when a buyer
+   *                survey is loaded so views are switched from the top.
+   */
+  orientation?: 'vertical' | 'horizontal'
+}
+
+export function ChartGroupSelector({ orientation = 'vertical' }: ChartGroupSelectorProps = {}) {
   const {
     selectedChartGroup,
     setSelectedChartGroup,
@@ -29,6 +41,9 @@ export function ChartGroupSelector() {
     distributorIntelligenceData,
     competitiveIntelligenceData,
     pricingAnalysisData,
+    b2bSurveyData,
+    b2cSurveyData,
+    quadrantData,
   } = useDashboardStore()
 
   const hasCustomerWorkbookRows = !!(
@@ -62,13 +77,21 @@ export function ChartGroupSelector() {
     pricingAnalysisData?.data?.value?.geography_segment_matrix?.length
   )
 
+  // Buyer survey reports (uploaded as JSON in the builder)
+  const hasB2bSurveyData = !!b2bSurveyData?.segments?.length
+  const hasB2cSurveyData = !!b2cSurveyData?.segments?.length
+  const hasQuadrantData = !!(quadrantData?.charted?.length || quadrantData?.others?.length)
+
   // Auto-switch to a valid chart group if the currently selected one has no data
   useEffect(() => {
     const isCurrentGroupInvalid =
       (selectedChartGroup === 'customer-intelligence' && !hasCustomerIntelligenceData) ||
       (selectedChartGroup === 'distributor-intelligence' && !hasDistributorIntelligenceData) ||
       (selectedChartGroup === 'competitive-intelligence' && !hasCompetitiveIntelligenceData) ||
-      (selectedChartGroup === 'pricing-analysis' && !hasPricingAnalysisData)
+      (selectedChartGroup === 'pricing-analysis' && !hasPricingAnalysisData) ||
+      (selectedChartGroup === 'b2b-survey' && !hasB2bSurveyData) ||
+      (selectedChartGroup === 'b2c-survey' && !hasB2cSurveyData) ||
+      (selectedChartGroup === 'coherent-quadrant' && !hasQuadrantData)
 
     if (isCurrentGroupInvalid) {
       // Switch to market-analysis as the default fallback
@@ -80,37 +103,65 @@ export function ChartGroupSelector() {
     hasDistributorIntelligenceData,
     hasCompetitiveIntelligenceData,
     hasPricingAnalysisData,
+    hasB2bSurveyData,
+    hasB2cSurveyData,
+    hasQuadrantData,
     setSelectedChartGroup
   ])
+
+  // Groups whose backing dataset is actually present. Shared by both layouts so
+  // visibility rules live in exactly one place.
+  const availableGroups = CHART_GROUPS.filter((group) => {
+    if (group.id === 'customer-intelligence') return hasCustomerIntelligenceData
+    if (group.id === 'distributor-intelligence') return hasDistributorIntelligenceData
+    if (group.id === 'competitive-intelligence') return hasCompetitiveIntelligenceData
+    if (group.id === 'pricing-analysis') return hasPricingAnalysisData
+    if (group.id === 'b2b-survey') return hasB2bSurveyData
+    if (group.id === 'b2c-survey') return hasB2cSurveyData
+    if (group.id === 'coherent-quadrant') return hasQuadrantData
+    return true
+  })
+
+  if (orientation === 'horizontal') {
+    return (
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 px-3 py-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <h3 className="mr-1 text-xs font-semibold text-black">Chart View</h3>
+          {availableGroups.map((group) => {
+            const Icon = iconMap[group.id] || BarChart3
+            const isSelected = selectedChartGroup === group.id
+            return (
+              <button
+                key={group.id}
+                onClick={() => setSelectedChartGroup(group.id)}
+                className={`
+                  flex items-center gap-2 rounded-md px-3 py-2 transition-all duration-200
+                  ${isSelected
+                    ? 'bg-gradient-to-r from-[#52B69A] to-[#34A0A4] text-white shadow-sm'
+                    : 'text-black hover:bg-gray-50'
+                  }
+                `}
+                title={group.description}
+              >
+                <Icon className={`h-4 w-4 flex-shrink-0 ${isSelected ? 'text-white' : 'text-black'}`} />
+                <span className="whitespace-nowrap text-xs font-medium">{group.label}</span>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3">
       <h3 className="text-xs font-semibold text-black mb-2">Chart View</h3>
 
       <div className="space-y-1">
-        {CHART_GROUPS.map((group) => {
-          // Hide customer-intelligence group if no data exists
-          if (group.id === 'customer-intelligence' && !hasCustomerIntelligenceData) {
-            return null
-          }
-
-          if (group.id === 'distributor-intelligence' && !hasDistributorIntelligenceData) {
-            return null
-          }
-
-          // Hide competitive-intelligence group if no data exists
-          if (group.id === 'competitive-intelligence' && !hasCompetitiveIntelligenceData) {
-            return null
-          }
-
-          // Hide pricing-analysis group if no data exists
-          if (group.id === 'pricing-analysis' && !hasPricingAnalysisData) {
-            return null
-          }
-
+        {availableGroups.map((group) => {
           const Icon = iconMap[group.id] || BarChart3
           const isSelected = selectedChartGroup === group.id
-          
+
           return (
             <button
               key={group.id}

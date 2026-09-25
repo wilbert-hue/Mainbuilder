@@ -57,6 +57,20 @@ export interface DashboardDocument {
   pricingAnalysisCompressed?: string | null
   /** Object-storage key for pricing blob when offloaded to R2/S3 */
   pricingAnalysisS3Key?: string | null
+  /** Which buyer-survey reports this dashboard carries */
+  buyerSurveyType?: 'b2b' | 'b2c' | 'both' | null
+  /** Parsed B2B buyer-survey report (normalised BuyerSurveyReport shape) */
+  b2bSurveyData?: unknown
+  b2bSurveyCompressed?: string | null
+  b2bSurveyS3Key?: string | null
+  /** Parsed B2C buyer-survey report */
+  b2cSurveyData?: unknown
+  b2cSurveyCompressed?: string | null
+  b2cSurveyS3Key?: string | null
+  /** Parsed Coherent Quadrant report */
+  quadrantData?: unknown
+  quadrantCompressed?: string | null
+  quadrantS3Key?: string | null
   showDemoNote: boolean
   logoChoice?: 'coherent' | 'wmr' | 'mi'
 }

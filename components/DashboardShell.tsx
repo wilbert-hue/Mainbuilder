@@ -22,6 +22,8 @@ import { WaterfallChart } from '@/components/charts/WaterfallChart'
 import { D3BubbleChartIndependent } from '@/components/charts/D3BubbleChartIndependent'
 import { CompetitiveIntelligence } from '@/components/charts/CompetitiveIntelligence'
 import { IntelligenceDatabaseViews } from '@/components/charts/IntelligenceDatabaseViews'
+import { BuyerSurveyView } from '@/components/charts/BuyerSurveyView'
+import { QuadrantView } from '@/components/charts/QuadrantView'
 import { PricingAnalysisView } from '@/components/charts/PricingAnalysisView'
 import { InsightsPanel } from '@/components/InsightsPanel'
 import { FilterPresets } from '@/components/filters/FilterPresets'
@@ -48,6 +50,9 @@ type ActiveTab =
   | 'pricing-line'
   | 'pricing-heatmap'
   | 'pricing-table'
+  | 'b2b-survey'
+  | 'b2c-survey'
+  | 'coherent-quadrant'
 
 interface Props {
   /** When true the "Dashboard Builder" button in the header is hidden (read-only shared view). */
@@ -82,9 +87,14 @@ export function DashboardShell({ readOnly = false }: Props) {
     pricingAnalysisData,
     showDemoNote,
     logoChoice,
+    b2bSurveyData,
+    b2cSurveyData,
+    quadrantData,
   } = useDashboardStore()
 
   const [activeTab, setActiveTab] = useState<ActiveTab>('bar')
+  /** Selected panel in the no-market-data shell (intelligence / b2b / b2c). */
+  const [standaloneTab, setStandaloneTab] = useState<string>('intelligence')
   const [showInsights, setShowInsights] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [viewMode, setViewMode] = useState<'tabs' | 'vertical'>('tabs')
@@ -102,16 +112,30 @@ export function DashboardShell({ readOnly = false }: Props) {
     distributorProposition3Data?.rows?.length
   )
 
+  const hasB2bSurvey = !!b2bSurveyData?.segments?.length
+  const hasB2cSurvey = !!b2cSurveyData?.segments?.length
+  const hasQuadrant = !!(quadrantData?.charted?.length || quadrantData?.others?.length)
+  /** Any JSON-sourced view; these move Chart View to the top strip. */
+  const hasAnySurvey = hasB2bSurvey || hasB2cSurvey || hasQuadrant
+
   const visibleCharts = getChartsForGroup(selectedChartGroup)
 
+  /** Charts that stand alone — they render from their own dataset, not market data. */
+  const STANDALONE_CHARTS = [
+    'customer-intelligence',
+    'distributor-intelligence',
+    'b2b-survey',
+    'b2c-survey',
+    'coherent-quadrant',
+  ]
+
   const isChartVisible = (chartId: string): boolean => {
-    if (
-      !hasMarketData &&
-      chartId !== 'customer-intelligence' &&
-      chartId !== 'distributor-intelligence'
-    ) {
+    if (!hasMarketData && !STANDALONE_CHARTS.includes(chartId)) {
       return false
     }
+    if (chartId === 'b2b-survey' && !hasB2bSurvey) return false
+    if (chartId === 'b2c-survey' && !hasB2cSurvey) return false
+    if (chartId === 'coherent-quadrant' && !hasQuadrant) return false
     return visibleCharts.includes(chartId)
   }
 
@@ -129,14 +153,23 @@ export function DashboardShell({ readOnly = false }: Props) {
     'pricing-multi-line': 'pricing-line',
     'pricing-heatmap': 'pricing-heatmap',
     'pricing-comparison-table': 'pricing-table',
+    'b2b-survey': 'b2b-survey',
+    'b2c-survey': 'b2c-survey',
+    'coherent-quadrant': 'coherent-quadrant',
   }
 
   useEffect(() => {
+    const first = visibleCharts[0]
+    // Survey groups own their tab outright — honour the selection before the
+    // market-data fallbacks below, which would otherwise pull focus away.
+    if (first === 'b2b-survey' || first === 'b2c-survey' || first === 'coherent-quadrant') {
+      setActiveTab(first)
+      return
+    }
     if (!hasMarketData && hasCustomerWorkbook) {
       setActiveTab('customer-intelligence')
       return
     }
-    const first = visibleCharts[0]
     if (first && chartIdToTab[first]) setActiveTab(chartIdToTab[first])
   }, [selectedChartGroup, hasMarketData, hasCustomerWorkbook])
 
@@ -147,13 +180,37 @@ export function DashboardShell({ readOnly = false }: Props) {
   }, [filters.viewMode])
 
   // ── Intelligence-only mode ──────────────────────────────────────────────
-  if (!hasMarketData && (hasCustomerWorkbook || hasDistributorWorkbook)) {
+  // Also covers survey-only dashboards: without market data the full dashboard
+  // below has no KPIs or filters to render, so standalone datasets get their own
+  // lightweight shell with a tab per available dataset.
+  if (!hasMarketData && (hasCustomerWorkbook || hasDistributorWorkbook || hasAnySurvey)) {
     const typeLabel =
       intelligenceType === 'distributor'
         ? 'Distributor'
         : intelligenceType === 'both'
         ? 'Customer & Distributor'
         : 'Customer'
+
+    const hasWorkbook = hasCustomerWorkbook || hasDistributorWorkbook
+    // Panels available in this cut-down shell, in display order.
+    const standalonePanels: { key: string; label: string }[] = [
+      ...(hasWorkbook ? [{ key: 'intelligence', label: `${typeLabel} Intelligence` }] : []),
+      ...(hasB2bSurvey ? [{ key: 'b2b-survey', label: 'B2B Survey' }] : []),
+      ...(hasB2cSurvey ? [{ key: 'b2c-survey', label: 'B2C Survey' }] : []),
+      ...(hasQuadrant ? [{ key: 'coherent-quadrant', label: 'Coherent Quadrant' }] : []),
+    ]
+    const activePanel = standalonePanels.some((p) => p.key === standaloneTab)
+      ? standaloneTab
+      : standalonePanels[0]?.key
+    const headingLabel = hasWorkbook
+      ? `${typeLabel} Intelligence`
+      : hasB2bSurvey && hasB2cSurvey
+      ? 'B2B & B2C Survey'
+      : hasB2bSurvey
+      ? 'B2B Survey'
+      : hasB2cSurvey
+      ? 'B2C Survey'
+      : 'Coherent Quadrant'
 
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -165,7 +222,7 @@ export function DashboardShell({ readOnly = false }: Props) {
             <div className="flex-1 flex justify-center">
               <div className="text-center">
                 <h1 className="text-2xl font-bold text-black mb-1">{logoChoice === 'wmr' ? 'WMR Dashboard' : logoChoice === 'mi' ? 'Coherent MI Dashboard' : 'Coherent Dashboard'}</h1>
-                <h2 className="text-sm text-black">{dashboardName || `${typeLabel} Intelligence`}</h2>
+                <h2 className="text-sm text-black">{dashboardName || headingLabel}</h2>
               </div>
             </div>
             <div className="flex-shrink-0">
@@ -180,8 +237,30 @@ export function DashboardShell({ readOnly = false }: Props) {
               )}
             </div>
           </div>
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <IntelligenceDatabaseViews />
+          <div className="bg-white rounded-lg shadow-sm">
+            {standalonePanels.length > 1 && (
+              <div className="flex flex-wrap border-b border-gray-200 px-2">
+                {standalonePanels.map((p) => (
+                  <button
+                    key={p.key}
+                    onClick={() => setStandaloneTab(p.key)}
+                    className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
+                      activePanel === p.key
+                        ? 'border-blue-500 text-blue-600'
+                        : 'border-transparent text-black hover:border-gray-300'
+                    }`}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+            )}
+            <div className="p-6">
+              {activePanel === 'intelligence' && <IntelligenceDatabaseViews />}
+              {activePanel === 'b2b-survey' && <BuyerSurveyView kind="b2b" />}
+              {activePanel === 'b2c-survey' && <BuyerSurveyView kind="b2c" />}
+              {activePanel === 'coherent-quadrant' && <QuadrantView />}
+            </div>
           </div>
         </div>
         <Footer />
@@ -233,6 +312,14 @@ export function DashboardShell({ readOnly = false }: Props) {
           )}
         </div>
 
+        {/* Chart View moves out of the sidebar and onto a full-width strip when a
+            buyer survey is loaded, so the extra views are switched from the top. */}
+        {hasAnySurvey && (
+          <div className="mb-6">
+            <ChartGroupSelector orientation="horizontal" />
+          </div>
+        )}
+
         <div className="grid grid-cols-12 gap-6">
           {/* Sidebar */}
           <aside className={`transition-all duration-300 ${sidebarCollapsed ? 'col-span-12 lg:col-span-1' : 'col-span-12 lg:col-span-3'}`}>
@@ -256,7 +343,7 @@ export function DashboardShell({ readOnly = false }: Props) {
                 <div className="max-h-[calc(100vh-6rem)] relative">
                   <CustomScrollbar containerRef={sidebarScrollRef}>
                     <div ref={sidebarScrollRef} className="overflow-y-auto pr-6 space-y-3 sidebar-scroll max-h-[calc(100vh-6rem)]">
-                      <ChartGroupSelector />
+                      {!hasAnySurvey && <ChartGroupSelector />}
                       <FilterPresets />
                       <EnhancedFilterPanel />
                     </div>
@@ -301,6 +388,9 @@ export function DashboardShell({ readOnly = false }: Props) {
                         {isChartVisible('pricing-multi-line') && <button onClick={() => setActiveTab('pricing-line')} className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'pricing-line' ? 'border-blue-500 text-blue-600' : 'border-transparent text-black hover:text-black hover:border-gray-300'}`}>Pricing Line</button>}
                         {isChartVisible('pricing-heatmap') && <button onClick={() => setActiveTab('pricing-heatmap')} className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'pricing-heatmap' ? 'border-blue-500 text-blue-600' : 'border-transparent text-black hover:text-black hover:border-gray-300'}`}>Pricing Heatmap</button>}
                         {isChartVisible('pricing-comparison-table') && <button onClick={() => setActiveTab('pricing-table')} className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'pricing-table' ? 'border-blue-500 text-blue-600' : 'border-transparent text-black hover:text-black hover:border-gray-300'}`}>Pricing Table</button>}
+                        {isChartVisible('b2b-survey') && <button onClick={() => setActiveTab('b2b-survey')} className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'b2b-survey' ? 'border-blue-500 text-blue-600' : 'border-transparent text-black hover:text-black hover:border-gray-300'}`}>B2B Survey</button>}
+                        {isChartVisible('b2c-survey') && <button onClick={() => setActiveTab('b2c-survey')} className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'b2c-survey' ? 'border-blue-500 text-blue-600' : 'border-transparent text-black hover:text-black hover:border-gray-300'}`}>B2C Survey</button>}
+                        {isChartVisible('coherent-quadrant') && <button onClick={() => setActiveTab('coherent-quadrant')} className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'coherent-quadrant' ? 'border-blue-500 text-blue-600' : 'border-transparent text-black hover:text-black hover:border-gray-300'}`}>Coherent Quadrant</button>}
                       </>
                     )}
                   </nav>
@@ -344,6 +434,9 @@ export function DashboardShell({ readOnly = false }: Props) {
                     {activeTab === 'pricing-line' && <div id="pricing-line-chart" className="relative">{showDemoNote && <DemoBadge />}<PricingAnalysisView activeTab="line" /></div>}
                     {activeTab === 'pricing-heatmap' && <div id="pricing-heatmap-chart" className="relative">{showDemoNote && <DemoBadge />}<PricingAnalysisView activeTab="heatmap" /></div>}
                     {activeTab === 'pricing-table' && <div id="pricing-table-chart" className="relative">{showDemoNote && <DemoBadge />}<PricingAnalysisView activeTab="table" /></div>}
+                    {activeTab === 'b2b-survey' && <div id="b2b-survey-view" className="relative">{showDemoNote && <DemoBadge />}<BuyerSurveyView kind="b2b" /></div>}
+                    {activeTab === 'b2c-survey' && <div id="b2c-survey-view" className="relative">{showDemoNote && <DemoBadge />}<BuyerSurveyView kind="b2c" /></div>}
+                    {activeTab === 'coherent-quadrant' && <div id="coherent-quadrant-view" className="relative">{showDemoNote && <DemoBadge />}<QuadrantView /></div>}
                   </>
                 ) : (
                   <div className="space-y-8">
@@ -362,6 +455,9 @@ export function DashboardShell({ readOnly = false }: Props) {
                       </div>
                     )}
                     {isChartVisible('pricing-grouped-bar') && <div className="border-b pb-8 relative">{showDemoNote && <DemoBadge />}<PricingAnalysisView activeTab="bar" /></div>}
+                    {isChartVisible('b2b-survey') && <div className="border-b pb-8 relative">{showDemoNote && <DemoBadge />}<BuyerSurveyView kind="b2b" /></div>}
+                    {isChartVisible('b2c-survey') && <div className="border-b pb-8 relative">{showDemoNote && <DemoBadge />}<BuyerSurveyView kind="b2c" /></div>}
+                    {isChartVisible('coherent-quadrant') && <div className="border-b pb-8 relative">{showDemoNote && <DemoBadge />}<QuadrantView /></div>}
                   </div>
                 )}
               </div>

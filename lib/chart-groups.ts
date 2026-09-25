@@ -10,6 +10,9 @@ export type ChartGroupId =
   | 'customer-intelligence'
   | 'distributor-intelligence'
   | 'pricing-analysis'
+  | 'b2b-survey'
+  | 'b2c-survey'
+  | 'coherent-quadrant'
 
 export interface ChartGroup {
   id: ChartGroupId
@@ -61,6 +64,27 @@ export const CHART_GROUPS: ChartGroup[] = [
     description: 'Average selling price trends and analysis',
     charts: ['pricing-grouped-bar', 'pricing-multi-line', 'pricing-heatmap', 'pricing-comparison-table'],
     icon: '💰'
+  },
+  {
+    id: 'b2b-survey',
+    label: 'B2B Survey',
+    description: 'Verified B2B buyer survey findings',
+    charts: ['b2b-survey'],
+    icon: '🏭'
+  },
+  {
+    id: 'b2c-survey',
+    label: 'B2C Survey',
+    description: 'Verified B2C consumer survey findings',
+    charts: ['b2c-survey'],
+    icon: '🛒'
+  },
+  {
+    id: 'coherent-quadrant',
+    label: 'Coherent Quadrant',
+    description: 'Competitive positioning across product and business capability',
+    charts: ['coherent-quadrant'],
+    icon: '📐'
   }
 ]
 

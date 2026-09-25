@@ -2,11 +2,14 @@
 
 import { useState, useEffect, type Dispatch, type SetStateAction } from 'react'
 import { useRouter } from 'next/navigation'
-import { Upload, Loader2, CheckCircle2, XCircle, FileSpreadsheet, Eye, Users, Building2, ArrowRight, TrendingUp, DollarSign, LayoutList, X } from 'lucide-react'
+import { Upload, Loader2, CheckCircle2, XCircle, FileSpreadsheet, Eye, Users, Building2, ArrowRight, TrendingUp, DollarSign, LayoutList, X, FileJson, Factory, ShoppingCart, Grid2x2 } from 'lucide-react'
 import Image from 'next/image'
 import { useDashboardStore } from '@/lib/store'
 import type { ComparisonData } from '@/lib/types'
 import { IntelligenceDataInput, type IntelligenceMode } from '@/components/dashboard-builder/IntelligenceDataInput'
+import { BuyerSurveyDataInput, type BuyerSurveyMode } from '@/components/dashboard-builder/BuyerSurveyDataInput'
+import { parseBuyerSurvey, type BuyerSurveyKind } from '@/lib/buyer-survey-types'
+import { parseQuadrantReport } from '@/lib/quadrant-types'
 import { STATIC_PROP1_DATA, STATIC_DISTRIBUTOR_PROP1_DATA } from '@/components/charts/CustomerIntelligenceTable'
 import { postDashboardSave } from '@/lib/share-upload'
 import { AuthStatus } from '@/components/AuthStatus'
@@ -16,6 +19,13 @@ function modeToStoreType(m: IntelligenceMode): 'customer' | 'distributor' | 'bot
   if (m.customer && m.distributor) return 'both'
   if (m.customer) return 'customer'
   if (m.distributor) return 'distributor'
+  return null
+}
+
+function surveyModeToStoreType(m: BuyerSurveyMode): 'b2b' | 'b2c' | 'both' | null {
+  if (m.b2b && m.b2c) return 'both'
+  if (m.b2b) return 'b2b'
+  if (m.b2c) return 'b2c'
   return null
 }
 
@@ -36,6 +46,10 @@ export default function DashboardBuilderPage() {
     setDistributorProposition3Data,
     setCompetitiveIntelligenceData,
     setPricingAnalysisData,
+    setB2bSurveyData,
+    setB2cSurveyData,
+    setBuyerSurveyType,
+    setQuadrantData,
     setDashboardName,
     setCurrency,
     setShowDemoNote,
@@ -80,7 +94,7 @@ export default function DashboardBuilderPage() {
   const [customerIntelStatusMessage, setCustomerIntelStatusMessage] = useState('')
   const [distributorIntelStatus, setDistributorIntelStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle')
   const [distributorIntelStatusMessage, setDistributorIntelStatusMessage] = useState('')
-  const [activeTab, setActiveTab] = useState<'market' | 'intelligence' | 'competitive' | 'pricing' | 'previous'>('market')
+  const [activeTab, setActiveTab] = useState<'market' | 'intelligence' | 'competitive' | 'pricing' | 'survey' | 'quadrant' | 'previous'>('market')
 
   useEffect(() => {
     setIntelligenceType(modeToStoreType(intelMode))
@@ -100,6 +114,42 @@ export default function DashboardBuilderPage() {
   const [isProcessingPricing, setIsProcessingPricing] = useState(false)
   const [pricingStatus, setPricingStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle')
   const [pricingStatusMessage, setPricingStatusMessage] = useState('')
+
+  // Section 5: B2B / B2C buyer survey JSON
+  const [surveyMode, setSurveyMode] = useState<BuyerSurveyMode>({ b2b: true, b2c: false })
+  const [b2bSurveyFile, setB2bSurveyFile] = useState<File | null>(null)
+  const [b2cSurveyFile, setB2cSurveyFile] = useState<File | null>(null)
+  const [b2bSurveyStatus, setB2bSurveyStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle')
+  const [b2cSurveyStatus, setB2cSurveyStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle')
+  const [b2bSurveyStatusMessage, setB2bSurveyStatusMessage] = useState('')
+  const [b2cSurveyStatusMessage, setB2cSurveyStatusMessage] = useState('')
+  const [isDraggingB2bSurvey, setIsDraggingB2bSurvey] = useState(false)
+  const [isDraggingB2cSurvey, setIsDraggingB2cSurvey] = useState(false)
+
+  // Section 6: Coherent Quadrant JSON
+  const [quadrantFile, setQuadrantFile] = useState<File | null>(null)
+  const [quadrantStatus, setQuadrantStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle')
+  const [quadrantStatusMessage, setQuadrantStatusMessage] = useState('')
+  const [isDraggingQuadrant, setIsDraggingQuadrant] = useState(false)
+
+  // Keep the store in step with the survey checkboxes. Turning a type off also
+  // drops its report, so the dashboard never shows a tab the user disabled.
+  useEffect(() => {
+    setBuyerSurveyType(surveyModeToStoreType(surveyMode))
+    if (!surveyMode.b2b) {
+      setB2bSurveyData(null)
+      setB2bSurveyFile(null)
+      setB2bSurveyStatus('idle')
+      setB2bSurveyStatusMessage('')
+    }
+    if (!surveyMode.b2c) {
+      setB2cSurveyData(null)
+      setB2cSurveyFile(null)
+      setB2cSurveyStatus('idle')
+      setB2cSurveyStatusMessage('')
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [surveyMode])
 
   const handleValueFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -306,6 +356,151 @@ export default function DashboardBuilderPage() {
     }
   }
 
+  // ── B2B / B2C survey JSON ────────────────────────────────────────────────
+  // Parsed entirely in the browser: the export is plain JSON, so there is no
+  // spreadsheet decoding to push to the server as the Excel uploads need.
+  const processSurveyFile = async (file: File, kind: BuyerSurveyKind) => {
+    const setFile = kind === 'b2b' ? setB2bSurveyFile : setB2cSurveyFile
+    const setStatus = kind === 'b2b' ? setB2bSurveyStatus : setB2cSurveyStatus
+    const setMessage = kind === 'b2b' ? setB2bSurveyStatusMessage : setB2cSurveyStatusMessage
+    const setStoreData = kind === 'b2b' ? setB2bSurveyData : setB2cSurveyData
+    const label = kind.toUpperCase()
+
+    setFile(file)
+    setStatus('processing')
+    setMessage(`Reading ${file.name}…`)
+
+    if (!/\.json$/i.test(file.name)) {
+      setStatus('error')
+      setMessage('Please upload a .json survey export.')
+      return
+    }
+
+    try {
+      const text = await file.text()
+      let raw: unknown
+      try {
+        raw = JSON.parse(text)
+      } catch {
+        setStatus('error')
+        setMessage('That file is not valid JSON. Re-export it and try again.')
+        return
+      }
+
+      const { report, error } = parseBuyerSurvey(raw, kind)
+      if (!report) {
+        setStatus('error')
+        setMessage(error || 'Could not read this survey file.')
+        return
+      }
+
+      setStoreData(report)
+      setBuyerSurveyType(surveyModeToStoreType(surveyMode))
+      setStatus('success')
+      setMessage(
+        `${label} survey loaded — ${report.industry} · ${report.geo} · ` +
+          `${report.segments.length} section${report.segments.length === 1 ? '' : 's'}, ` +
+          `${report.questionCount} question${report.questionCount === 1 ? '' : 's'}` +
+          (report.sampleSize ? ` · n = ${report.sampleSize}` : '')
+      )
+    } catch (err) {
+      setStatus('error')
+      setMessage(err instanceof Error ? err.message : 'Failed to read the survey file.')
+    }
+  }
+
+  const handleSurveyFileChange = (e: React.ChangeEvent<HTMLInputElement>, kind: BuyerSurveyKind) => {
+    const f = e.target.files?.[0]
+    if (f) processSurveyFile(f, kind)
+  }
+
+  const handleSurveyDrop = (e: React.DragEvent<HTMLDivElement>, kind: BuyerSurveyKind) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (kind === 'b2b') setIsDraggingB2bSurvey(false)
+    else setIsDraggingB2cSurvey(false)
+
+    const files = e.dataTransfer.files
+    if (files && files.length > 0) processSurveyFile(files[0], kind)
+  }
+
+  const clearSurveyFile = (kind: BuyerSurveyKind) => {
+    if (kind === 'b2b') {
+      setB2bSurveyFile(null)
+      setB2bSurveyStatus('idle')
+      setB2bSurveyStatusMessage('')
+      setB2bSurveyData(null)
+    } else {
+      setB2cSurveyFile(null)
+      setB2cSurveyStatus('idle')
+      setB2cSurveyStatusMessage('')
+      setB2cSurveyData(null)
+    }
+  }
+
+  // ── Coherent Quadrant JSON ───────────────────────────────────────────────
+  const processQuadrantFile = async (file: File) => {
+    setQuadrantFile(file)
+    setQuadrantStatus('processing')
+    setQuadrantStatusMessage(`Reading ${file.name}…`)
+
+    if (!/\.json$/i.test(file.name)) {
+      setQuadrantStatus('error')
+      setQuadrantStatusMessage('Please upload a .json quadrant export.')
+      return
+    }
+
+    try {
+      const text = await file.text()
+      let raw: unknown
+      try {
+        raw = JSON.parse(text)
+      } catch {
+        setQuadrantStatus('error')
+        setQuadrantStatusMessage('That file is not valid JSON. Re-export it and try again.')
+        return
+      }
+
+      const { report, error } = parseQuadrantReport(raw)
+      if (!report) {
+        setQuadrantStatus('error')
+        setQuadrantStatusMessage(error || 'Could not read this quadrant file.')
+        return
+      }
+
+      setQuadrantData(report)
+      setQuadrantStatus('success')
+      setQuadrantStatusMessage(
+        `Quadrant loaded — ${report.market} · ${report.geo} · ` +
+          `${report.charted.length} charted, ${report.others.length} other ` +
+          `(${report.companyCount} scored)`
+      )
+    } catch (err) {
+      setQuadrantStatus('error')
+      setQuadrantStatusMessage(err instanceof Error ? err.message : 'Failed to read the file.')
+    }
+  }
+
+  const handleQuadrantFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0]
+    if (f) processQuadrantFile(f)
+  }
+
+  const handleQuadrantDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDraggingQuadrant(false)
+    const files = e.dataTransfer.files
+    if (files && files.length > 0) processQuadrantFile(files[0])
+  }
+
+  const clearQuadrantFile = () => {
+    setQuadrantFile(null)
+    setQuadrantStatus('idle')
+    setQuadrantStatusMessage('')
+    setQuadrantData(null)
+  }
+
   // Generic drag event handlers
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault()
@@ -341,9 +536,20 @@ export default function DashboardBuilderPage() {
       pricingAnalysisData,
       showDemoNote,
       logoChoice,
+      b2bSurveyData,
+      b2cSurveyData,
+      buyerSurveyType,
+      quadrantData,
     } = storeState
 
-    if (!data && !rawIntelligenceData && !pricingAnalysisData) {
+    if (
+      !data &&
+      !rawIntelligenceData &&
+      !pricingAnalysisData &&
+      !b2bSurveyData &&
+      !b2cSurveyData &&
+      !quadrantData
+    ) {
       setShareLinkError('Please process your dashboard data first before generating a link.')
       return
     }
@@ -366,6 +572,10 @@ export default function DashboardBuilderPage() {
         distributorProposition2Data,
         distributorProposition3Data,
         pricingAnalysisData,
+        buyerSurveyType,
+        b2bSurveyData,
+        b2cSurveyData,
+        quadrantData,
         showDemoNote,
         logoChoice,
       }
@@ -796,13 +1006,19 @@ export default function DashboardBuilderPage() {
     (intelMode.customer && customerIntelStatus === 'success') ||
     (intelMode.distributor && distributorIntelStatus === 'success')
 
+  const hadSurveyUploadSuccess =
+    (surveyMode.b2b && b2bSurveyStatus === 'success') ||
+    (surveyMode.b2c && b2cSurveyStatus === 'success')
+
+  const hadQuadrantUploadSuccess = quadrantStatus === 'success'
+
   // Navigate to dashboard
   const handleViewDashboard = () => {
     // If only intelligence data was processed (no market data in this session),
     // clear any existing market data from the store to show intelligence-only view
-    if (marketStatus !== 'success' && hadIntelligenceUploadSuccess) {
-      console.log('Clearing market data for intelligence-only view')
-      clearData() // This clears market data but keeps intelligence data
+    if (marketStatus !== 'success' && (hadIntelligenceUploadSuccess || hadSurveyUploadSuccess || hadQuadrantUploadSuccess)) {
+      console.log('Clearing market data for intelligence/survey-only view')
+      clearData() // This clears market data but keeps intelligence and survey data
     }
     router.push('/')
   }
@@ -918,6 +1134,26 @@ export default function DashboardBuilderPage() {
                 >
                   <DollarSign className="h-5 w-5" />
                   3. Pricing Analysis
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('survey')}
+                  className={`builder-tab ${
+                    activeTab === 'survey' ? 'builder-tab-active' : 'builder-tab-inactive'
+                  }`}
+                >
+                  <FileJson className="h-5 w-5" />
+                  4. B2B / B2C Survey
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('quadrant')}
+                  className={`builder-tab ${
+                    activeTab === 'quadrant' ? 'builder-tab-active' : 'builder-tab-inactive'
+                  }`}
+                >
+                  <Grid2x2 className="h-5 w-5" />
+                  5. Coherent Quadrant
                 </button>
                 <button
                   type="button"
@@ -1691,11 +1927,254 @@ export default function DashboardBuilderPage() {
           </div>
           )}
 
+          {activeTab === 'survey' && (
+          <div className="builder-card p-8">
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-white mb-2">4. B2B / B2C Survey</h2>
+              <p className="text-sm text-slate-400">
+                Add buyer-survey findings to your dashboard from a JSON export
+              </p>
+            </div>
+
+            <BuyerSurveyDataInput mode={surveyMode} onModeChange={setSurveyMode} />
+
+            <div className="mt-6 pt-6 border-t border-white/[0.06] space-y-8">
+              <div>
+                <h3 className="text-sm font-semibold text-slate-100 mb-2">Upload survey exports</h3>
+                <p className="text-xs text-slate-400">
+                  Each file is the analyst JSON export for one market, containing a{' '}
+                  <span className="font-medium text-slate-200">segments</span> array of sections and
+                  their questions. The market name, geography, respondent counts, executive summary
+                  and methodology are all read from the file — nothing else to fill in. Each uploaded
+                  survey becomes its own tab in the dashboard.
+                </p>
+              </div>
+
+              {([
+                {
+                  kind: 'b2b' as BuyerSurveyKind,
+                  enabled: surveyMode.b2b,
+                  title: 'B2B survey export',
+                  inputId: 'b2bSurveyFile',
+                  Icon: Factory,
+                  iconClass: 'text-sky-400/80',
+                  file: b2bSurveyFile,
+                  status: b2bSurveyStatus,
+                  message: b2bSurveyStatusMessage,
+                  dragging: isDraggingB2bSurvey,
+                  setDragging: setIsDraggingB2bSurvey,
+                },
+                {
+                  kind: 'b2c' as BuyerSurveyKind,
+                  enabled: surveyMode.b2c,
+                  title: 'B2C survey export',
+                  inputId: 'b2cSurveyFile',
+                  Icon: ShoppingCart,
+                  iconClass: 'text-emerald-400/80',
+                  file: b2cSurveyFile,
+                  status: b2cSurveyStatus,
+                  message: b2cSurveyStatusMessage,
+                  dragging: isDraggingB2cSurvey,
+                  setDragging: setIsDraggingB2cSurvey,
+                },
+              ]).filter((s) => s.enabled).map((s) => (
+                <div key={s.kind} className="builder-panel-nested space-y-4">
+                  <div className="flex items-center gap-2">
+                    <s.Icon className={`h-5 w-5 ${s.iconClass}`} />
+                    <h4 className="text-sm font-semibold text-slate-100">{s.title}</h4>
+                  </div>
+
+                  <label className="block text-sm font-medium text-slate-200">
+                    Survey JSON <span className="text-red-500">*</span>
+                  </label>
+                  <div
+                    className={`mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-dashed rounded-md transition-colors ${
+                      s.dragging ? 'builder-upload-zone-active' : 'builder-upload-zone'
+                    }`}
+                    onDrop={(e) => handleSurveyDrop(e, s.kind)}
+                    onDragOver={handleDragOver}
+                    onDragEnter={(e) => handleDragEnter(e, s.setDragging)}
+                    onDragLeave={(e) => handleDragLeave(e, s.setDragging)}
+                  >
+                    <div className="space-y-1 text-center">
+                      <FileJson
+                        className={`mx-auto h-12 w-12 ${s.dragging ? 'text-sky-400' : 'text-slate-500'}`}
+                      />
+                      <div className="flex text-sm text-slate-400">
+                        <label
+                          htmlFor={s.inputId}
+                          className="builder-upload-link focus-within:outline-none focus-within:ring-2 focus-within:ring-sky-500 focus-within:ring-offset-2 focus-within:ring-offset-slate-900"
+                        >
+                          <span>Upload a file</span>
+                          <input
+                            id={s.inputId}
+                            name={s.inputId}
+                            type="file"
+                            accept=".json,application/json"
+                            className="sr-only"
+                            onChange={(e) => handleSurveyFileChange(e, s.kind)}
+                          />
+                        </label>
+                        <p className="pl-1">or drag and drop</p>
+                      </div>
+                      <p className="text-xs text-slate-500">JSON up to 50MB</p>
+                      {s.dragging && (
+                        <p className="text-sm text-sky-400 mt-2 font-medium">Drop file here!</p>
+                      )}
+                      {s.file && !s.dragging && (
+                        <div className="flex items-center justify-center gap-2 mt-2">
+                          <p className="text-sm text-emerald-400">
+                            {s.status === 'success' ? '✓' : '⏳'} {s.file.name} (
+                            {(s.file.size / 1024 / 1024).toFixed(2)} MB)
+                            {s.status === 'success' && (
+                              <span className="text-emerald-300 ml-1">(Loaded)</span>
+                            )}
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => clearSurveyFile(s.kind)}
+                            className="text-slate-400 hover:text-red-400 transition-colors"
+                            title="Remove file"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  {renderIntelStatusBlock(s.status, s.message)}
+                </div>
+              ))}
+
+              <div className="builder-callout-info">
+                <p>
+                  <strong>Expected format:</strong> a JSON object with{' '}
+                  <code>industry</code>, <code>geo</code>, <code>sample_size</code>,{' '}
+                  <code>buyer_landscape</code>, <code>survey_methodology</code> and a{' '}
+                  <code>segments</code> array. Each segment needs a <code>title</code> and a{' '}
+                  <code>questions</code> array, where each question has <code>text</code> and{' '}
+                  <code>options</code> (<code>label</code> + <code>pct</code>). Optional{' '}
+                  <code>chart_type</code> values: pie, donut, horizontal_bar, vertical_bar,
+                  lollipop. An <code>executive_summary</code> block is rendered when present.
+                </p>
+              </div>
+            </div>
+          </div>
+          )}
+
+          {activeTab === 'quadrant' && (
+          <div className="builder-card p-8">
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-white mb-2">5. Coherent Quadrant</h2>
+              <p className="text-sm text-slate-400">
+                Add competitive quadrant positioning to your dashboard from a JSON export
+              </p>
+            </div>
+
+            <div className="space-y-8">
+              <div>
+                <h3 className="text-sm font-semibold text-slate-100 mb-2">Upload quadrant export</h3>
+                <p className="text-xs text-slate-400">
+                  The analyst JSON export for one market, containing the scored company
+                  population and the two capability axes. Market name, geography, axis
+                  parameters, per-company scores and quadrant placement are all read from the
+                  file. The upload becomes its own{' '}
+                  <span className="font-medium text-slate-200">Coherent Quadrant</span> tab in
+                  the dashboard.
+                </p>
+              </div>
+
+              <div className="builder-panel-nested space-y-4">
+                <div className="flex items-center gap-2">
+                  <Grid2x2 className="h-5 w-5 text-teal-400/80" />
+                  <h4 className="text-sm font-semibold text-slate-100">Quadrant export</h4>
+                </div>
+
+                <label className="block text-sm font-medium text-slate-200">
+                  Quadrant JSON <span className="text-red-500">*</span>
+                </label>
+                <div
+                  className={`mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-dashed rounded-md transition-colors ${
+                    isDraggingQuadrant ? 'builder-upload-zone-active' : 'builder-upload-zone'
+                  }`}
+                  onDrop={handleQuadrantDrop}
+                  onDragOver={handleDragOver}
+                  onDragEnter={(e) => handleDragEnter(e, setIsDraggingQuadrant)}
+                  onDragLeave={(e) => handleDragLeave(e, setIsDraggingQuadrant)}
+                >
+                  <div className="space-y-1 text-center">
+                    <FileJson
+                      className={`mx-auto h-12 w-12 ${isDraggingQuadrant ? 'text-sky-400' : 'text-slate-500'}`}
+                    />
+                    <div className="flex text-sm text-slate-400">
+                      <label
+                        htmlFor="quadrantFile"
+                        className="builder-upload-link focus-within:outline-none focus-within:ring-2 focus-within:ring-sky-500 focus-within:ring-offset-2 focus-within:ring-offset-slate-900"
+                      >
+                        <span>Upload a file</span>
+                        <input
+                          id="quadrantFile"
+                          name="quadrantFile"
+                          type="file"
+                          accept=".json,application/json"
+                          className="sr-only"
+                          onChange={handleQuadrantFileChange}
+                        />
+                      </label>
+                      <p className="pl-1">or drag and drop</p>
+                    </div>
+                    <p className="text-xs text-slate-500">JSON up to 50MB</p>
+                    {isDraggingQuadrant && (
+                      <p className="text-sm text-sky-400 mt-2 font-medium">Drop file here!</p>
+                    )}
+                    {quadrantFile && !isDraggingQuadrant && (
+                      <div className="flex items-center justify-center gap-2 mt-2">
+                        <p className="text-sm text-emerald-400">
+                          {quadrantStatus === 'success' ? '✓' : '⏳'} {quadrantFile.name} (
+                          {(quadrantFile.size / 1024 / 1024).toFixed(2)} MB)
+                          {quadrantStatus === 'success' && (
+                            <span className="text-emerald-300 ml-1">(Loaded)</span>
+                          )}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={clearQuadrantFile}
+                          className="text-slate-400 hover:text-red-400 transition-colors"
+                          title="Remove file"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                {renderIntelStatusBlock(quadrantStatus, quadrantStatusMessage)}
+              </div>
+
+              <div className="builder-callout-info">
+                <p>
+                  <strong>Expected format:</strong> a JSON object with <code>market</code>,{' '}
+                  <code>geo</code>, <code>x_axis</code> and <code>y_axis</code> (each with a{' '}
+                  <code>name</code> and a <code>parameters</code> list), plus a{' '}
+                  <code>companies</code> array. Each company needs a <code>company</code> name
+                  and a <code>quadrant</code> (Leaders, Challengers, Trailblazers or Evolving
+                  Players), with optional <code>x_score</code>, <code>y_score</code>,{' '}
+                  <code>overall_score</code>, and <code>x_parameters</code> /{' '}
+                  <code>y_parameters</code> carrying per-parameter <code>score</code>,{' '}
+                  <code>basis</code> and <code>evidence</code>. Companies that include
+                  parameter detail are plotted on the chart; the rest are listed under Other
+                  Noticeable Player.
+                </p>
+              </div>
+            </div>
+          </div>
+          )}
+
           {activeTab === 'previous' && <PreviousDashboards />}
         </div>
 
         {/* View Dashboard Button - Shows when any data is processed (hidden on Previous tab) */}
-        {activeTab !== 'previous' && (marketStatus === 'success' || hadIntelligenceUploadSuccess || pricingStatus === 'success') && (
+        {activeTab !== 'previous' && (marketStatus === 'success' || hadIntelligenceUploadSuccess || pricingStatus === 'success' || hadSurveyUploadSuccess || hadQuadrantUploadSuccess) && (
           <div className="mt-6 space-y-4">
             {/* View Dashboard */}
             <div className="builder-callout-ready">
@@ -1706,7 +2185,9 @@ export default function DashboardBuilderPage() {
                     {[
                       marketStatus === 'success' && 'Market',
                       hadIntelligenceUploadSuccess && 'Intelligence',
-                      pricingStatus === 'success' && 'Pricing'
+                      pricingStatus === 'success' && 'Pricing',
+                      hadSurveyUploadSuccess && 'Survey',
+                      hadQuadrantUploadSuccess && 'Quadrant'
                     ].filter(Boolean).join(', ')} data processed. Open your workspace when you are ready.
                   </p>
                 </div>

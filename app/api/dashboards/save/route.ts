@@ -53,9 +53,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Request body is not valid JSON.' }, { status: 400 })
   }
 
-  const { data, rawIntelligenceData, pricingAnalysisData, dashboardId } = body
+  const {
+    data,
+    rawIntelligenceData,
+    pricingAnalysisData,
+    dashboardId,
+    b2bSurveyData,
+    b2cSurveyData,
+    quadrantData,
+  } = body
 
-  if (!data && !rawIntelligenceData && !pricingAnalysisData) {
+  if (!data && !rawIntelligenceData && !pricingAnalysisData && !b2bSurveyData && !b2cSurveyData && !quadrantData) {
     return NextResponse.json(
       { error: 'No dashboard data provided. Upload at least one data file before generating a link.' },
       { status: 400 }
@@ -82,9 +90,12 @@ export async function POST(request: NextRequest) {
       id = newDashboardId()
     }
 
-    const [marketPersist, pricingPersist] = await Promise.all([
+    const [marketPersist, pricingPersist, b2bPersist, b2cPersist, quadrantPersist] = await Promise.all([
       persistMarketData(data as ComparisonData | null | undefined, id),
       persistJsonField(pricingAnalysisData, id, 'pricing'),
+      persistJsonField(b2bSurveyData, id, 'b2b-survey'),
+      persistJsonField(b2cSurveyData, id, 'b2c-survey'),
+      persistJsonField(quadrantData, id, 'quadrant'),
     ])
 
     const payload = {
@@ -107,6 +118,18 @@ export async function POST(request: NextRequest) {
       pricingAnalysisData: pricingPersist.inline,
       pricingAnalysisCompressed: pricingPersist.compressed,
       pricingAnalysisS3Key: pricingPersist.s3Key,
+      buyerSurveyType: (['b2b', 'b2c', 'both'].includes(body.buyerSurveyType as string)
+        ? body.buyerSurveyType
+        : null) as 'b2b' | 'b2c' | 'both' | null,
+      b2bSurveyData: b2bPersist.inline,
+      b2bSurveyCompressed: b2bPersist.compressed,
+      b2bSurveyS3Key: b2bPersist.s3Key,
+      b2cSurveyData: b2cPersist.inline,
+      b2cSurveyCompressed: b2cPersist.compressed,
+      b2cSurveyS3Key: b2cPersist.s3Key,
+      quadrantData: quadrantPersist.inline,
+      quadrantCompressed: quadrantPersist.compressed,
+      quadrantS3Key: quadrantPersist.s3Key,
       showDemoNote: body.showDemoNote === true,
       logoChoice: (['wmr', 'mi'].includes(body.logoChoice as string) ? body.logoChoice : 'coherent') as 'coherent' | 'wmr' | 'mi',
       ownerId,
@@ -123,6 +146,9 @@ export async function POST(request: NextRequest) {
         ...payload,
         data: (data as ComparisonData | null) ?? null,
         pricingAnalysisData: pricingAnalysisData ?? null,
+        b2bSurveyData: b2bSurveyData ?? null,
+        b2cSurveyData: b2cSurveyData ?? null,
+        quadrantData: quadrantData ?? null,
         readCount: 0,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),

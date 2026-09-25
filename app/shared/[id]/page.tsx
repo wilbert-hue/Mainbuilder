@@ -6,6 +6,8 @@ import { useDashboardStore } from '@/lib/store'
 import { DashboardShell } from '@/components/DashboardShell'
 import type { DashboardDocument } from '@/lib/dashboard-mongo'
 import { parseIntelligenceSheet } from '@/lib/intelligence-sheet-types'
+import { reviveBuyerSurvey } from '@/lib/buyer-survey-types'
+import { reviveQuadrantReport } from '@/lib/quadrant-types'
 
 export default function SharedDashboardPage() {
   const params = useParams()
@@ -27,6 +29,10 @@ export default function SharedDashboardPage() {
     setDistributorProposition2Data,
     setDistributorProposition3Data,
     setPricingAnalysisData,
+    setB2bSurveyData,
+    setB2cSurveyData,
+    setBuyerSurveyType,
+    setQuadrantData,
     setShowDemoNote,
     setLogoChoice,
     loadDefaultFilters,
@@ -70,6 +76,13 @@ export default function SharedDashboardPage() {
         const distProp3 = parseIntelligenceSheet(snapshot.distributorProposition3Data)
         if (distProp3) setDistributorProposition3Data(distProp3)
       if (snapshot.pricingAnalysisData) setPricingAnalysisData(snapshot.pricingAnalysisData)
+
+      // Surveys are set unconditionally (null included) so a dashboard without
+      // them never inherits the previously viewed dashboard's reports.
+      setB2bSurveyData(reviveBuyerSurvey(snapshot.b2bSurveyData, 'b2b'))
+      setB2cSurveyData(reviveBuyerSurvey(snapshot.b2cSurveyData, 'b2c'))
+      setBuyerSurveyType(snapshot.buyerSurveyType ?? null)
+      setQuadrantData(reviveQuadrantReport(snapshot.quadrantData))
       setShowDemoNote(snapshot.showDemoNote || false)
       setLogoChoice((snapshot.logoChoice === 'wmr' || snapshot.logoChoice === 'mi') ? snapshot.logoChoice : 'coherent')
 
