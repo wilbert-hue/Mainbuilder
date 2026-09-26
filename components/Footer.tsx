@@ -3,6 +3,42 @@
 import Image from 'next/image'
 import { Phone, Mail, MapPin, Linkedin, Facebook, Twitter } from 'lucide-react'
 
+/** Every footer entry points at the live coherentmarketinsights.com page. */
+const CMI = 'https://www.coherentmarketinsights.com'
+
+const MENU_LINKS = [
+  { label: 'About Us', href: '/aboutus' },
+  { label: 'Industries', href: '/industries' },
+  { label: 'Services', href: '/services' },
+  { label: 'Contact Us', href: '/contact-us' },
+  { label: 'Careers', href: '/careers' },
+]
+
+const READER_CLUB_LINKS = [
+  { label: 'Latest Insights', href: '/latest-insights' },
+  { label: 'Press Release', href: '/press-releases' },
+  { label: 'Infographics', href: '/infographics' },
+  { label: 'Blogs', href: '/blog' },
+  { label: 'News', href: '/news' },
+]
+
+const HELP_LINKS = [
+  { label: 'Become Reseller', href: '/become-reseller' },
+  { label: 'How To Order?', href: '/how-to-order' },
+  { label: 'Terms and Conditions', href: '/terms-and-conditions' },
+  { label: 'Privacy Policy', href: '/privacy-policy' },
+  { label: 'Disclaimer', href: '/disclaimer' },
+  { label: 'Sitemap', href: '/sitemap.html' },
+  { label: 'Feeds', href: '/feeds' },
+]
+
+const SOCIAL = {
+  linkedin: 'https://www.linkedin.com/company/coherent-market-insights',
+  twitter: 'https://twitter.com/CoherentMI',
+  facebook: 'https://www.facebook.com/Coherent-Market-Insights-Pvt-Ltd-184735681994311/',
+  pinterest: 'https://www.pinterest.com/coherentMI/',
+}
+
 export function Footer({ variant = 'default' }: { variant?: 'default' | 'magma' }) {
   const magma = variant === 'magma'
   // Theme-dependent classes — magma reuses the electric-blue palette.
@@ -84,11 +120,11 @@ export function Footer({ variant = 'default' }: { variant?: 'default' | 'magma' 
             <div>
               <h3 className="text-white font-semibold mb-4">Menu</h3>
               <ul className="space-y-2 text-sm">
-                <li><a href="#" className={`${linkText} transition-colors`}>About Us</a></li>
-                <li><a href="#" className={`${linkText} transition-colors`}>Industries</a></li>
-                <li><a href="#" className={`${linkText} transition-colors`}>Services</a></li>
-                <li><a href="#" className={`${linkText} transition-colors`}>Contact Us</a></li>
-                <li><a href="#" className={`${linkText} transition-colors`}>Careers</a></li>
+                {MENU_LINKS.map((l) => (
+                  <li key={l.href}>
+                    <a href={CMI + l.href} target="_blank" rel="noopener noreferrer" className={`${linkText} transition-colors`}>{l.label}</a>
+                  </li>
+                ))}
               </ul>
             </div>
 
@@ -96,12 +132,11 @@ export function Footer({ variant = 'default' }: { variant?: 'default' | 'magma' 
             <div>
               <h3 className="text-white font-semibold mb-4">Reader Club</h3>
               <ul className="space-y-2 text-sm">
-                <li><a href="#" className={`${linkText} transition-colors`}>Latest Insights</a></li>
-                <li><a href="#" className={`${linkText} transition-colors`}>COVID-19 Tracker</a></li>
-                <li><a href="#" className={`${linkText} transition-colors`}>Press Release</a></li>
-                <li><a href="#" className={`${linkText} transition-colors`}>Infographics</a></li>
-                <li><a href="#" className={`${linkText} transition-colors`}>Blogs</a></li>
-                <li><a href="#" className={`${linkText} transition-colors`}>News</a></li>
+                {READER_CLUB_LINKS.map((l) => (
+                  <li key={l.href}>
+                    <a href={CMI + l.href} target="_blank" rel="noopener noreferrer" className={`${linkText} transition-colors`}>{l.label}</a>
+                  </li>
+                ))}
               </ul>
             </div>
 
@@ -109,13 +144,11 @@ export function Footer({ variant = 'default' }: { variant?: 'default' | 'magma' 
             <div>
               <h3 className="text-white font-semibold mb-4">Help</h3>
               <ul className="space-y-2 text-sm">
-                <li><a href="#" className={`${linkText} transition-colors`}>Become Reseller</a></li>
-                <li><a href="#" className={`${linkText} transition-colors`}>How To Order?</a></li>
-                <li><a href="#" className={`${linkText} transition-colors`}>Terms and Conditions</a></li>
-                <li><a href="#" className={`${linkText} transition-colors`}>Privacy Policy</a></li>
-                <li><a href="#" className={`${linkText} transition-colors`}>Disclaimer</a></li>
-                <li><a href="#" className={`${linkText} transition-colors`}>Sitemap</a></li>
-                <li><a href="#" className={`${linkText} transition-colors`}>Feeds</a></li>
+                {HELP_LINKS.map((l) => (
+                  <li key={l.href}>
+                    <a href={CMI + l.href} target="_blank" rel="noopener noreferrer" className={`${linkText} transition-colors`}>{l.label}</a>
+                  </li>
+                ))}
               </ul>
             </div>
           </div>
@@ -137,28 +170,28 @@ export function Footer({ variant = 'default' }: { variant?: 'default' | 'magma' 
                 <p className="text-white font-semibold mb-3">Connect With Us :</p>
                 <div className="flex gap-3">
                   <a 
-                    href="#" 
+                    href={SOCIAL.linkedin} target="_blank" rel="noopener noreferrer"
                     className="w-10 h-10 bg-blue-600 rounded flex items-center justify-center text-white hover:bg-blue-700 transition-colors"
                     aria-label="LinkedIn"
                   >
                     <Linkedin className="h-5 w-5" />
                   </a>
                   <a 
-                    href="#" 
+                    href={SOCIAL.twitter} target="_blank" rel="noopener noreferrer"
                     className="w-10 h-10 bg-black rounded flex items-center justify-center text-white hover:bg-gray-800 transition-colors"
                     aria-label="Twitter"
                   >
                     <Twitter className="h-5 w-5" />
                   </a>
                   <a 
-                    href="#" 
+                    href={SOCIAL.facebook} target="_blank" rel="noopener noreferrer"
                     className="w-10 h-10 bg-blue-700 rounded flex items-center justify-center text-white hover:bg-blue-800 transition-colors"
                     aria-label="Facebook"
                   >
                     <Facebook className="h-5 w-5" />
                   </a>
                   <a 
-                    href="#" 
+                    href={SOCIAL.pinterest} target="_blank" rel="noopener noreferrer"
                     className="w-10 h-10 bg-red-600 rounded flex items-center justify-center text-white hover:bg-red-700 transition-colors font-bold"
                     aria-label="Pinterest"
                   >

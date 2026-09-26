@@ -31,9 +31,13 @@ import { ChartGroupSelector } from '@/components/filters/ChartGroupSelector'
 import { CustomScrollbar } from '@/components/ui/CustomScrollbar'
 import { GlobalKPICards } from '@/components/GlobalKPICards'
 import { getChartsForGroup } from '@/lib/chart-groups'
+import { expandDashboardTitle } from '@/lib/dashboard-title'
 import { Lightbulb, X, Layers, LayoutGrid, Settings } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { Footer } from '@/components/Footer'
+import { CredibilitySection } from '@/components/CredibilitySection'
+import { CountryGate } from '@/components/CountryGate'
+import { DemoDataNote } from '@/components/DemoDataNote'
 import Image from 'next/image'
 
 type ActiveTab =
@@ -59,15 +63,14 @@ interface Props {
   readOnly?: boolean
 }
 
+/** Applies the country selector only where the view is country-scoped. */
+function MaybeCountryGate({ enabled, children }: { enabled: boolean; children: React.ReactNode }) {
+  return enabled ? <CountryGate>{children}</CountryGate> : <>{children}</>
+}
+
+/** In-chart dummy-data alert. Market-analysis charts only. */
 function DemoBadge() {
-  return (
-    <span className="absolute top-2 right-2 z-10 inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-semibold bg-amber-50 text-amber-700 border border-amber-200 select-none pointer-events-none">
-      <svg className="h-4 w-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-      </svg>
-      Demo Data (Dummy Data): The data is for illustration purpose only
-    </span>
-  )
+  return <DemoDataNote className="mb-4" />
 }
 
 export function DashboardShell({ readOnly = false }: Props) {
@@ -117,6 +120,15 @@ export function DashboardShell({ readOnly = false }: Props) {
   const hasQuadrant = !!(quadrantData?.charted?.length || quadrantData?.others?.length)
   /** Any JSON-sourced view; these move Chart View to the top strip. */
   const hasAnySurvey = hasB2bSurvey || hasB2cSurvey || hasQuadrant
+
+  /**
+   * Market Analysis is the only view driven by the filter sidebar and the KPI
+   * row — every other view renders its own dataset full width, per country.
+   */
+  const isMarketAnalysis = selectedChartGroup === 'market-analysis'
+
+  /** Heading text: a loaded survey expands the name to the full suite. */
+  const headingTitle = expandDashboardTitle(dashboardName || 'Market Analysis', hasB2bSurvey)
 
   const visibleCharts = getChartsForGroup(selectedChartGroup)
 
@@ -198,9 +210,9 @@ export function DashboardShell({ readOnly = false }: Props) {
     // Panels available in this cut-down shell, in display order.
     const standalonePanels: { key: string; label: string }[] = [
       ...(hasWorkbook ? [{ key: 'intelligence', label: `${typeLabel} Intelligence` }] : []),
-      ...(hasB2bSurvey ? [{ key: 'b2b-survey', label: 'B2B Survey' }] : []),
+      ...(hasB2bSurvey ? [{ key: 'b2b-survey', label: 'Customer Survey' }] : []),
       ...(hasB2cSurvey ? [{ key: 'b2c-survey', label: 'B2C Survey' }] : []),
-      ...(hasQuadrant ? [{ key: 'coherent-quadrant', label: 'Coherent Quadrant' }] : []),
+      ...(hasQuadrant ? [{ key: 'coherent-quadrant', label: 'Vendor Intelligence (Coherent Quadrant)' }] : []),
     ]
     const activePanel = standalonePanels.some((p) => p.key === standaloneTab)
       ? standaloneTab
@@ -224,8 +236,8 @@ export function DashboardShell({ readOnly = false }: Props) {
             </div>
             <div className="flex-1 flex justify-center">
               <div className="text-center">
-                <h1 className="text-2xl font-bold text-black mb-1">{logoChoice === 'wmr' ? 'WMR Dashboard' : logoChoice === 'mi' ? 'Coherent MI Dashboard' : 'Coherent Dashboard'}</h1>
-                <h2 className="text-sm text-black">{dashboardName || headingLabel}</h2>
+                <h1 className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500 mb-1">{logoChoice === 'wmr' ? 'WMR Dashboard' : logoChoice === 'mi' ? 'Coherent MI Dashboard' : 'Coherent Dashboard'}</h1>
+                <h2 className="text-xl lg:text-2xl font-bold text-black leading-snug">{expandDashboardTitle(dashboardName || headingLabel, hasB2bSurvey)}</h2>
               </div>
             </div>
             <div className="flex-shrink-0">
@@ -259,13 +271,16 @@ export function DashboardShell({ readOnly = false }: Props) {
               </div>
             )}
             <div className="p-6">
+              <CountryGate>
               {activePanel === 'intelligence' && <IntelligenceDatabaseViews />}
               {activePanel === 'b2b-survey' && <BuyerSurveyView kind="b2b" />}
               {activePanel === 'b2c-survey' && <BuyerSurveyView kind="b2c" />}
               {activePanel === 'coherent-quadrant' && <QuadrantView />}
+              </CountryGate>
             </div>
           </div>
         </div>
+        <CredibilitySection />
         <Footer />
       </div>
     )
@@ -282,8 +297,8 @@ export function DashboardShell({ readOnly = false }: Props) {
           </div>
           <div className="flex-1 flex justify-center">
             <div className="text-center">
-              <h1 className="text-2xl font-bold text-black mb-1">{logoChoice === 'wmr' ? 'WMR Dashboard' : logoChoice === 'mi' ? 'Coherent MI Dashboard' : 'Coherent Dashboard'}</h1>
-              <h2 className="text-sm text-black">{dashboardName || ' Market Analysis'}</h2>
+              <h1 className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500 mb-1">{logoChoice === 'wmr' ? 'WMR Dashboard' : logoChoice === 'mi' ? 'Coherent MI Dashboard' : 'Coherent Dashboard'}</h1>
+              <h2 className="text-xl lg:text-2xl font-bold text-black leading-snug">{headingTitle}</h2>
             </div>
           </div>
           <div className="flex-shrink-0 flex items-center">
@@ -300,31 +315,24 @@ export function DashboardShell({ readOnly = false }: Props) {
           </div>
         </div>
 
-        {/* KPI Cards */}
-        <div className="mb-6">
-          <GlobalKPICards />
-          {showDemoNote && (
-            <div className="mt-3 mx-1 flex items-start gap-3 rounded-md border border-amber-400 bg-amber-100 px-5 py-3.5">
-              <svg className="mt-0.5 h-5 w-5 flex-shrink-0 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
-              </svg>
-              <p className="text-sm text-amber-900 font-medium">
-                <span className="font-bold">NOTE:</span> All the data in the dashboard is demo data. No real world data is related to this.
-              </p>
-            </div>
-          )}
-        </div>
-
-        {/* Chart View moves out of the sidebar and onto a full-width strip when a
-            buyer survey is loaded, so the extra views are switched from the top. */}
-        {hasAnySurvey && (
+        {/* KPI Cards — market analysis only; the other views are not filtered
+            by geography/segment so the KPI row would not match what they show. */}
+        {isMarketAnalysis && (
           <div className="mb-6">
-            <ChartGroupSelector orientation="horizontal" />
+            <GlobalKPICards />
+            <DemoDataNote className="mt-3 mx-1" />
           </div>
         )}
 
+        {/* Chart View sits on a full-width strip so every view — including the
+            ones that hide the sidebar — can still be switched from the top. */}
+        <div className="mb-6">
+          <ChartGroupSelector orientation="horizontal" />
+        </div>
+
         <div className="grid grid-cols-12 gap-6">
           {/* Sidebar */}
+          {isMarketAnalysis && (
           <aside className={`transition-all duration-300 ${sidebarCollapsed ? 'col-span-12 lg:col-span-1' : 'col-span-12 lg:col-span-3'}`}>
             {sidebarCollapsed ? (
               <div className="sticky top-6">
@@ -346,7 +354,6 @@ export function DashboardShell({ readOnly = false }: Props) {
                 <div className="max-h-[calc(100vh-6rem)] relative">
                   <CustomScrollbar containerRef={sidebarScrollRef}>
                     <div ref={sidebarScrollRef} className="overflow-y-auto pr-6 space-y-3 sidebar-scroll max-h-[calc(100vh-6rem)]">
-                      {!hasAnySurvey && <ChartGroupSelector />}
                       <FilterPresets />
                       <EnhancedFilterPanel />
                     </div>
@@ -355,13 +362,19 @@ export function DashboardShell({ readOnly = false }: Props) {
               </div>
             )}
           </aside>
+          )}
 
           {/* Main content */}
           <main className={`transition-all duration-300 ${
-            sidebarCollapsed
+            !isMarketAnalysis
+              ? showInsights ? 'col-span-12 lg:col-span-9' : 'col-span-12'
+              : sidebarCollapsed
               ? showInsights ? 'col-span-12 lg:col-span-8' : 'col-span-12 lg:col-span-11'
               : showInsights ? 'col-span-12 lg:col-span-6' : 'col-span-12 lg:col-span-9'
           } space-y-6`}>
+
+            {/* Every view except Market Analysis is country-scoped. */}
+            <MaybeCountryGate key={selectedChartGroup} enabled={!isMarketAnalysis}>
 
             {/* Tab Navigation */}
             <div className="bg-white rounded-lg shadow">
@@ -391,9 +404,9 @@ export function DashboardShell({ readOnly = false }: Props) {
                         {isChartVisible('pricing-multi-line') && <button onClick={() => setActiveTab('pricing-line')} className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'pricing-line' ? 'border-blue-500 text-blue-600' : 'border-transparent text-black hover:text-black hover:border-gray-300'}`}>Pricing Line</button>}
                         {isChartVisible('pricing-heatmap') && <button onClick={() => setActiveTab('pricing-heatmap')} className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'pricing-heatmap' ? 'border-blue-500 text-blue-600' : 'border-transparent text-black hover:text-black hover:border-gray-300'}`}>Pricing Heatmap</button>}
                         {isChartVisible('pricing-comparison-table') && <button onClick={() => setActiveTab('pricing-table')} className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'pricing-table' ? 'border-blue-500 text-blue-600' : 'border-transparent text-black hover:text-black hover:border-gray-300'}`}>Pricing Table</button>}
-                        {isChartVisible('b2b-survey') && <button onClick={() => setActiveTab('b2b-survey')} className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'b2b-survey' ? 'border-blue-500 text-blue-600' : 'border-transparent text-black hover:text-black hover:border-gray-300'}`}>B2B Survey</button>}
+                        {isChartVisible('b2b-survey') && <button onClick={() => setActiveTab('b2b-survey')} className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'b2b-survey' ? 'border-blue-500 text-blue-600' : 'border-transparent text-black hover:text-black hover:border-gray-300'}`}>Customer Survey</button>}
                         {isChartVisible('b2c-survey') && <button onClick={() => setActiveTab('b2c-survey')} className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'b2c-survey' ? 'border-blue-500 text-blue-600' : 'border-transparent text-black hover:text-black hover:border-gray-300'}`}>B2C Survey</button>}
-                        {isChartVisible('coherent-quadrant') && <button onClick={() => setActiveTab('coherent-quadrant')} className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'coherent-quadrant' ? 'border-blue-500 text-blue-600' : 'border-transparent text-black hover:text-black hover:border-gray-300'}`}>Coherent Quadrant</button>}
+                        {isChartVisible('coherent-quadrant') && <button onClick={() => setActiveTab('coherent-quadrant')} className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'coherent-quadrant' ? 'border-blue-500 text-blue-600' : 'border-transparent text-black hover:text-black hover:border-gray-300'}`}>Vendor Intelligence (Coherent Quadrant)</button>}
                       </>
                     )}
                   </nav>
@@ -414,57 +427,59 @@ export function DashboardShell({ readOnly = false }: Props) {
               <div className="p-6">
                 {viewMode === 'tabs' ? (
                   <>
-                    {activeTab === 'bar' && <div id="grouped-bar-chart" className="relative">{showDemoNote && <DemoBadge />}<GroupedBarChart title="Comparative Analysis - Grouped Bars" height={450} /></div>}
-                    {activeTab === 'line' && <div id="line-chart" className="relative">{showDemoNote && <DemoBadge />}<MultiLineChart title="Trend Analysis - Multiple Series" height={450} /></div>}
-                    {activeTab === 'heatmap' && <div id="heatmap-chart" className="relative">{showDemoNote && <DemoBadge />}<MatrixHeatmap title="Matrix View - Geography x Segment" height={450} /></div>}
-                    {activeTab === 'table' && <div id="comparison-table"><ComparisonTable title="Data Comparison Table" height={500} /></div>}
-                    {activeTab === 'waterfall' && <div id="waterfall-chart" className="relative">{showDemoNote && <DemoBadge />}<WaterfallChart title="Contribution Analysis - Waterfall Chart" height={450} /></div>}
-                    {activeTab === 'bubble' && isChartVisible('bubble') && <div id="bubble-chart" className="relative">{showDemoNote && <DemoBadge />}<D3BubbleChartIndependent title="Coherent Opportunity Matrix" height={500} /></div>}
-                    {activeTab === 'competitive-intelligence' && <div id="competitive-intelligence-chart" className="relative">{showDemoNote && <DemoBadge />}<CompetitiveIntelligence height={600} /></div>}
+                    {activeTab === 'bar' && <div id="grouped-bar-chart" className="relative"><DemoBadge /><GroupedBarChart title="Comparative Analysis - Grouped Bars" height={450} /></div>}
+                    {activeTab === 'line' && <div id="line-chart" className="relative"><DemoBadge /><MultiLineChart title="Trend Analysis - Multiple Series" height={450} /></div>}
+                    {activeTab === 'heatmap' && <div id="heatmap-chart" className="relative"><DemoBadge /><MatrixHeatmap title="Matrix View - Geography x Segment" height={450} /></div>}
+                    {activeTab === 'table' && <div id="comparison-table"><DemoBadge /><ComparisonTable title="Data Comparison Table" height={500} /></div>}
+                    {activeTab === 'waterfall' && <div id="waterfall-chart" className="relative"><DemoBadge /><WaterfallChart title="Contribution Analysis - Waterfall Chart" height={450} /></div>}
+                    {activeTab === 'bubble' && isChartVisible('bubble') && <div id="bubble-chart" className="relative"><D3BubbleChartIndependent title="Coherent Opportunity Matrix" height={500} /></div>}
+                    {activeTab === 'competitive-intelligence' && <div id="competitive-intelligence-chart" className="relative"><CompetitiveIntelligence height={600} /></div>}
                     {activeTab === 'customer-intelligence' && (
                       <div id="customer-intelligence-chart" className="relative">
-                        {showDemoNote && <DemoBadge />}
+                        
                         <IntelligenceDatabaseViews preferredSource="customer" />
                       </div>
                     )}
                     {activeTab === 'distributor-intelligence' && (
                       <div id="distributor-intelligence-chart" className="relative">
-                        {showDemoNote && <DemoBadge />}
+                        
                         <IntelligenceDatabaseViews preferredSource="distributor" />
                       </div>
                     )}
-                    {activeTab === 'pricing-bar' && <div id="pricing-bar-chart" className="relative">{showDemoNote && <DemoBadge />}<PricingAnalysisView activeTab="bar" /></div>}
-                    {activeTab === 'pricing-line' && <div id="pricing-line-chart" className="relative">{showDemoNote && <DemoBadge />}<PricingAnalysisView activeTab="line" /></div>}
-                    {activeTab === 'pricing-heatmap' && <div id="pricing-heatmap-chart" className="relative">{showDemoNote && <DemoBadge />}<PricingAnalysisView activeTab="heatmap" /></div>}
-                    {activeTab === 'pricing-table' && <div id="pricing-table-chart" className="relative">{showDemoNote && <DemoBadge />}<PricingAnalysisView activeTab="table" /></div>}
-                    {activeTab === 'b2b-survey' && <div id="b2b-survey-view" className="relative">{showDemoNote && <DemoBadge />}<BuyerSurveyView kind="b2b" /></div>}
-                    {activeTab === 'b2c-survey' && <div id="b2c-survey-view" className="relative">{showDemoNote && <DemoBadge />}<BuyerSurveyView kind="b2c" /></div>}
-                    {activeTab === 'coherent-quadrant' && <div id="coherent-quadrant-view" className="relative">{showDemoNote && <DemoBadge />}<QuadrantView /></div>}
+                    {activeTab === 'pricing-bar' && <div id="pricing-bar-chart" className="relative"><PricingAnalysisView activeTab="bar" /></div>}
+                    {activeTab === 'pricing-line' && <div id="pricing-line-chart" className="relative"><PricingAnalysisView activeTab="line" /></div>}
+                    {activeTab === 'pricing-heatmap' && <div id="pricing-heatmap-chart" className="relative"><PricingAnalysisView activeTab="heatmap" /></div>}
+                    {activeTab === 'pricing-table' && <div id="pricing-table-chart" className="relative"><PricingAnalysisView activeTab="table" /></div>}
+                    {activeTab === 'b2b-survey' && <div id="b2b-survey-view" className="relative"><BuyerSurveyView kind="b2b" /></div>}
+                    {activeTab === 'b2c-survey' && <div id="b2c-survey-view" className="relative"><BuyerSurveyView kind="b2c" /></div>}
+                    {activeTab === 'coherent-quadrant' && <div id="coherent-quadrant-view" className="relative"><QuadrantView /></div>}
                   </>
                 ) : (
                   <div className="space-y-8">
-                    {isChartVisible('grouped-bar') && <div className="border-b pb-8 relative">{showDemoNote && <DemoBadge />}<h3 className="text-lg font-semibold text-black mb-4">Grouped Bar Chart</h3><GroupedBarChart title="Comparative Analysis - Grouped Bars" height={400} /></div>}
-                    {isChartVisible('multi-line') && <div className="border-b pb-8 relative">{showDemoNote && <DemoBadge />}<h3 className="text-lg font-semibold text-black mb-4">Line Chart</h3><MultiLineChart title="Trend Analysis - Multiple Series" height={400} /></div>}
-                    {isChartVisible('heatmap') && <div className="border-b pb-8 relative">{showDemoNote && <DemoBadge />}<h3 className="text-lg font-semibold text-black mb-4">Heatmap</h3><MatrixHeatmap title="Matrix View - Geography x Segment" height={400} /></div>}
-                    {isChartVisible('comparison-table') && <div className="border-b pb-8"><h3 className="text-lg font-semibold text-black mb-4">Data Table</h3><ComparisonTable title="Data Comparison Table" height={400} /></div>}
-                    {isChartVisible('waterfall') && <div className="border-b pb-8 relative">{showDemoNote && <DemoBadge />}<h3 className="text-lg font-semibold text-black mb-4">Waterfall Chart</h3><WaterfallChart title="Contribution Analysis - Waterfall Chart" height={400} /></div>}
-                    {isChartVisible('bubble') && <div className="border-b pb-8 relative">{showDemoNote && <DemoBadge />}<h3 className="text-lg font-semibold text-black mb-4">Bubble Chart</h3><D3BubbleChartIndependent title="Coherent Opportunity Matrix" height={450} /></div>}
-                    {isChartVisible('competitive-intelligence') && <div className="border-b pb-8 relative">{showDemoNote && <DemoBadge />}<CompetitiveIntelligence height={600} /></div>}
+                    {isChartVisible('grouped-bar') && <div className="border-b pb-8 relative"><DemoBadge /><h3 className="text-lg font-semibold text-black mb-4">Grouped Bar Chart</h3><GroupedBarChart title="Comparative Analysis - Grouped Bars" height={400} /></div>}
+                    {isChartVisible('multi-line') && <div className="border-b pb-8 relative"><DemoBadge /><h3 className="text-lg font-semibold text-black mb-4">Line Chart</h3><MultiLineChart title="Trend Analysis - Multiple Series" height={400} /></div>}
+                    {isChartVisible('heatmap') && <div className="border-b pb-8 relative"><DemoBadge /><h3 className="text-lg font-semibold text-black mb-4">Heatmap</h3><MatrixHeatmap title="Matrix View - Geography x Segment" height={400} /></div>}
+                    {isChartVisible('comparison-table') && <div className="border-b pb-8"><DemoBadge /><h3 className="text-lg font-semibold text-black mb-4">Data Table</h3><ComparisonTable title="Data Comparison Table" height={400} /></div>}
+                    {isChartVisible('waterfall') && <div className="border-b pb-8 relative"><DemoBadge /><h3 className="text-lg font-semibold text-black mb-4">Waterfall Chart</h3><WaterfallChart title="Contribution Analysis - Waterfall Chart" height={400} /></div>}
+                    {isChartVisible('bubble') && <div className="border-b pb-8 relative"><h3 className="text-lg font-semibold text-black mb-4">Bubble Chart</h3><D3BubbleChartIndependent title="Coherent Opportunity Matrix" height={450} /></div>}
+                    {isChartVisible('competitive-intelligence') && <div className="border-b pb-8 relative"><CompetitiveIntelligence height={600} /></div>}
                     {(isChartVisible('customer-intelligence') ||
                       isChartVisible('distributor-intelligence')) && (
                       <div className="border-b pb-8 relative">
-                        {showDemoNote && <DemoBadge />}
+                        
                         <IntelligenceDatabaseViews />
                       </div>
                     )}
-                    {isChartVisible('pricing-grouped-bar') && <div className="border-b pb-8 relative">{showDemoNote && <DemoBadge />}<PricingAnalysisView activeTab="bar" /></div>}
-                    {isChartVisible('b2b-survey') && <div className="border-b pb-8 relative">{showDemoNote && <DemoBadge />}<BuyerSurveyView kind="b2b" /></div>}
-                    {isChartVisible('b2c-survey') && <div className="border-b pb-8 relative">{showDemoNote && <DemoBadge />}<BuyerSurveyView kind="b2c" /></div>}
-                    {isChartVisible('coherent-quadrant') && <div className="border-b pb-8 relative">{showDemoNote && <DemoBadge />}<QuadrantView /></div>}
+                    {isChartVisible('pricing-grouped-bar') && <div className="border-b pb-8 relative"><PricingAnalysisView activeTab="bar" /></div>}
+                    {isChartVisible('b2b-survey') && <div className="border-b pb-8 relative"><BuyerSurveyView kind="b2b" /></div>}
+                    {isChartVisible('b2c-survey') && <div className="border-b pb-8 relative"><BuyerSurveyView kind="b2c" /></div>}
+                    {isChartVisible('coherent-quadrant') && <div className="border-b pb-8 relative"><QuadrantView /></div>}
                   </div>
                 )}
               </div>
             </div>
+
+            </MaybeCountryGate>
           </main>
 
           {/* Insights Panel */}
@@ -494,6 +509,7 @@ export function DashboardShell({ readOnly = false }: Props) {
         </div>
       </div>
 
+      <CredibilitySection />
       <Footer />
     </div>
   )

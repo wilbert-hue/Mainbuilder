@@ -159,7 +159,7 @@ function QuestionCard({ question, index }: { question: BuyerSurveyQuestion; inde
           {question.text}
         </span>
         {question.n !== null && (
-          <span className="shrink-0 text-xs text-slate-500">(n = {question.n})</span>
+          <span className="shrink-0 text-xs text-slate-500">Sample Size - {question.n} Respondents</span>
         )}
       </div>
 
@@ -201,7 +201,7 @@ function MethodologyPanel({ report }: { report: BuyerSurveyReport }) {
             Respondents
           </p>
           <p className="text-sm font-bold text-[#0f3d5c]">
-            n = {m.sampleSize ?? report.sampleSize ?? '—'} verified procurement professionals
+            Sample Size - {m.sampleSize ?? report.sampleSize ?? '—'} Respondents (verified procurement professionals)
           </p>
         </div>
         <div className="rounded-md border border-slate-200 p-4">
@@ -328,7 +328,7 @@ export function BuyerSurveyView({ kind }: Props) {
           <h2 className="mt-1 text-2xl font-bold text-[#0f3d5c]">{report.industry}</h2>
           <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-600">
             <span>{report.geo}</span>
-            {report.sampleSize !== null && <span>n = {report.sampleSize}</span>}
+            {report.sampleSize !== null && <span>Sample Size - {report.sampleSize} Respondents</span>}
             <span>
               {report.segments.length} section{report.segments.length === 1 ? '' : 's'} ·{' '}
               {report.questionCount} question{report.questionCount === 1 ? '' : 's'}

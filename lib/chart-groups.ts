@@ -67,7 +67,7 @@ export const CHART_GROUPS: ChartGroup[] = [
   },
   {
     id: 'b2b-survey',
-    label: 'B2B Survey',
+    label: 'Customer Survey',
     description: 'Verified B2B buyer survey findings',
     charts: ['b2b-survey'],
     icon: '🏭'
@@ -81,7 +81,7 @@ export const CHART_GROUPS: ChartGroup[] = [
   },
   {
     id: 'coherent-quadrant',
-    label: 'Coherent Quadrant',
+    label: 'Vendor Intelligence (Coherent Quadrant)',
     description: 'Competitive positioning across product and business capability',
     charts: ['coherent-quadrant'],
     icon: '📐'

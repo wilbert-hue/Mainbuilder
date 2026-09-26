@@ -335,7 +335,7 @@ export function QuadrantView() {
           background: 'linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #0d9488 100%)',
         }}
       >
-        <h1 className="mb-1 text-2xl font-bold tracking-tight">Coherent Quadrant</h1>
+        <h1 className="mb-1 text-2xl font-bold tracking-tight">Vendor Intelligence (Coherent Quadrant)</h1>
         <p className="opacity-90">
           {report.market} · {report.geo} · {report.companyCount}{' '}
           {report.providerCategories[0] || 'companies'} scored on {report.xAxis.name} (X) and{' '}
