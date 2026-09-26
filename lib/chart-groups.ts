@@ -4,6 +4,7 @@
  */
 
 export type ChartGroupId =
+  | 'taxonomy'
   | 'market-analysis'
   | 'coherent-opportunity'
   | 'competitive-intelligence'
@@ -23,6 +24,13 @@ export interface ChartGroup {
 }
 
 export const CHART_GROUPS: ChartGroup[] = [
+  {
+    id: 'taxonomy',
+    label: 'Taxonomy',
+    description: 'Segmentation and geographical scope of this dashboard',
+    charts: ['taxonomy'],
+    icon: '🗂️'
+  },
   {
     id: 'market-analysis',
     label: 'Market Analysis',

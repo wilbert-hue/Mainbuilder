@@ -24,6 +24,7 @@ import { CompetitiveIntelligence } from '@/components/charts/CompetitiveIntellig
 import { IntelligenceDatabaseViews } from '@/components/charts/IntelligenceDatabaseViews'
 import { BuyerSurveyView } from '@/components/charts/BuyerSurveyView'
 import { QuadrantView } from '@/components/charts/QuadrantView'
+import { TaxonomyView } from '@/components/charts/TaxonomyView'
 import { PricingAnalysisView } from '@/components/charts/PricingAnalysisView'
 import { InsightsPanel } from '@/components/InsightsPanel'
 import { FilterPresets } from '@/components/filters/FilterPresets'
@@ -32,15 +33,17 @@ import { CustomScrollbar } from '@/components/ui/CustomScrollbar'
 import { GlobalKPICards } from '@/components/GlobalKPICards'
 import { getChartsForGroup } from '@/lib/chart-groups'
 import { expandDashboardTitle } from '@/lib/dashboard-title'
+import { countriesFromData } from '@/lib/taxonomy'
 import { Lightbulb, X, Layers, LayoutGrid, Settings } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { Footer } from '@/components/Footer'
 import { CredibilitySection } from '@/components/CredibilitySection'
-import { CountryGate } from '@/components/CountryGate'
+import { CountryGate, COVERED_COUNTRY } from '@/components/CountryGate'
 import { DemoDataNote } from '@/components/DemoDataNote'
 import Image from 'next/image'
 
 type ActiveTab =
+  | 'taxonomy'
   | 'bar'
   | 'line'
   | 'heatmap'
@@ -64,8 +67,16 @@ interface Props {
 }
 
 /** Applies the country selector only where the view is country-scoped. */
-function MaybeCountryGate({ enabled, children }: { enabled: boolean; children: React.ReactNode }) {
-  return enabled ? <CountryGate>{children}</CountryGate> : <>{children}</>
+function MaybeCountryGate({
+  enabled,
+  countries,
+  children,
+}: {
+  enabled: boolean
+  countries: string[]
+  children: React.ReactNode
+}) {
+  return enabled ? <CountryGate countries={countries}>{children}</CountryGate> : <>{children}</>
 }
 
 /** In-chart dummy-data alert. Market-analysis charts only. */
@@ -127,6 +138,12 @@ export function DashboardShell({ readOnly = false }: Props) {
    */
   const isMarketAnalysis = selectedChartGroup === 'market-analysis'
 
+  /** Views whose content is reported per country; taxonomy and market analysis are not. */
+  const isCountryScoped = !isMarketAnalysis && selectedChartGroup !== 'taxonomy'
+
+  /** Geographies offered in the country strip, taken from the workbook. */
+  const countryOptions = countriesFromData(data, COVERED_COUNTRY)
+
   /** Heading text: a loaded survey expands the name to the full suite. */
   const headingTitle = expandDashboardTitle(dashboardName || 'Market Analysis', hasB2bSurvey)
 
@@ -155,6 +172,7 @@ export function DashboardShell({ readOnly = false }: Props) {
   }
 
   const chartIdToTab: Record<string, ActiveTab> = {
+    taxonomy: 'taxonomy',
     'grouped-bar': 'bar',
     'multi-line': 'line',
     heatmap: 'heatmap',
@@ -232,7 +250,9 @@ export function DashboardShell({ readOnly = false }: Props) {
         <div className="container mx-auto px-6 py-6 flex-1">
           <div className="mb-6 flex items-center justify-between gap-4">
             <div className="flex-shrink-0">
-              <Image src={logoChoice === 'wmr' ? '/wmr-logo.png' : logoChoice === 'mi' ? '/mi-logo.png' : '/logo.png'} alt={logoChoice === 'wmr' ? 'Worldwide Market Reports Logo' : logoChoice === 'mi' ? 'Coherent MI Logo' : 'Coherent Market Insights Logo'} width={150} height={60} unoptimized className="h-auto w-auto max-w-[150px]" priority />
+              <a href="https://www.coherentmarketinsights.com" target="_blank" rel="noopener noreferrer" title="coherentmarketinsights.com">
+                <Image src={logoChoice === 'wmr' ? '/wmr-logo.png' : logoChoice === 'mi' ? '/mi-logo.png' : '/logo.png'} alt={logoChoice === 'wmr' ? 'Worldwide Market Reports Logo' : logoChoice === 'mi' ? 'Coherent MI Logo' : 'Coherent Market Insights Logo'} width={150} height={60} unoptimized className="h-auto w-auto max-w-[150px]" priority />
+              </a>
             </div>
             <div className="flex-1 flex justify-center">
               <div className="text-center">
@@ -293,7 +313,9 @@ export function DashboardShell({ readOnly = false }: Props) {
         {/* Header */}
         <div className="mb-6 flex items-center justify-between gap-4">
           <div className="flex-shrink-0">
-            <Image src={logoChoice === 'wmr' ? '/wmr-logo.png' : logoChoice === 'mi' ? '/mi-logo.png' : '/logo.png'} alt={logoChoice === 'wmr' ? 'Worldwide Market Reports Logo' : logoChoice === 'mi' ? 'Coherent MI Logo' : 'Coherent Market Insights Logo'} width={150} height={60} unoptimized className="h-auto w-auto max-w-[150px]" priority />
+            <a href="https://www.coherentmarketinsights.com" target="_blank" rel="noopener noreferrer" title="coherentmarketinsights.com">
+              <Image src={logoChoice === 'wmr' ? '/wmr-logo.png' : logoChoice === 'mi' ? '/mi-logo.png' : '/logo.png'} alt={logoChoice === 'wmr' ? 'Worldwide Market Reports Logo' : logoChoice === 'mi' ? 'Coherent MI Logo' : 'Coherent Market Insights Logo'} width={150} height={60} unoptimized className="h-auto w-auto max-w-[150px]" priority />
+            </a>
           </div>
           <div className="flex-1 flex justify-center">
             <div className="text-center">
@@ -374,7 +396,7 @@ export function DashboardShell({ readOnly = false }: Props) {
           } space-y-6`}>
 
             {/* Every view except Market Analysis is country-scoped. */}
-            <MaybeCountryGate key={selectedChartGroup} enabled={!isMarketAnalysis}>
+            <MaybeCountryGate key={selectedChartGroup} enabled={isCountryScoped} countries={countryOptions}>
 
             {/* Tab Navigation */}
             <div className="bg-white rounded-lg shadow">
@@ -392,6 +414,7 @@ export function DashboardShell({ readOnly = false }: Props) {
 
                     {viewMode === 'tabs' && (
                       <>
+                        {isChartVisible('taxonomy') && <button onClick={() => setActiveTab('taxonomy')} className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'taxonomy' ? 'border-blue-500 text-blue-600' : 'border-transparent text-black hover:text-black hover:border-gray-300'}`}>Taxonomy</button>}
                         {isChartVisible('grouped-bar') && <button onClick={() => setActiveTab('bar')} className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'bar' ? 'border-blue-500 text-blue-600' : 'border-transparent text-black hover:text-black hover:border-gray-300'}`}>Grouped Bar Chart</button>}
                         {isChartVisible('multi-line') && <button onClick={() => setActiveTab('line')} className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'line' ? 'border-blue-500 text-blue-600' : 'border-transparent text-black hover:text-black hover:border-gray-300'}`}>Line Chart</button>}
                         {isChartVisible('heatmap') && <button onClick={() => setActiveTab('heatmap')} className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'heatmap' ? 'border-blue-500 text-blue-600' : 'border-transparent text-black hover:text-black hover:border-gray-300'}`}>Heatmap</button>}
@@ -427,6 +450,7 @@ export function DashboardShell({ readOnly = false }: Props) {
               <div className="p-6">
                 {viewMode === 'tabs' ? (
                   <>
+                    {activeTab === 'taxonomy' && <div id="taxonomy-view"><TaxonomyView /></div>}
                     {activeTab === 'bar' && <div id="grouped-bar-chart" className="relative"><DemoBadge /><GroupedBarChart title="Comparative Analysis - Grouped Bars" height={450} /></div>}
                     {activeTab === 'line' && <div id="line-chart" className="relative"><DemoBadge /><MultiLineChart title="Trend Analysis - Multiple Series" height={450} /></div>}
                     {activeTab === 'heatmap' && <div id="heatmap-chart" className="relative"><DemoBadge /><MatrixHeatmap title="Matrix View - Geography x Segment" height={450} /></div>}
@@ -456,6 +480,7 @@ export function DashboardShell({ readOnly = false }: Props) {
                   </>
                 ) : (
                   <div className="space-y-8">
+                    {isChartVisible('taxonomy') && <div className="border-b pb-8"><TaxonomyView /></div>}
                     {isChartVisible('grouped-bar') && <div className="border-b pb-8 relative"><DemoBadge /><h3 className="text-lg font-semibold text-black mb-4">Grouped Bar Chart</h3><GroupedBarChart title="Comparative Analysis - Grouped Bars" height={400} /></div>}
                     {isChartVisible('multi-line') && <div className="border-b pb-8 relative"><DemoBadge /><h3 className="text-lg font-semibold text-black mb-4">Line Chart</h3><MultiLineChart title="Trend Analysis - Multiple Series" height={400} /></div>}
                     {isChartVisible('heatmap') && <div className="border-b pb-8 relative"><DemoBadge /><h3 className="text-lg font-semibold text-black mb-4">Heatmap</h3><MatrixHeatmap title="Matrix View - Geography x Segment" height={400} /></div>}

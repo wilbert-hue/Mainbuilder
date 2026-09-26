@@ -8,6 +8,8 @@
  * being reachable from wherever it is embedded.
  */
 
+const CREDIBILITY_URL = 'https://www.coherentmarketinsights.com/credibility-certifications'
+
 const BADGES = [
   { src: '/certifications/duns-registerednewupdsma.webp', alt: 'D-U-N-S Registered' },
   { src: '/certifications/esomar2026.avif', alt: 'ESOMAR Individual 2026' },
@@ -20,7 +22,12 @@ const BADGES = [
 export function CredibilitySection() {
   return (
     <section className="bg-[#f7f9fc] border-t border-gray-200">
-      <div className="container mx-auto px-6 py-10">
+      <a
+        href={CREDIBILITY_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="block container mx-auto px-6 py-10 transition-opacity hover:opacity-90"
+      >
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
           <div>
             <span className="inline-flex items-center gap-2 rounded-full bg-[#eef7d6] px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#0f3d5c]">
@@ -52,7 +59,7 @@ export function CredibilitySection() {
             ))}
           </div>
         </div>
-      </div>
+      </a>
     </section>
   )
 }

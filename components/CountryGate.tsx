@@ -13,7 +13,8 @@ import { Lock, Globe } from 'lucide-react'
 
 export const COVERED_COUNTRY = 'India'
 
-export const COUNTRIES = [
+/** Fallback strip for dashboards without a market workbook to read geographies from. */
+export const FALLBACK_COUNTRIES = [
   'India',
   'United States',
   'Canada',
@@ -26,8 +27,16 @@ export const COUNTRIES = [
   'Brazil',
 ]
 
-export function CountryGate({ children }: { children: React.ReactNode }) {
-  const [country, setCountry] = useState(COVERED_COUNTRY)
+interface CountryGateProps {
+  children: React.ReactNode
+  /** Geographies to offer; defaults to the static fallback strip. */
+  countries?: string[]
+}
+
+export function CountryGate({ children, countries }: CountryGateProps) {
+  const list = countries?.length ? countries : FALLBACK_COUNTRIES
+  const [country, setCountry] = useState(list[0] ?? COVERED_COUNTRY)
+  const covered = list.includes(COVERED_COUNTRY) ? COVERED_COUNTRY : list[0]
 
   return (
     <div className="space-y-4">
@@ -37,7 +46,7 @@ export function CountryGate({ children }: { children: React.ReactNode }) {
             <Globe className="h-3.5 w-3.5" />
             Country
           </span>
-          {COUNTRIES.map((c) => {
+          {list.map((c) => {
             const isSelected = c === country
             return (
               <button
@@ -56,7 +65,7 @@ export function CountryGate({ children }: { children: React.ReactNode }) {
         </div>
       </div>
 
-      {country === COVERED_COUNTRY ? (
+      {country === covered ? (
         children
       ) : (
         <div className="flex flex-col items-center justify-center rounded-lg border border-gray-200 bg-white px-6 py-20 text-center shadow-sm">

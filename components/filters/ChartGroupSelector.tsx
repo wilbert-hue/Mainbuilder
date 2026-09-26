@@ -3,10 +3,11 @@
 import { useEffect } from 'react'
 import { useDashboardStore } from '@/lib/store'
 import { CHART_GROUPS, type ChartGroupId } from '@/lib/chart-groups'
-import { BarChart3, Target, Trophy, Users, Building2, DollarSign, Factory, ShoppingCart, Grid2x2 } from 'lucide-react'
+import { BarChart3, Target, Trophy, Users, Building2, DollarSign, Factory, ShoppingCart, Grid2x2, ListTree } from 'lucide-react'
 
 // Icon mapping for each chart group
 const iconMap: Record<string, any> = {
+  taxonomy: ListTree,
   'market-analysis': BarChart3,
   'coherent-opportunity': Target,
   'competitive-intelligence': Trophy,
@@ -29,6 +30,7 @@ interface ChartGroupSelectorProps {
 
 export function ChartGroupSelector({ orientation = 'vertical' }: ChartGroupSelectorProps = {}) {
   const {
+    data,
     selectedChartGroup,
     setSelectedChartGroup,
     rawIntelligenceData,
@@ -45,6 +47,8 @@ export function ChartGroupSelector({ orientation = 'vertical' }: ChartGroupSelec
     b2cSurveyData,
     quadrantData,
   } = useDashboardStore()
+
+  const hasMarketData = !!data
 
   const hasCustomerWorkbookRows = !!(
     rawIntelligenceData?.rows?.length ||
@@ -85,6 +89,7 @@ export function ChartGroupSelector({ orientation = 'vertical' }: ChartGroupSelec
   // Auto-switch to a valid chart group if the currently selected one has no data
   useEffect(() => {
     const isCurrentGroupInvalid =
+      (selectedChartGroup === 'taxonomy' && !hasMarketData) ||
       (selectedChartGroup === 'coherent-opportunity' && (hasB2bSurveyData || hasB2cSurveyData)) ||
       (selectedChartGroup === 'customer-intelligence' && !hasCustomerIntelligenceData) ||
       (selectedChartGroup === 'distributor-intelligence' && !hasDistributorIntelligenceData) ||
@@ -100,6 +105,7 @@ export function ChartGroupSelector({ orientation = 'vertical' }: ChartGroupSelec
     }
   }, [
     selectedChartGroup,
+    hasMarketData,
     hasCustomerIntelligenceData,
     hasDistributorIntelligenceData,
     hasCompetitiveIntelligenceData,
@@ -113,6 +119,7 @@ export function ChartGroupSelector({ orientation = 'vertical' }: ChartGroupSelec
   // Groups whose backing dataset is actually present. Shared by both layouts so
   // visibility rules live in exactly one place.
   const availableGroups = CHART_GROUPS.filter((group) => {
+    if (group.id === 'taxonomy') return hasMarketData
     // Survey findings supersede the Opportunity Matrix: when a B2B or B2C
     // survey is loaded, hide the matrix rather than presenting two competing
     // reads of the same opportunity question.
