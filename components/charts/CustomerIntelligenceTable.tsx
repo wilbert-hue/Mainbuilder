@@ -200,22 +200,46 @@ function tierPillClass(tier: TierKey): string {
   return 'bg-slate-200 text-slate-800 border border-slate-300'
 }
 
+/**
+ * Columns dropped before render.
+ *
+ * Customer: the two fields the directory does not populate for buyers.
+ * Distributor: "Office Website" repeats "Website" verbatim in every source
+ * workbook, so the pair reads as a duplicate column.
+ */
+const HIDDEN_COLUMNS: Record<'customer' | 'distributor', string[]> = {
+  customer: ['Whom They Sell To', 'Distribution Channel'],
+  distributor: ['Office Website'],
+}
+
+/** Shown in place of a blank cell — the value exists, it is just gated. */
+const LOCKED_CELL_NOTE = 'Kindly subscribe to access these details'
+
 function PropositionTableDashboard({
   data,
   tier,
   bannerTitle,
   showDemoNote,
   currency,
+  intelligenceSource,
 }: {
   data: PropositionData
   tier: TierKey
   bannerTitle: string
   showDemoNote: boolean
   currency: TableCurrency
+  intelligenceSource: 'customer' | 'distributor'
 }) {
   const rawHeaders = data.headers?.length ? data.headers : Object.keys(data.rows[0] || {})
-  const headers = rawHeaders
   const parentHeaders = data.parentHeaders
+  const hidden = HIDDEN_COLUMNS[intelligenceSource]
+  // Banded headers carry colSpans tied to the full column list, so dropping a
+  // column there would misalign the band — leave those sheets untouched.
+  const headers = parentHeaders?.length
+    ? rawHeaders
+    : rawHeaders.filter(
+        (h) => !hidden.some((x) => x.toLowerCase() === String(h).trim().toLowerCase())
+      )
 
   const tierLabel = tier === 'premium' ? 'Premium' : tier === 'advance' ? 'Advance' : 'Standard'
 
@@ -310,7 +334,7 @@ function PropositionTableDashboard({
                         {renderCellValue(header, row[header], currency)}
                       </span>
                     ) : (
-                      <span className="text-slate-400">—</span>
+                      <span className="text-xs italic text-slate-400">{LOCKED_CELL_NOTE}</span>
                     )}
                   </td>
                 ))}
@@ -465,6 +489,7 @@ export function CustomerIntelligenceTable({
           bannerTitle={bannerTitle}
           showDemoNote={false}
           currency={tableCurrency}
+          intelligenceSource={intelligenceSource}
         />
       </div>
     )
@@ -576,6 +601,7 @@ export function CustomerIntelligenceTable({
           bannerTitle={bannerTitle}
           showDemoNote={showDemoNote}
           currency={tableCurrency}
+          intelligenceSource={intelligenceSource}
         />
       )}
 

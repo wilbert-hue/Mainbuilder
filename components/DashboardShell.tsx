@@ -32,12 +32,14 @@ import { ChartGroupSelector } from '@/components/filters/ChartGroupSelector'
 import { CustomScrollbar } from '@/components/ui/CustomScrollbar'
 import { GlobalKPICards } from '@/components/GlobalKPICards'
 import { getChartsForGroup } from '@/lib/chart-groups'
-import { expandDashboardTitle } from '@/lib/dashboard-title'
+import { suiteSubtitle } from '@/lib/dashboard-title'
 import { countriesFromData } from '@/lib/taxonomy'
 import { Lightbulb, X, Layers, LayoutGrid, Settings } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { Footer } from '@/components/Footer'
 import { CredibilitySection } from '@/components/CredibilitySection'
+import { AccoladesSection } from '@/components/AccoladesSection'
+import { WhyCoherentSection } from '@/components/WhyCoherentSection'
 import { CountryGate, COVERED_COUNTRY } from '@/components/CountryGate'
 import { DemoDataNote } from '@/components/DemoDataNote'
 import Image from 'next/image'
@@ -144,8 +146,9 @@ export function DashboardShell({ readOnly = false }: Props) {
   /** Geographies offered in the country strip, taken from the workbook. */
   const countryOptions = countriesFromData(data, COVERED_COUNTRY)
 
-  /** Heading text: a loaded survey expands the name to the full suite. */
-  const headingTitle = expandDashboardTitle(dashboardName || 'Market Analysis', hasB2bSurvey)
+  /** Market name on top; a loaded survey adds the module list beneath it. */
+  const headingTitle = dashboardName || 'Market Analysis'
+  const headingSubtitle = suiteSubtitle(hasB2bSurvey)
 
   const visibleCharts = getChartsForGroup(selectedChartGroup)
 
@@ -256,8 +259,10 @@ export function DashboardShell({ readOnly = false }: Props) {
             </div>
             <div className="flex-1 flex justify-center">
               <div className="text-center">
-                <h1 className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500 mb-1">{logoChoice === 'wmr' ? 'WMR Dashboard' : logoChoice === 'mi' ? 'Coherent MI Dashboard' : 'Coherent Dashboard'}</h1>
-                <h2 className="text-xl lg:text-2xl font-bold text-black leading-snug">{expandDashboardTitle(dashboardName || headingLabel, hasB2bSurvey)}</h2>
+                <h1 className="text-xl lg:text-2xl font-bold text-black leading-snug">{dashboardName || headingLabel}</h1>
+                {suiteSubtitle(hasB2bSurvey) && (
+                  <p className="mt-1 text-xs lg:text-sm text-gray-600">{suiteSubtitle(hasB2bSurvey)}</p>
+                )}
               </div>
             </div>
             <div className="flex-shrink-0">
@@ -300,7 +305,9 @@ export function DashboardShell({ readOnly = false }: Props) {
             </div>
           </div>
         </div>
+        <WhyCoherentSection />
         <CredibilitySection />
+        <AccoladesSection />
         <Footer />
       </div>
     )
@@ -319,8 +326,10 @@ export function DashboardShell({ readOnly = false }: Props) {
           </div>
           <div className="flex-1 flex justify-center">
             <div className="text-center">
-              <h1 className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500 mb-1">{logoChoice === 'wmr' ? 'WMR Dashboard' : logoChoice === 'mi' ? 'Coherent MI Dashboard' : 'Coherent Dashboard'}</h1>
-              <h2 className="text-xl lg:text-2xl font-bold text-black leading-snug">{headingTitle}</h2>
+              <h1 className="text-xl lg:text-2xl font-bold text-black leading-snug">{headingTitle}</h1>
+              {headingSubtitle && (
+                <p className="mt-1 text-xs lg:text-sm text-gray-600">{headingSubtitle}</p>
+              )}
             </div>
           </div>
           <div className="flex-shrink-0 flex items-center">
@@ -341,8 +350,8 @@ export function DashboardShell({ readOnly = false }: Props) {
             by geography/segment so the KPI row would not match what they show. */}
         {isMarketAnalysis && (
           <div className="mb-6">
+            <DemoDataNote className="mb-3 mx-1" />
             <GlobalKPICards />
-            <DemoDataNote className="mt-3 mx-1" />
           </div>
         )}
 
@@ -534,7 +543,9 @@ export function DashboardShell({ readOnly = false }: Props) {
         </div>
       </div>
 
+      <WhyCoherentSection />
       <CredibilitySection />
+      <AccoladesSection />
       <Footer />
     </div>
   )

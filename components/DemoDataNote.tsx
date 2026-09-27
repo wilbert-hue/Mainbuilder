@@ -7,7 +7,7 @@
  */
 
 export const DEMO_DATA_NOTE =
-  'All the data consists of dummy number, No real-world data is related to this'
+  'Data presented is dummy, and simply for representation. Kindly subscribe to this platform for real world data.'
 
 export function DemoDataNote({ className = '' }: { className?: string }) {
   return (

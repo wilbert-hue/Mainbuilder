@@ -74,7 +74,7 @@ export function CountryGate({ children, countries }: CountryGateProps) {
           </div>
           <h3 className="text-lg font-bold text-[#0f3d5c]">Data Hidden</h3>
           <p className="mt-2 text-sm text-slate-600">
-            Please subscribe for more — {country} coverage is available on request.
+            Please subscribe to platform for {country} data
           </p>
         </div>
       )}

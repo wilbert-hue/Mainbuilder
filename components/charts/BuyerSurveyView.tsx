@@ -147,7 +147,10 @@ function ExecutiveSummaryCard({ report }: { report: BuyerSurveyReport }) {
 }
 
 function QuestionCard({ question, index }: { question: BuyerSurveyQuestion; index: number }) {
-  const label = question.id || `Q${index + 1}`
+  // Exports label questions inconsistently ("q1", "Q1", "1") — normalise to "Q.1".
+  const raw = question.id || String(index + 1)
+  const digits = raw.match(/\d+/)?.[0]
+  const label = digits ? `Q.${digits}` : raw
   return (
     <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
       {/* Question header */}

@@ -18,3 +18,8 @@ export function expandDashboardTitle(name: string, includeSuite: boolean): strin
   if (!includeSuite || !base) return base
   return [base, ...SUITE_MODULES].join(', ')
 }
+
+/** The modules line rendered under the market name, or "" when not applicable. */
+export function suiteSubtitle(includeSuite: boolean): string {
+  return includeSuite ? SUITE_MODULES.join(', ') : ''
+}
