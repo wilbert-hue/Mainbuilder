@@ -9,7 +9,7 @@ export const SUITE_MODULES = [
   'Customer Intelligence',
   'Distributor Intelligence',
   'Vendor Intelligence',
-  'Customer Survey',
+  'Voice of Customer - B2B',
   'Future Outlook',
 ]
 

@@ -231,8 +231,8 @@ export function DashboardShell({ readOnly = false }: Props) {
     // Panels available in this cut-down shell, in display order.
     const standalonePanels: { key: string; label: string }[] = [
       ...(hasWorkbook ? [{ key: 'intelligence', label: `${typeLabel} Intelligence` }] : []),
-      ...(hasB2bSurvey ? [{ key: 'b2b-survey', label: 'Customer Survey' }] : []),
-      ...(hasB2cSurvey ? [{ key: 'b2c-survey', label: 'B2C Survey' }] : []),
+      ...(hasB2bSurvey ? [{ key: 'b2b-survey', label: 'Voice of Customer - B2B' }] : []),
+      ...(hasB2cSurvey ? [{ key: 'b2c-survey', label: 'Voice of Customer - B2C' }] : []),
       ...(hasQuadrant ? [{ key: 'coherent-quadrant', label: 'Vendor Intelligence (Coherent Quadrant)' }] : []),
     ]
     const activePanel = standalonePanels.some((p) => p.key === standaloneTab)
@@ -241,11 +241,11 @@ export function DashboardShell({ readOnly = false }: Props) {
     const headingLabel = hasWorkbook
       ? `${typeLabel} Intelligence`
       : hasB2bSurvey && hasB2cSurvey
-      ? 'B2B & B2C Survey'
+      ? 'Voice of Customer'
       : hasB2bSurvey
-      ? 'B2B Survey'
+      ? 'Voice of Customer - B2B'
       : hasB2cSurvey
-      ? 'B2C Survey'
+      ? 'Voice of Customer - B2C'
       : 'Coherent Quadrant'
 
     return (
@@ -436,8 +436,8 @@ export function DashboardShell({ readOnly = false }: Props) {
                         {isChartVisible('pricing-multi-line') && <button onClick={() => setActiveTab('pricing-line')} className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'pricing-line' ? 'border-blue-500 text-blue-600' : 'border-transparent text-black hover:text-black hover:border-gray-300'}`}>Pricing Line</button>}
                         {isChartVisible('pricing-heatmap') && <button onClick={() => setActiveTab('pricing-heatmap')} className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'pricing-heatmap' ? 'border-blue-500 text-blue-600' : 'border-transparent text-black hover:text-black hover:border-gray-300'}`}>Pricing Heatmap</button>}
                         {isChartVisible('pricing-comparison-table') && <button onClick={() => setActiveTab('pricing-table')} className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'pricing-table' ? 'border-blue-500 text-blue-600' : 'border-transparent text-black hover:text-black hover:border-gray-300'}`}>Pricing Table</button>}
-                        {isChartVisible('b2b-survey') && <button onClick={() => setActiveTab('b2b-survey')} className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'b2b-survey' ? 'border-blue-500 text-blue-600' : 'border-transparent text-black hover:text-black hover:border-gray-300'}`}>Customer Survey</button>}
-                        {isChartVisible('b2c-survey') && <button onClick={() => setActiveTab('b2c-survey')} className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'b2c-survey' ? 'border-blue-500 text-blue-600' : 'border-transparent text-black hover:text-black hover:border-gray-300'}`}>B2C Survey</button>}
+                        {isChartVisible('b2b-survey') && <button onClick={() => setActiveTab('b2b-survey')} className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'b2b-survey' ? 'border-blue-500 text-blue-600' : 'border-transparent text-black hover:text-black hover:border-gray-300'}`}>Voice of Customer - B2B</button>}
+                        {isChartVisible('b2c-survey') && <button onClick={() => setActiveTab('b2c-survey')} className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'b2c-survey' ? 'border-blue-500 text-blue-600' : 'border-transparent text-black hover:text-black hover:border-gray-300'}`}>Voice of Customer - B2C</button>}
                         {isChartVisible('coherent-quadrant') && <button onClick={() => setActiveTab('coherent-quadrant')} className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'coherent-quadrant' ? 'border-blue-500 text-blue-600' : 'border-transparent text-black hover:text-black hover:border-gray-300'}`}>Vendor Intelligence (Coherent Quadrant)</button>}
                       </>
                     )}

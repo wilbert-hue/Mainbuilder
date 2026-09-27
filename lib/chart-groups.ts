@@ -75,14 +75,14 @@ export const CHART_GROUPS: ChartGroup[] = [
   },
   {
     id: 'b2b-survey',
-    label: 'Customer Survey',
+    label: 'Voice of Customer - B2B',
     description: 'Verified B2B buyer survey findings',
     charts: ['b2b-survey'],
     icon: '🏭'
   },
   {
     id: 'b2c-survey',
-    label: 'B2C Survey',
+    label: 'Voice of Customer - B2C',
     description: 'Verified B2C consumer survey findings',
     charts: ['b2c-survey'],
     icon: '🛒'
