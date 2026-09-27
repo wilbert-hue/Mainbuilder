@@ -20,6 +20,7 @@
  */
 
 import { useMemo, useState } from 'react'
+import { Lock } from 'lucide-react'
 import { useDashboardStore } from '@/lib/store'
 import {
   normaliseQuadrant,
@@ -226,15 +227,23 @@ function AxisParameterPanel({
   )
 }
 
-/** One company block carrying both axes, X above Y. */
+/**
+ * One company block carrying both axes, X above Y.
+ *
+ * Only the lead company is readable; the rest keep their header (the scores are
+ * already public in the Top companies table) with the evidence behind a
+ * subscribe overlay.
+ */
 function CompanyParameterBlock({
   company,
   xAxisName,
   yAxisName,
+  locked = false,
 }: {
   company: QuadrantCompany
   xAxisName: string
   yAxisName: string
+  locked?: boolean
 }) {
   return (
     <div className="rounded-lg border border-slate-200 bg-white">
@@ -259,9 +268,25 @@ function CompanyParameterBlock({
         </span>
       </div>
 
-      <div className="space-y-5 p-4">
-        <AxisParameterPanel axisLabel="X" axisName={xAxisName} params={company.xParameters} />
-        <AxisParameterPanel axisLabel="Y" axisName={yAxisName} params={company.yParameters} />
+      <div className="relative">
+        <div
+          className={`space-y-5 p-4 ${locked ? 'pointer-events-none select-none blur-[5px]' : ''}`}
+          aria-hidden={locked || undefined}
+        >
+          <AxisParameterPanel axisLabel="X" axisName={xAxisName} params={company.xParameters} />
+          <AxisParameterPanel axisLabel="Y" axisName={yAxisName} params={company.yParameters} />
+        </div>
+
+        {locked && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-b-lg bg-white/75 backdrop-blur-[3px]">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-50 text-amber-600 shadow-sm">
+              <Lock className="h-6 w-6" />
+            </div>
+            <p className="px-6 text-center text-sm font-medium text-[#0f3d5c]">
+              Kindly subscribe to access these details
+            </p>
+          </div>
+        )}
       </div>
     </div>
   )
@@ -705,7 +730,8 @@ export function QuadrantView() {
             </span>
           </h2>
           <p className="mb-4 text-[0.86rem] text-slate-500">
-            Click any parameter to read its scoring rationale and supporting evidence.
+            Click any parameter to read its scoring rationale and supporting evidence. Full evidence
+            is shown for the leading company; the rest is available on subscription.
           </p>
           <div className="space-y-4">
             {charted.map((c, i) => (
@@ -714,6 +740,7 @@ export function QuadrantView() {
                 company={c}
                 xAxisName={report.xAxis.name}
                 yAxisName={report.yAxis.name}
+                locked={i > 0}
               />
             ))}
           </div>
