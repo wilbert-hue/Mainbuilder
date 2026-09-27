@@ -189,14 +189,14 @@ function parseQuestions(raw: unknown): BuyerSurveyQuestion[] {
   const out: BuyerSurveyQuestion[] = []
   raw.forEach((item, index) => {
     const rec = asRecord(item)
-    const text = asString(rec.text ?? rec.question ?? rec.title)
+    const text = asString(rec.text ?? rec.question ?? rec.question_text ?? rec.title)
     const options = parseOptions(rec.options ?? rec.answers ?? rec.choices)
     // A question with neither text nor options carries no signal — skip it.
     if (!text && options.length === 0) return
     out.push({
-      id: asString(rec.id) || `Q${index + 1}`,
+      id: asString(rec.id ?? rec.question_number) || `Q${index + 1}`,
       text,
-      type: asString(rec.type, 'single_select'),
+      type: asString(rec.type ?? rec.question_type, 'single_select'),
       chartType: asString(rec.chart_type ?? rec.chartType) || null,
       options,
       keyInsight: asString(rec.key_insight ?? rec.keyInsight ?? rec.takeaway),
@@ -216,9 +216,12 @@ function parseSegments(raw: unknown): BuyerSurveySegment[] {
     const questions = parseQuestions(rec.questions ?? rec.items)
     if (questions.length === 0) return
     out.push({
-      id: asString(rec.id) || `S${index + 1}`,
-      title: asString(rec.title ?? rec.name ?? rec.source_title, `Section ${index + 1}`),
-      focus: asString(rec.focus ?? rec.description ?? rec.summary),
+      id: asString(rec.id ?? rec.section_number) || `S${index + 1}`,
+      title: asString(
+        rec.title ?? rec.name ?? rec.section_name ?? rec.source_title,
+        `Section ${index + 1}`
+      ),
+      focus: asString(rec.focus ?? rec.description ?? rec.summary ?? rec.section_focus),
       questions,
     })
   })
@@ -243,7 +246,9 @@ function parseLandscape(raw: unknown): BuyerSurveyLandscape {
   // Organisations: prefer the explicit surveyed list, then the richer
   // entity objects, then the industries-served list.
   const organisations =
-    asStringList(rec.organisations_surveyed).length > 0
+    asStringList(rec.customers_surveyed).length > 0
+      ? asStringList(rec.customers_surveyed)
+      : asStringList(rec.organisations_surveyed).length > 0
       ? asStringList(rec.organisations_surveyed)
       : asStringList(rec.entities_surveyed, ['type', 'name']).length > 0
       ? asStringList(rec.entities_surveyed, ['type', 'name'])
@@ -260,7 +265,8 @@ function parseLandscape(raw: unknown): BuyerSurveyLandscape {
 
   // Buyer types: name + how that type buys.
   const buyerSegments: BuyerSegment[] = []
-  const rawSegments = rec.buyer_segments ?? rec.buyerSegments ?? rec.buyer_types
+  const rawSegments =
+    rec.buyer_segments ?? rec.buyerSegments ?? rec.buyer_types ?? rec.behavioural_profiles
   if (Array.isArray(rawSegments)) {
     for (const item of rawSegments) {
       if (typeof item === 'string') {
@@ -278,11 +284,16 @@ function parseLandscape(raw: unknown): BuyerSurveyLandscape {
     }
   }
 
+  // Consumer exports list individuals, not organisations — label the panel to match.
+  const defaultOrgHeading = rec.customers_surveyed
+    ? 'Customers We Surveyed'
+    : 'Organisations We Surveyed'
+
   return {
-    definition: asString(rec.definition),
-    whoBuys: asString(rec.who_buys ?? rec.whoBuys),
+    definition: asString(rec.definition ?? rec.category),
+    whoBuys: asString(rec.who_buys ?? rec.whoBuys ?? rec.summary),
     buyerSegments,
-    organisationsHeading: asString(rec.organisations_heading, 'Organisations We Surveyed'),
+    organisationsHeading: asString(rec.organisations_heading, defaultOrgHeading),
     organisations,
     designationsHeading: asString(rec.designations_heading, 'Designations We Spoke To'),
     designations,
@@ -376,7 +387,7 @@ export function parseBuyerSurvey(raw: unknown, kind: BuyerSurveyKind): ParseBuye
       analystName: asString(rec.analyst_name),
       analystTitle: asString(rec.analyst_title),
       sampleBreakdown: asNumberMap(rec.sample_breakdown),
-      landscape: parseLandscape(rec.buyer_landscape ?? rec.market_definition),
+      landscape: parseLandscape(rec.buyer_landscape ?? rec.market_definition ?? rec.study_overview),
       methodology,
       executiveSummary: parseExecutiveSummary(rec.executive_summary),
       segments,
