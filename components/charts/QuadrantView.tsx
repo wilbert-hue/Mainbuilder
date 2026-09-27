@@ -227,6 +227,59 @@ function AxisParameterPanel({
   )
 }
 
+const NUMBER_WORDS = [
+  'zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten',
+  'eleven', 'twelve',
+]
+const spell = (n: number) => NUMBER_WORDS[n] ?? String(n)
+const capitalise = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
+
+/**
+ * The standard research methodology, identical across every quadrant apart from
+ * the parameter counts, which are read off the report so the copy cannot drift
+ * from what the dashboard actually shows.
+ */
+function buildMethodologySteps(perAxis: number, total: number) {
+  return [
+    {
+      title: 'Market Definition',
+      detail:
+        `The market scope and the type of company that qualifies were defined first. ${capitalise(
+          spell(perAxis)
+        )} parameters were then set for each axis, each with a written definition: the X axis measures core capability (products, services or technology) and the Y axis measures business capability.`,
+    },
+    {
+      title: 'Desk and Primary Research',
+      detail:
+        'Desk research covered company websites, filings, trade directories, industry publications and news. Primary research drew on B2B marketplace listings, where available, to confirm company offerings. Coverage was extended region by region until no new qualifying companies emerged.',
+    },
+    {
+      title: 'Screening',
+      detail:
+        "Each candidate was screened against the market's inclusion criteria and required commercial role, and its market activity was verified. Distributors, resellers, consultancies, contract manufacturers and media names were excluded, and duplicate entries were consolidated.",
+    },
+    {
+      title: 'Evidence Compilation',
+      detail:
+        `Every screened company was assessed on all ${spell(
+          total
+        )} parameters. For companies profiled on the chart, evidence was recorded parameter by parameter. Findings from B2B marketplace listings are reported as primary research; items not verified through primary research are marked as such.`,
+    },
+    {
+      title: 'Scoring',
+      detail:
+        `Each parameter is rated on a 0–100 scale against its written definition, based on the evidence available for that company. A company's X and Y scores are the simple average of its ${spell(
+          perAxis
+        )} parameter ratings on each axis, and its overall score is the average of X and Y.`,
+    },
+    {
+      title: 'Normalization & Selection',
+      detail:
+        'X and Y scores are rescaled to a 65–100 range across all companies assessed, preserving their rank order. The chart shows an equal number of companies from each of the four quadrants, with boundaries set at the median. All other companies are listed in the table below the chart.',
+    },
+  ]
+}
+
 /**
  * One company block carrying both axes, X above Y.
  *
@@ -339,6 +392,15 @@ export function QuadrantView() {
 
   const xNames = report.xAxis.parameters.map((p) => p.name)
   const yNames = report.yAxis.parameters.map((p) => p.name)
+  const paramsPerAxis = xNames.length || 5
+  // A report that ships its own methodology wins; otherwise the standard steps.
+  const methodologySteps =
+    report.methodology.length > 0
+      ? report.methodology
+      : buildMethodologySteps(paramsPerAxis, xNames.length + yNames.length || 10)
+  const defaultMethodologyNote = `Scoring inputs: each axis is built from ${spell(
+    paramsPerAxis
+  )} market-specific parameters, defined in the Market Scoring Parameters section above. All parameters are equally weighted.`
 
   // Country mix per quadrant, shown beneath the chart.
   const countryMix = QUADRANT_KEYS.map((q) => {
@@ -747,37 +809,6 @@ export function QuadrantView() {
         </section>
       )}
 
-      {/* Methodology */}
-      {(report.methodology.length > 0 || report.methodologyNote) && (
-        <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="mb-3 text-lg font-bold text-slate-900">Research Methodology</h2>
-          {report.methodology.length > 0 && (
-            <div className="mb-4 flex flex-wrap gap-3">
-              {report.methodology.map((s, i) => (
-                <div
-                  key={i}
-                  className="min-w-[150px] flex-1 rounded-xl px-4 py-4 text-slate-50"
-                  style={{ background: 'linear-gradient(160deg, #0f172a, #1e3a5f)' }}
-                >
-                  <div
-                    className="mb-2 flex h-7 w-7 items-center justify-center rounded-full text-[0.85rem] font-bold"
-                    style={{ backgroundColor: '#0d9488' }}
-                  >
-                    {i + 1}
-                  </div>
-                  <div className="mb-1 text-[0.88rem] font-bold">{s.title}</div>
-                  {s.detail && (
-                    <div className="text-[0.78rem] leading-relaxed opacity-90">{s.detail}</div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-          {report.methodologyNote && (
-            <p className="text-[0.82rem] leading-relaxed text-slate-500">{report.methodologyNote}</p>
-          )}
-        </section>
-      )}
       {/* Scoring parameters */}
       {(xNames.length > 0 || yNames.length > 0) && (
         <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -814,6 +845,46 @@ export function QuadrantView() {
           </div>
         </section>
       )}
+
+      {/* Research Methodology — closes every quadrant */}
+      <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <h2 className="mb-3 text-lg font-bold text-slate-900">Research Methodology</h2>
+        <p className="mb-5 text-[0.92rem] leading-relaxed text-slate-500">
+          This quadrant was compiled independently through structured desk research, supplemented by
+          primary research where available. It is not based on a survey or on vendor
+          self-submission. The steps below describe how companies were identified, screened,
+          evidenced and scored.
+        </p>
+
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-stretch">
+          {methodologySteps.map((step, i) => (
+            <div key={step.title} className="flex flex-1 items-stretch gap-3">
+              <div
+                className="flex-1 rounded-xl px-4 py-4 text-slate-50"
+                style={{ background: 'linear-gradient(160deg, #0f172a, #1e3a5f)' }}
+              >
+                <div
+                  className="mb-3 flex h-8 w-8 items-center justify-center rounded-full text-[0.85rem] font-bold"
+                  style={{ backgroundColor: '#0d9488' }}
+                >
+                  {i + 1}
+                </div>
+                <div className="mb-2 text-[0.92rem] font-bold leading-snug">{step.title}</div>
+                <div className="text-[0.8rem] leading-relaxed opacity-90">{step.detail}</div>
+              </div>
+              {i < methodologySteps.length - 1 && (
+                <div className="hidden items-center text-slate-400 lg:flex" aria-hidden>
+                  →
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        <p className="mt-5 border-t border-slate-200 pt-4 text-[0.86rem] leading-relaxed text-slate-500">
+          {report.methodologyNote || defaultMethodologyNote}
+        </p>
+      </section>
 
     </div>
   )
