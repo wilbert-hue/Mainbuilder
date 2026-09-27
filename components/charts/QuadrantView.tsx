@@ -476,6 +476,43 @@ export function QuadrantView() {
         )}
       </section>
 
+      {/* What each quadrant means */}
+      {report.quadrantDefinitions.length > 0 && (
+        <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <h2 className="mb-3 text-lg font-bold text-slate-900">What Each Quadrant Means</h2>
+          <div className="grid gap-4 md:grid-cols-2">
+            {report.quadrantDefinitions.map((q) => {
+              const color = QUADRANT_COLORS[normaliseQuadrant(q.quadrant)] || '#cbd5e1'
+              return (
+                <div
+                  key={q.quadrant + q.title}
+                  className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-4"
+                  style={{ borderLeft: `4px solid ${color}` }}
+                >
+                  <div className="flex flex-wrap items-baseline gap-2">
+                    <span
+                      className="rounded-full px-2.5 py-0.5 text-[0.72rem] font-bold text-slate-900"
+                      style={{ backgroundColor: color }}
+                    >
+                      {q.quadrant}
+                    </span>
+                    <span className="font-bold text-slate-900">{q.title}</span>
+                  </div>
+                  {q.position && (
+                    <div className="mt-1 text-[0.8rem] font-medium text-slate-500">{q.position}</div>
+                  )}
+                  {q.definition && (
+                    <p className="mt-2 text-[0.88rem] leading-relaxed text-slate-700">
+                      {q.definition}
+                    </p>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </section>
+      )}
+
       {/* Top companies */}
       <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
         <h2 className="mb-3 text-lg font-bold text-slate-900">

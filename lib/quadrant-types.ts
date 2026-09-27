@@ -53,6 +53,17 @@ export interface QuadrantAxis {
   parameters: QuadrantParameterDefinition[]
 }
 
+/** One of the four quadrants, as described by the export. */
+export interface QuadrantDefinition {
+  /** "Leaders", "Challengers", … */
+  quadrant: string
+  /** Full name, e.g. "Integrated Market Leaders". */
+  title: string
+  /** Where the quadrant sits on the two axes. */
+  position: string
+  definition: string
+}
+
 export interface QuadrantMethodologyStep {
   title: string
   detail: string
@@ -75,6 +86,8 @@ export interface QuadrantReport {
   charted: QuadrantCompany[]
   /** The remaining population, listed in "Other Noticeable Player". */
   others: QuadrantCompany[]
+  /** Quadrant explanations; empty for exports that do not describe them. */
+  quadrantDefinitions: QuadrantDefinition[]
   methodology: QuadrantMethodologyStep[]
   methodologyNote: string
 }
@@ -313,6 +326,24 @@ function parseCompanies(raw: unknown): QuadrantCompany[] {
   return out
 }
 
+function parseQuadrantDefinitions(raw: unknown): QuadrantDefinition[] {
+  if (!Array.isArray(raw)) return []
+  const out: QuadrantDefinition[] = []
+  for (const item of raw) {
+    const rec = asRecord(item)
+    const quadrant = asString(pick(rec, 'quadrant', 'chart_label', 'name', 'key'))
+    const definition = asString(pick(rec, 'definition', 'description', 'summary'))
+    if (!quadrant && !definition) continue
+    out.push({
+      quadrant,
+      title: asString(pick(rec, 'title', 'label')) || quadrant,
+      position: asString(pick(rec, 'position', 'placement')),
+      definition,
+    })
+  }
+  return out
+}
+
 function parseMethodology(raw: unknown): QuadrantMethodologyStep[] {
   const list = Array.isArray(raw) ? raw : asRecord(raw).steps
   if (!Array.isArray(list)) return []
@@ -402,10 +433,18 @@ export function parseQuadrantReport(raw: unknown): ParseQuadrantResult {
   }
 
   const meta = asRecord(pick(rec, 'report_meta', 'meta', 'metadata'))
+  const quadrantDefinitions = parseQuadrantDefinitions(
+    pick(rec, 'quadrant_definitions', 'quadrantDefinitions', 'quadrants')
+  )
   // cmi-quadrant-v1 puts the axes under `criteria` and the market classification
   // under `criteria.relevance`.
   const criteria = asRecord(pick(rec, 'criteria'))
+  // Newer exports carry axis_titles at the top level; older ones only have
+  // criteria.axis_labels. Prefer the explicit top-level titles when present.
+  const axisTitles = asRecord(pick(rec, 'axis_titles', 'axisTitles'))
   const axisLabels = asRecord(pick(criteria, 'axis_labels'))
+  const axisName = (key: 'x' | 'y', fallback: string) =>
+    asString(pick(axisTitles, key)) || asString(pick(axisLabels, key), fallback)
   const paramDefs = asRecord(pick(criteria, 'parameter_definitions'))
   const classification = asRecord(
     pick(rec, 'market_classification', 'classification') ?? criteria.relevance
@@ -445,16 +484,17 @@ export function parseQuadrantReport(raw: unknown): ParseQuadrantResult {
         charted.length + others.length,
       xAxis: parseAxis(
         pick(rec, 'x_axis', 'xAxis', 'x') ?? criteria.x_axis,
-        asString(pick(axisLabels, 'x'), 'Product Capability'),
+        axisName('x', 'Product Capability'),
         asRecord(paramDefs.x)
       ),
       yAxis: parseAxis(
         pick(rec, 'y_axis', 'yAxis', 'y') ?? criteria.y_axis,
-        asString(pick(axisLabels, 'y'), 'Business Capability'),
+        axisName('y', 'Business Capability'),
         asRecord(paramDefs.y)
       ),
       charted,
       others,
+      quadrantDefinitions,
       methodology: parseMethodology(pick(rec, 'methodology', 'research_methodology', 'method')),
       methodologyNote: asString(pick(rec, 'methodology_note', 'scoring_note', 'footnote')),
     },
@@ -480,7 +520,11 @@ export function reviveQuadrantReport(stored: unknown): QuadrantReport | null {
     !!rec.xAxis &&
     !!rec.yAxis
 
-  if (looksNormalised) return stored as QuadrantReport
+  // Snapshots saved before quadrant definitions existed have no such field.
+  if (looksNormalised) {
+    const report = stored as QuadrantReport
+    return { ...report, quadrantDefinitions: report.quadrantDefinitions ?? [] }
+  }
   return parseQuadrantReport(stored).report
 }
 
