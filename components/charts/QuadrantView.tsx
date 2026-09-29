@@ -348,7 +348,9 @@ function CompanyParameterBlock({
 // ── Main view ───────────────────────────────────────────────────────────────
 
 export function QuadrantView() {
-  const { quadrantData } = useDashboardStore()
+  const { quadrantData, b2bSurveyData } = useDashboardStore()
+  // Evidence is only paywalled on the survey-backed preview dashboards.
+  const isSuitePreview = !!b2bSurveyData?.segments?.length
   const report = quadrantData as QuadrantReport | null
 
   const [search, setSearch] = useState('')
@@ -792,8 +794,9 @@ export function QuadrantView() {
             </span>
           </h2>
           <p className="mb-4 text-[0.86rem] text-slate-500">
-            Click any parameter to read its scoring rationale and supporting evidence. Full evidence
-            is shown for the leading company; the rest is available on subscription.
+            Click any parameter to read its scoring rationale and supporting evidence.
+            {isSuitePreview &&
+              ' Full evidence is shown for the leading company; the rest is available on subscription.'}
           </p>
           <div className="space-y-4">
             {charted.map((c, i) => (
@@ -802,7 +805,7 @@ export function QuadrantView() {
                 company={c}
                 xAxisName={report.xAxis.name}
                 yAxisName={report.yAxis.name}
-                locked={i > 0}
+                locked={isSuitePreview && i > 0}
               />
             ))}
           </div>

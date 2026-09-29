@@ -135,13 +135,22 @@ export function DashboardShell({ readOnly = false }: Props) {
   const hasAnySurvey = hasB2bSurvey || hasB2cSurvey || hasQuadrant
 
   /**
-   * Market Analysis is the only view driven by the filter sidebar and the KPI
-   * row — every other view renders its own dataset full width, per country.
+   * Suite mode — the presentation built for the survey-backed dashboards:
+   * taxonomy, per-country gating and the full-width views. A dashboard without
+   * a buyer survey keeps the original layout, so the plain
+   * market/customer/distributor flows are untouched.
    */
+  const isSuitePreview = hasB2bSurvey
+
   const isMarketAnalysis = selectedChartGroup === 'market-analysis'
 
-  /** Views whose content is reported per country; taxonomy and market analysis are not. */
-  const isCountryScoped = !isMarketAnalysis && selectedChartGroup !== 'taxonomy'
+  /** Market Analysis owns the filter sidebar and KPI row; in suite mode it is
+   *  the only view that shows them. */
+  const showSidebar = !isSuitePreview || isMarketAnalysis
+
+  /** Views reported per country — suite mode only; taxonomy and market analysis never. */
+  const isCountryScoped =
+    isSuitePreview && !isMarketAnalysis && selectedChartGroup !== 'taxonomy'
 
   /** Geographies offered in the country strip, taken from the workbook. */
   const countryOptions = countriesFromData(data, COVERED_COUNTRY)
@@ -165,6 +174,7 @@ export function DashboardShell({ readOnly = false }: Props) {
     if (!hasMarketData && !STANDALONE_CHARTS.includes(chartId)) {
       return false
     }
+    if (chartId === 'taxonomy' && !hasB2bSurvey) return false
     if (chartId === 'b2b-survey' && !hasB2bSurvey) return false
     if (chartId === 'b2c-survey' && !hasB2cSurvey) return false
     if (chartId === 'coherent-quadrant' && !hasQuadrant) return false
@@ -348,22 +358,24 @@ export function DashboardShell({ readOnly = false }: Props) {
 
         {/* KPI Cards — market analysis only; the other views are not filtered
             by geography/segment so the KPI row would not match what they show. */}
-        {isMarketAnalysis && (
+        {showSidebar && (
           <div className="mb-6">
-            <DemoDataNote className="mb-3 mx-1" />
+            {showDemoNote && <DemoDataNote className="mb-3 mx-1" />}
             <GlobalKPICards />
           </div>
         )}
 
-        {/* Chart View sits on a full-width strip so every view — including the
-            ones that hide the sidebar — can still be switched from the top. */}
-        <div className="mb-6">
-          <ChartGroupSelector orientation="horizontal" />
-        </div>
+        {/* Chart View moves onto a full-width strip once a survey is loaded, so
+            the views that hide the sidebar can still be switched from the top. */}
+        {hasAnySurvey && (
+          <div className="mb-6">
+            <ChartGroupSelector orientation="horizontal" />
+          </div>
+        )}
 
         <div className="grid grid-cols-12 gap-6">
           {/* Sidebar */}
-          {isMarketAnalysis && (
+          {showSidebar && (
           <aside className={`transition-all duration-300 ${sidebarCollapsed ? 'col-span-12 lg:col-span-1' : 'col-span-12 lg:col-span-3'}`}>
             {sidebarCollapsed ? (
               <div className="sticky top-6">
@@ -385,6 +397,7 @@ export function DashboardShell({ readOnly = false }: Props) {
                 <div className="max-h-[calc(100vh-6rem)] relative">
                   <CustomScrollbar containerRef={sidebarScrollRef}>
                     <div ref={sidebarScrollRef} className="overflow-y-auto pr-6 space-y-3 sidebar-scroll max-h-[calc(100vh-6rem)]">
+                      {!hasAnySurvey && <ChartGroupSelector />}
                       <FilterPresets />
                       <EnhancedFilterPanel />
                     </div>
@@ -397,7 +410,7 @@ export function DashboardShell({ readOnly = false }: Props) {
 
           {/* Main content */}
           <main className={`transition-all duration-300 ${
-            !isMarketAnalysis
+            !showSidebar
               ? showInsights ? 'col-span-12 lg:col-span-9' : 'col-span-12'
               : sidebarCollapsed
               ? showInsights ? 'col-span-12 lg:col-span-8' : 'col-span-12 lg:col-span-11'
@@ -460,11 +473,11 @@ export function DashboardShell({ readOnly = false }: Props) {
                 {viewMode === 'tabs' ? (
                   <>
                     {activeTab === 'taxonomy' && <div id="taxonomy-view"><TaxonomyView /></div>}
-                    {activeTab === 'bar' && <div id="grouped-bar-chart" className="relative"><DemoBadge /><GroupedBarChart title="Comparative Analysis - Grouped Bars" height={450} /></div>}
-                    {activeTab === 'line' && <div id="line-chart" className="relative"><DemoBadge /><MultiLineChart title="Trend Analysis - Multiple Series" height={450} /></div>}
-                    {activeTab === 'heatmap' && <div id="heatmap-chart" className="relative"><DemoBadge /><MatrixHeatmap title="Matrix View - Geography x Segment" height={450} /></div>}
-                    {activeTab === 'table' && <div id="comparison-table"><DemoBadge /><ComparisonTable title="Data Comparison Table" height={500} /></div>}
-                    {activeTab === 'waterfall' && <div id="waterfall-chart" className="relative"><DemoBadge /><WaterfallChart title="Contribution Analysis - Waterfall Chart" height={450} /></div>}
+                    {activeTab === 'bar' && <div id="grouped-bar-chart" className="relative">{showDemoNote && <DemoBadge />}<GroupedBarChart title="Comparative Analysis - Grouped Bars" height={450} /></div>}
+                    {activeTab === 'line' && <div id="line-chart" className="relative">{showDemoNote && <DemoBadge />}<MultiLineChart title="Trend Analysis - Multiple Series" height={450} /></div>}
+                    {activeTab === 'heatmap' && <div id="heatmap-chart" className="relative">{showDemoNote && <DemoBadge />}<MatrixHeatmap title="Matrix View - Geography x Segment" height={450} /></div>}
+                    {activeTab === 'table' && <div id="comparison-table">{showDemoNote && <DemoBadge />}<ComparisonTable title="Data Comparison Table" height={500} /></div>}
+                    {activeTab === 'waterfall' && <div id="waterfall-chart" className="relative">{showDemoNote && <DemoBadge />}<WaterfallChart title="Contribution Analysis - Waterfall Chart" height={450} /></div>}
                     {activeTab === 'bubble' && isChartVisible('bubble') && <div id="bubble-chart" className="relative"><D3BubbleChartIndependent title="Coherent Opportunity Matrix" height={500} /></div>}
                     {activeTab === 'competitive-intelligence' && <div id="competitive-intelligence-chart" className="relative"><CompetitiveIntelligence height={600} /></div>}
                     {activeTab === 'customer-intelligence' && (
@@ -490,11 +503,11 @@ export function DashboardShell({ readOnly = false }: Props) {
                 ) : (
                   <div className="space-y-8">
                     {isChartVisible('taxonomy') && <div className="border-b pb-8"><TaxonomyView /></div>}
-                    {isChartVisible('grouped-bar') && <div className="border-b pb-8 relative"><DemoBadge /><h3 className="text-lg font-semibold text-black mb-4">Grouped Bar Chart</h3><GroupedBarChart title="Comparative Analysis - Grouped Bars" height={400} /></div>}
-                    {isChartVisible('multi-line') && <div className="border-b pb-8 relative"><DemoBadge /><h3 className="text-lg font-semibold text-black mb-4">Line Chart</h3><MultiLineChart title="Trend Analysis - Multiple Series" height={400} /></div>}
-                    {isChartVisible('heatmap') && <div className="border-b pb-8 relative"><DemoBadge /><h3 className="text-lg font-semibold text-black mb-4">Heatmap</h3><MatrixHeatmap title="Matrix View - Geography x Segment" height={400} /></div>}
-                    {isChartVisible('comparison-table') && <div className="border-b pb-8"><DemoBadge /><h3 className="text-lg font-semibold text-black mb-4">Data Table</h3><ComparisonTable title="Data Comparison Table" height={400} /></div>}
-                    {isChartVisible('waterfall') && <div className="border-b pb-8 relative"><DemoBadge /><h3 className="text-lg font-semibold text-black mb-4">Waterfall Chart</h3><WaterfallChart title="Contribution Analysis - Waterfall Chart" height={400} /></div>}
+                    {isChartVisible('grouped-bar') && <div className="border-b pb-8 relative">{showDemoNote && <DemoBadge />}<h3 className="text-lg font-semibold text-black mb-4">Grouped Bar Chart</h3><GroupedBarChart title="Comparative Analysis - Grouped Bars" height={400} /></div>}
+                    {isChartVisible('multi-line') && <div className="border-b pb-8 relative">{showDemoNote && <DemoBadge />}<h3 className="text-lg font-semibold text-black mb-4">Line Chart</h3><MultiLineChart title="Trend Analysis - Multiple Series" height={400} /></div>}
+                    {isChartVisible('heatmap') && <div className="border-b pb-8 relative">{showDemoNote && <DemoBadge />}<h3 className="text-lg font-semibold text-black mb-4">Heatmap</h3><MatrixHeatmap title="Matrix View - Geography x Segment" height={400} /></div>}
+                    {isChartVisible('comparison-table') && <div className="border-b pb-8">{showDemoNote && <DemoBadge />}<h3 className="text-lg font-semibold text-black mb-4">Data Table</h3><ComparisonTable title="Data Comparison Table" height={400} /></div>}
+                    {isChartVisible('waterfall') && <div className="border-b pb-8 relative">{showDemoNote && <DemoBadge />}<h3 className="text-lg font-semibold text-black mb-4">Waterfall Chart</h3><WaterfallChart title="Contribution Analysis - Waterfall Chart" height={400} /></div>}
                     {isChartVisible('bubble') && <div className="border-b pb-8 relative"><h3 className="text-lg font-semibold text-black mb-4">Bubble Chart</h3><D3BubbleChartIndependent title="Coherent Opportunity Matrix" height={450} /></div>}
                     {isChartVisible('competitive-intelligence') && <div className="border-b pb-8 relative"><CompetitiveIntelligence height={600} /></div>}
                     {(isChartVisible('customer-intelligence') ||

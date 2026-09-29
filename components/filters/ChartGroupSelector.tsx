@@ -89,7 +89,7 @@ export function ChartGroupSelector({ orientation = 'vertical' }: ChartGroupSelec
   // Auto-switch to a valid chart group if the currently selected one has no data
   useEffect(() => {
     const isCurrentGroupInvalid =
-      (selectedChartGroup === 'taxonomy' && !hasMarketData) ||
+      (selectedChartGroup === 'taxonomy' && !(hasMarketData && hasB2bSurveyData)) ||
       (selectedChartGroup === 'coherent-opportunity' && (hasB2bSurveyData || hasB2cSurveyData)) ||
       (selectedChartGroup === 'customer-intelligence' && !hasCustomerIntelligenceData) ||
       (selectedChartGroup === 'distributor-intelligence' && !hasDistributorIntelligenceData) ||
@@ -119,7 +119,7 @@ export function ChartGroupSelector({ orientation = 'vertical' }: ChartGroupSelec
   // Groups whose backing dataset is actually present. Shared by both layouts so
   // visibility rules live in exactly one place.
   const availableGroups = CHART_GROUPS.filter((group) => {
-    if (group.id === 'taxonomy') return hasMarketData
+    if (group.id === 'taxonomy') return hasMarketData && hasB2bSurveyData
     // Survey findings supersede the Opportunity Matrix: when a B2B or B2C
     // survey is loaded, hide the matrix rather than presenting two competing
     // reads of the same opportunity question.

@@ -222,6 +222,7 @@ function PropositionTableDashboard({
   showDemoNote,
   currency,
   intelligenceSource,
+  suitePreview,
 }: {
   data: PropositionData
   tier: TierKey
@@ -229,17 +230,19 @@ function PropositionTableDashboard({
   showDemoNote: boolean
   currency: TableCurrency
   intelligenceSource: 'customer' | 'distributor'
+  suitePreview: boolean
 }) {
   const rawHeaders = data.headers?.length ? data.headers : Object.keys(data.rows[0] || {})
   const parentHeaders = data.parentHeaders
   const hidden = HIDDEN_COLUMNS[intelligenceSource]
   // Banded headers carry colSpans tied to the full column list, so dropping a
   // column there would misalign the band — leave those sheets untouched.
-  const headers = parentHeaders?.length
-    ? rawHeaders
-    : rawHeaders.filter(
-        (h) => !hidden.some((x) => x.toLowerCase() === String(h).trim().toLowerCase())
-      )
+  const headers =
+    !suitePreview || parentHeaders?.length
+      ? rawHeaders
+      : rawHeaders.filter(
+          (h) => !hidden.some((x) => x.toLowerCase() === String(h).trim().toLowerCase())
+        )
 
   const tierLabel = tier === 'premium' ? 'Premium' : tier === 'advance' ? 'Advance' : 'Standard'
 
@@ -334,7 +337,9 @@ function PropositionTableDashboard({
                         {renderCellValue(header, row[header], currency)}
                       </span>
                     ) : (
-                      <span className="text-xs italic text-slate-400">{LOCKED_CELL_NOTE}</span>
+                      <span className={suitePreview ? 'text-xs italic text-slate-400' : 'text-slate-400'}>
+                        {suitePreview ? LOCKED_CELL_NOTE : '—'}
+                      </span>
                     )}
                   </td>
                 ))}
@@ -372,7 +377,12 @@ export function CustomerIntelligenceTable({
     currency,
     staticCustomerProp1,
     staticDistributorProp1,
+    b2bSurveyData,
   } = useDashboardStore()
+
+  // Column hiding and the subscribe placeholder belong to the survey-backed
+  // preview dashboards; a plain intelligence upload renders in full.
+  const isSuitePreview = !!b2bSurveyData?.segments?.length
 
   const tableCurrency = (currency || data?.metadata?.currency || 'USD') as TableCurrency
 
@@ -490,6 +500,7 @@ export function CustomerIntelligenceTable({
           showDemoNote={false}
           currency={tableCurrency}
           intelligenceSource={intelligenceSource}
+          suitePreview={isSuitePreview}
         />
       </div>
     )
@@ -602,6 +613,7 @@ export function CustomerIntelligenceTable({
           showDemoNote={showDemoNote}
           currency={tableCurrency}
           intelligenceSource={intelligenceSource}
+          suitePreview={isSuitePreview}
         />
       )}
 
