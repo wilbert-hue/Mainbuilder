@@ -178,9 +178,9 @@ export function DashboardShell({ readOnly = false }: Props) {
     if (chartId === 'b2b-survey' && !hasB2bSurvey) return false
     if (chartId === 'b2c-survey' && !hasB2cSurvey) return false
     if (chartId === 'coherent-quadrant' && !hasQuadrant) return false
-    // Mirrors the tab rule in ChartGroupSelector: a loaded survey replaces the
-    // Opportunity Matrix, so the bubble chart is hidden in every layout too.
-    if (chartId === 'bubble' && (hasB2bSurvey || hasB2cSurvey)) return false
+    // Mirrors the tab rule in ChartGroupSelector: a loaded B2B survey replaces
+    // the Opportunity Matrix, so the bubble chart is hidden in every layout too.
+    if (chartId === 'bubble' && hasB2bSurvey) return false
     return visibleCharts.includes(chartId)
   }
 

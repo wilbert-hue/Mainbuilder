@@ -120,10 +120,12 @@ export function ChartGroupSelector({ orientation = 'vertical' }: ChartGroupSelec
   // visibility rules live in exactly one place.
   const availableGroups = CHART_GROUPS.filter((group) => {
     if (group.id === 'taxonomy') return hasMarketData && hasB2bSurveyData
-    // Survey findings supersede the Opportunity Matrix: when a B2B or B2C
-    // survey is loaded, hide the matrix rather than presenting two competing
-    // reads of the same opportunity question.
-    if (group.id === 'coherent-opportunity') return !hasB2bSurveyData && !hasB2cSurveyData
+    // Market views need the value/volume workbook behind them.
+    if (group.id === 'market-analysis') return hasMarketData
+    // B2B findings supersede the Opportunity Matrix: when that survey is
+    // loaded, hide the matrix rather than presenting two competing reads of
+    // the same opportunity question.
+    if (group.id === 'coherent-opportunity') return hasMarketData && !hasB2bSurveyData
     if (group.id === 'customer-intelligence') return hasCustomerIntelligenceData
     if (group.id === 'distributor-intelligence') return hasDistributorIntelligenceData
     if (group.id === 'competitive-intelligence') return hasCompetitiveIntelligenceData
