@@ -101,18 +101,44 @@ export function EnhancedFilterPanel() {
     }
   }
 
+  /**
+   * A branch is worth keeping when it carries data itself or leads to a
+   * descendant that does. Workbooks often carry values only on the leaves, so
+   * testing a parent for its own rows would drop the whole tree and leave the
+   * cascade with nothing to show.
+   */
+  const branchHasData = (() => {
+    if (!segmentsWithData) return () => true
+    const cache = new Map<string, boolean>()
+    const walk = (node: string, seen: Set<string>): boolean => {
+      const hit = cache.get(node)
+      if (hit !== undefined) return hit
+      if (seen.has(node)) return false
+      seen.add(node)
+      const result =
+        segmentsWithData!.has(node) ||
+        (hierarchy[node] || []).some((child: string) => walk(child, seen))
+      cache.set(node, result)
+      return result
+    }
+    return (node: string) => walk(node, new Set<string>())
+  })()
+
   if (segmentsWithData && availableSegments.length > 0) {
-    availableSegments = availableSegments.filter(s => segmentsWithData!.has(s))
+    const kept = availableSegments.filter(branchHasData)
+    // Never filter the list down to nothing — an empty picker is worse than an
+    // unfiltered one.
+    if (kept.length > 0) availableSegments = kept
   }
 
   // Also build a filtered hierarchy so CascadeFilter only shows valid options
   const filteredHierarchy: Record<string, string[]> = segmentsWithData
     ? Object.fromEntries(
         Object.entries(hierarchy)
-          .filter(([key]) => segmentsWithData!.has(key))
+          .filter(([key]) => branchHasData(key))
           .map(([key, children]) => [
             key,
-            (children as string[]).filter(c => segmentsWithData!.has(c)),
+            (children as string[]).filter(branchHasData),
           ])
       )
     : hierarchy

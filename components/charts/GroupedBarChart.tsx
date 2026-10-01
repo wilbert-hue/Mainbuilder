@@ -395,7 +395,7 @@ export function GroupedBarChart({ title, height = 400 }: GroupedBarChartProps) {
               if (!payload || !chartData.isStacked || !chartData.stackedSeries) {
                 // Default legend for non-stacked
                 return (
-                  <ul className="flex flex-wrap justify-center gap-4 mt-4">
+                  <ul className="flex flex-wrap justify-center gap-x-4 gap-y-1 mt-4 max-h-[88px] overflow-y-auto px-2">
                     {payload?.map((entry: any, index: number) => (
                       <li key={`item-${index}`} className="flex items-center gap-2">
                         <span 
@@ -425,7 +425,7 @@ export function GroupedBarChart({ title, height = 400 }: GroupedBarChartProps) {
               })
                         
                         return (
-                <ul className="flex flex-wrap justify-center gap-4 mt-4">
+                <ul className="flex flex-wrap justify-center gap-x-4 gap-y-1 mt-4 max-h-[88px] overflow-y-auto px-2">
                   {legendItems.map((item, index) => (
                     <li key={`item-${index}`} className="flex items-center gap-2">
                       <span 

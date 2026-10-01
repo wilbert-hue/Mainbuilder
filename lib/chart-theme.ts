@@ -76,8 +76,13 @@ export const CHART_THEME = {
   },
   
   legend: {
+    // Recharts reserves a fixed box for the legend; a long series list used to
+    // overflow it and paint over the chart and the page around it. Cap the
+    // height and scroll instead.
     wrapperStyle: {
       paddingTop: '20px',
+      maxHeight: 110,
+      overflowY: 'auto' as const,
     },
     iconType: 'rect' as const,
     iconSize: 12,

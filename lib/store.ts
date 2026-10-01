@@ -129,9 +129,10 @@ function getDefaultFilters(data: ComparisonData | null): FilterState {
   // Get first geography for default view
   const firstGeography = data.dimensions.geographies.all_geographies?.[0] || ''
   
-  // Get first few segments from the first segment type (for default view)
+  // Seed the view with two segments: enough to compare, few enough that the
+  // chart legend stays readable on segment types with dozens of children.
   const segmentDimension = data.dimensions.segments[firstSegmentType]
-  const firstSegments = segmentDimension?.items?.slice(0, 3) || []
+  const firstSegments = segmentDimension?.items?.slice(0, 2) || []
   
   // Set default business type only if B2B/B2C exists
   let defaultBusinessType: 'B2B' | 'B2C' | undefined = undefined
