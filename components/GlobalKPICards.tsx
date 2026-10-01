@@ -3,7 +3,7 @@
 import { useMemo } from 'react'
 import { useDashboardStore } from '@/lib/store'
 import { TrendingUp, DollarSign, Calendar, Activity } from 'lucide-react'
-import { formatIndianNumber, formatIndianNumberWithCommas, formatCurrencyValue, formatLargeNumber, getCurrencySymbol } from '@/lib/utils'
+import { formatIndianNumber, formatIndianNumberWithCommas, formatCurrencyValue, formatMeasure, getCurrencySymbol } from '@/lib/utils'
 import { METRICS_END_YEAR, METRICS_START_YEAR, calculateCAGRFromTimeSeries } from '@/lib/metrics-calculator'
 
 export function GlobalKPICards() {
@@ -289,8 +289,8 @@ export function GlobalKPICards() {
                 {kpiData.dataType === 'value' && kpiData.isINR
                   ? `₹ ${kpiData.marketSizeStart.toFixed(2)} Cr.`
                   : kpiData.dataType === 'value'
-                  ? `${kpiData.currencySymbol} ${formatLargeNumber(kpiData.marketSizeStart, 1)} ${kpiData.unit}`
-                  : `${formatLargeNumber(kpiData.marketSizeStart, 1)} ${kpiData.unit}`}
+                  ? `${kpiData.currencySymbol} ${formatMeasure(kpiData.marketSizeStart, kpiData.unit)}`
+                  : `${formatMeasure(kpiData.marketSizeStart, kpiData.unit)}`}
               </p>
             </div>
           </div>
@@ -308,8 +308,8 @@ export function GlobalKPICards() {
                 {kpiData.dataType === 'value' && kpiData.isINR
                   ? `₹ ${kpiData.marketSizeEnd.toFixed(2)} Cr.`
                   : kpiData.dataType === 'value'
-                  ? `${kpiData.currencySymbol} ${formatLargeNumber(kpiData.marketSizeEnd, 1)} ${kpiData.unit}`
-                  : `${formatLargeNumber(kpiData.marketSizeEnd, 1)} ${kpiData.unit}`}
+                  ? `${kpiData.currencySymbol} ${formatMeasure(kpiData.marketSizeEnd, kpiData.unit)}`
+                  : `${formatMeasure(kpiData.marketSizeEnd, kpiData.unit)}`}
               </p>
             </div>
           </div>
@@ -342,8 +342,8 @@ export function GlobalKPICards() {
                 {kpiData.dataType === 'value' && kpiData.isINR
                   ? `₹ ${kpiData.absoluteGrowth.toFixed(2)} Cr.`
                   : kpiData.dataType === 'value'
-                  ? `${kpiData.currencySymbol} ${formatLargeNumber(kpiData.absoluteGrowth, 1)} ${kpiData.unit}`
-                  : `${formatLargeNumber(kpiData.absoluteGrowth, 1)} ${kpiData.unit}`}
+                  ? `${kpiData.currencySymbol} ${formatMeasure(kpiData.absoluteGrowth, kpiData.unit)}`
+                  : `${formatMeasure(kpiData.absoluteGrowth, kpiData.unit)}`}
               </p>
               <p className="text-[10px] text-gray-600 mt-0.5">
                 +{kpiData.growthPercentage.toFixed(1)}% increase

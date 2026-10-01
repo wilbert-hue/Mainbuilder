@@ -108,6 +108,39 @@ export function formatLargeNumber(value: number, decimals: number = 2): string {
   }
 }
 
+/** Magnitude ladder for stated data units; each step is 1,000x the previous. */
+const UNIT_LADDER = ['Thousand', 'Million', 'Billion', 'Trillion']
+
+/** Position of a stated unit in the ladder, or -1 for plain counts like "Units". */
+function unitRank(unit: string): number {
+  const u = (unit || '').trim().toLowerCase()
+  return UNIT_LADDER.findIndex((step) => step.toLowerCase() === u)
+}
+
+/**
+ * Format a figure that is already expressed in `unit`.
+ *
+ * Values arrive pre-scaled: 1,701,509.2 with unit "Million" is 1.7 trillion, not
+ * 1.7 million. Abbreviating the digits while keeping the unit produced readings
+ * like "1.7M Million", so promote the unit instead — the magnitude is carried by
+ * the word, never by both.
+ *
+ * Units outside the ladder ("Units", "Tonnes", …) are counts rather than
+ * magnitudes, so those keep the K/M/B suffix on the number itself.
+ */
+export function formatMeasure(value: number, unit: string, decimals: number = 1): string {
+  const rank = unitRank(unit)
+  if (rank === -1) return `${formatLargeNumber(value, decimals)} ${unit}`.trim()
+
+  let scaled = value
+  let step = rank
+  while (Math.abs(scaled) >= 1000 && step < UNIT_LADDER.length - 1) {
+    scaled /= 1000
+    step += 1
+  }
+  return `${scaled.toFixed(decimals)} ${UNIT_LADDER[step]}`
+}
+
 export function calculateGrowth(startValue: number, endValue: number): number {
   if (startValue === 0) return 0
   return ((endValue - startValue) / startValue) * 100
