@@ -22,27 +22,56 @@ import { isBlobStoreEnabled, putBlob, getBlob } from './blob-store'
 const INLINE_MAX_BYTES = 50_000
 const MONGO_DOC_SOFT_LIMIT = 15_000_000
 
-function slimRecords(records: DataRecord[]): DataRecord[] {
+/**
+ * Segment names that appear as a node in any segment hierarchy — i.e. the
+ * parents a user can actually pick in the filter panel.
+ */
+function hierarchyNodes(data: ComparisonData): Set<string> {
+  const nodes = new Set<string>()
+  for (const dimension of Object.values(data.dimensions?.segments ?? {})) {
+    for (const [parent, children] of Object.entries(dimension?.hierarchy ?? {})) {
+      nodes.add(parent)
+      if (Array.isArray(children)) children.forEach((c) => nodes.add(c))
+    }
+  }
+  return nodes
+}
+
+/**
+ * Drop the synthetic totals, but keep an aggregated row when it is the only
+ * thing carrying a selectable parent.
+ *
+ * Workbooks that hold values solely on the leaves have their parent totals
+ * computed during ingest and flagged aggregated. Discarding those left the
+ * parents unplottable, so picking one fanned the chart out into every leaf
+ * beneath it.
+ */
+function slimRecords(records: DataRecord[], keep: Set<string>): DataRecord[] {
   return records.filter(
-    (r) => r.is_aggregated !== true && r.segment !== '__ALL_SEGMENTS__'
+    (r) =>
+      r.segment !== '__ALL_SEGMENTS__' &&
+      (r.is_aggregated !== true || keep.has(r.segment))
   )
 }
 
-/** Drop redundant aggregated rows; charts filter on leaf data. */
 export function slimComparisonData(data: ComparisonData | null): ComparisonData | null {
   if (!data?.data) return data
+
+  const keep = hierarchyNodes(data)
 
   return {
     ...data,
     data: {
       value: {
         geography_segment_matrix: slimRecords(
-          data.data.value?.geography_segment_matrix ?? []
+          data.data.value?.geography_segment_matrix ?? [],
+          keep
         ),
       },
       volume: {
         geography_segment_matrix: slimRecords(
-          data.data.volume?.geography_segment_matrix ?? []
+          data.data.volume?.geography_segment_matrix ?? [],
+          keep
         ),
       },
     },
