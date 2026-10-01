@@ -33,7 +33,6 @@ import { CustomScrollbar } from '@/components/ui/CustomScrollbar'
 import { GlobalKPICards } from '@/components/GlobalKPICards'
 import { getChartsForGroup } from '@/lib/chart-groups'
 import { suiteSubtitle } from '@/lib/dashboard-title'
-import { countriesFromData } from '@/lib/taxonomy'
 import { Lightbulb, X, Layers, LayoutGrid, Settings } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { Footer } from '@/components/Footer'
@@ -152,8 +151,8 @@ export function DashboardShell({ readOnly = false }: Props) {
   const isCountryScoped =
     isSuitePreview && !isMarketAnalysis && selectedChartGroup !== 'taxonomy'
 
-  /** Geographies offered in the country strip, taken from the workbook. */
-  const countryOptions = countriesFromData(data, COVERED_COUNTRY)
+  /** These dashboards cover one market, so the strip lists it alone. */
+  const countryOptions = [COVERED_COUNTRY]
 
   /** Market name on top; a loaded survey adds the module list beneath it. */
   const headingTitle = dashboardName || 'Market Analysis'

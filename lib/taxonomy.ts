@@ -114,20 +114,3 @@ export function buildTaxonomy(data: ComparisonData, dashboardName?: string | nul
     sections,
   }
 }
-
-/**
- * Leaf geographies (countries) in workbook order, with the covered market
- * first. Used for the country strip above the country-scoped views.
- */
-export function countriesFromData(
-  data: ComparisonData | null | undefined,
-  covered: string,
-): string[] {
-  const geo = data?.dimensions?.geographies
-  const hierarchy = geo?.geography_hierarchy || geo?.countries || {}
-  const leaves = Object.values(hierarchy).flat().filter(Boolean)
-  const unique = Array.from(new Set(leaves))
-  if (!unique.length) return []
-  // The covered market leads the strip; it is the default selection.
-  return [covered, ...unique.filter((c) => c !== covered)]
-}
