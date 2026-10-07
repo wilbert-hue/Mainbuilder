@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useDashboardStore } from '@/lib/store'
 import { Building2, Users } from 'lucide-react'
+import { AccessDataCell, contactFieldOf } from './AccessDataCell'
 
 // ---------------------------------------------------------------------------
 // Static Proposition 1 data — exact format from the reference template
@@ -336,6 +337,8 @@ function PropositionTableDashboard({
                       <span className="line-clamp-3" title={renderCellValue(header, row[header], currency)}>
                         {renderCellValue(header, row[header], currency)}
                       </span>
+                    ) : suitePreview && contactFieldOf(String(header)) ? (
+                      <AccessDataCell row={row} field={contactFieldOf(String(header))!} />
                     ) : (
                       <span className={suitePreview ? 'text-xs italic text-slate-400' : 'text-slate-400'}>
                         {suitePreview ? LOCKED_CELL_NOTE : '—'}
