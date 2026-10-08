@@ -214,6 +214,16 @@ const HIDDEN_COLUMNS: Record<'customer' | 'distributor', string[]> = {
 }
 
 /** Shown in place of a blank cell — the value exists, it is just gated. */
+/**
+ * A row-counter column, as opposed to real data.
+ *
+ * The verified directories keep the numbering from the research sheet, which
+ * runs over the rows that were screened out too — so a 159-row table counts up
+ * to 286 with gaps. Renumber those sequentially on display.
+ */
+const isRowNumberColumn = (header: string): boolean =>
+  /^(#|s\.?\s*no\.?|sr\.?\s*no\.?|serial\s*no\.?)$/i.test(header.trim())
+
 const LOCKED_CELL_NOTE = 'Kindly subscribe to access these details'
 
 function PropositionTableDashboard({
@@ -333,7 +343,9 @@ function PropositionTableDashboard({
                     key={colIndex}
                     className="px-3 py-2.5 text-sm text-slate-800 border-b border-slate-100 border-r border-slate-100/80 last:border-r-0 align-top max-w-[18rem]"
                   >
-                    {row[header] !== undefined && row[header] !== null && row[header] !== '' ? (
+                    {isRowNumberColumn(String(header)) ? (
+                      <span>{rowIndex + 1}</span>
+                    ) : row[header] !== undefined && row[header] !== null && row[header] !== '' ? (
                       <span className="line-clamp-3" title={renderCellValue(header, row[header], currency)}>
                         {renderCellValue(header, row[header], currency)}
                       </span>
