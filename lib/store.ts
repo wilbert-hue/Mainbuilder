@@ -44,6 +44,7 @@ interface DashboardStore {
   dashboardName: string | null // Custom dashboard name
   currency: 'USD' | 'INR' | 'EUR' // Currency preference
   showDemoNote: boolean // Toggle for demo data disclaimer note
+  showDemoQuadrant: boolean // Toggle for the generated demo Coherent Quadrant
   logoChoice: 'coherent' | 'wmr' | 'mi' // Which logo to show in the dashboard header
   staticCustomerProp1: boolean // When true, render static 20-row Proposition 1 template instead of uploaded data
   staticDistributorProp1: boolean // Same for distributor intelligence
@@ -87,6 +88,7 @@ interface DashboardStore {
   setDashboardName: (name: string | null) => void
   setCurrency: (currency: 'USD' | 'INR' | 'EUR') => void
   setShowDemoNote: (show: boolean) => void
+  setShowDemoQuadrant: (show: boolean) => void
   setLogoChoice: (choice: 'coherent' | 'wmr' | 'mi') => void
   setStaticCustomerProp1: (val: boolean) => void
   setStaticDistributorProp1: (val: boolean) => void
@@ -284,6 +286,7 @@ export const useDashboardStore = create<DashboardStore>((set, get) => ({
   dashboardName: null,
   currency: 'USD',
   showDemoNote: false,
+  showDemoQuadrant: false,
   logoChoice: 'coherent' as const,
   staticCustomerProp1: false,
   staticDistributorProp1: false,
@@ -555,6 +558,7 @@ export const useDashboardStore = create<DashboardStore>((set, get) => ({
   setCurrency: (currency) => set({ currency }),
 
   setShowDemoNote: (show) => set({ showDemoNote: show }),
+  setShowDemoQuadrant: (show) => set({ showDemoQuadrant: show }),
   setLogoChoice: (choice) => set({ logoChoice: choice }),
   setStaticCustomerProp1: (val) => set({ staticCustomerProp1: val }),
   setStaticDistributorProp1: (val) => set({ staticDistributorProp1: val }),

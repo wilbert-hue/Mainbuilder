@@ -72,6 +72,7 @@ export interface DashboardDocument {
   quadrantCompressed?: string | null
   quadrantS3Key?: string | null
   showDemoNote: boolean
+  showDemoQuadrant?: boolean
   logoChoice?: 'coherent' | 'wmr' | 'mi'
 }
 

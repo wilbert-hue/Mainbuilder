@@ -46,6 +46,7 @@ export function ChartGroupSelector({ orientation = 'vertical' }: ChartGroupSelec
     b2bSurveyData,
     b2cSurveyData,
     quadrantData,
+    showDemoQuadrant,
   } = useDashboardStore()
 
   const hasMarketData = !!data
@@ -84,7 +85,9 @@ export function ChartGroupSelector({ orientation = 'vertical' }: ChartGroupSelec
   // Buyer survey reports (uploaded as JSON in the builder)
   const hasB2bSurveyData = !!b2bSurveyData?.segments?.length
   const hasB2cSurveyData = !!b2cSurveyData?.segments?.length
-  const hasQuadrantData = !!(quadrantData?.charted?.length || quadrantData?.others?.length)
+  const hasQuadrantData =
+    !!(quadrantData?.charted?.length || quadrantData?.others?.length) ||
+    (showDemoQuadrant && hasMarketData)
 
   // Auto-switch to a valid chart group if the currently selected one has no data
   useEffect(() => {

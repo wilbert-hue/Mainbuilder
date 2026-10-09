@@ -22,6 +22,8 @@
 import { useMemo, useState } from 'react'
 import { Lock } from 'lucide-react'
 import { useDashboardStore } from '@/lib/store'
+import { buildDemoQuadrant } from '@/lib/demo-quadrant'
+import { DemoDataNote } from '@/components/DemoDataNote'
 import {
   normaliseQuadrant,
   sortByQuadrant,
@@ -104,6 +106,16 @@ function StrengthDots({ score }: { score: number | null }) {
 }
 
 /** Pill showing which quadrant a company sits in. */
+/** Stands in for a field the demo withholds. */
+function LockedField({ label = false }: { label?: boolean }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 text-slate-400" title="Available on subscription">
+      <Lock className="h-3.5 w-3.5" />
+      {label && <span className="text-[0.78rem] italic">Subscribe to access</span>}
+    </span>
+  )
+}
+
 function QuadrantPill({ quadrant }: { quadrant: string }) {
   const q = normaliseQuadrant(quadrant)
   const color = QUADRANT_COLORS[q] || '#cbd5e1'
@@ -127,10 +139,13 @@ function AxisParameterPanel({
   axisLabel,
   axisName,
   params,
+  demoLocked = false,
 }: {
   axisLabel: 'X' | 'Y'
   axisName: string
   params: QuadrantParameterScore[]
+  /** Demo mode: the parameters are real, the evidence behind them is withheld. */
+  demoLocked?: boolean
 }) {
   // Default to the first parameter so the detail pane is never empty on open.
   const [selected, setSelected] = useState<string | null>(params[0]?.name ?? null)
@@ -187,7 +202,17 @@ function AxisParameterPanel({
 
         {/* Detail for the selected parameter */}
         <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
-          {active ? (
+          {demoLocked ? (
+            <div className="flex h-full min-h-[180px] flex-col items-center justify-center gap-3 text-center">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-50 text-amber-600">
+                <Lock className="h-6 w-6" />
+              </div>
+              <p className="text-sm font-medium text-[#0f3d5c]">
+                Kindly subscribe to access these details
+              </p>
+              {active && <p className="text-[0.8rem] text-slate-500">{active.name}</p>}
+            </div>
+          ) : active ? (
             <div className="leading-relaxed">
               <div className="mb-2 font-bold text-slate-900">
                 {active.name} — scored {active.score ?? '—'}/100
@@ -292,11 +317,13 @@ function CompanyParameterBlock({
   xAxisName,
   yAxisName,
   locked = false,
+  demoLocked = false,
 }: {
   company: QuadrantCompany
   xAxisName: string
   yAxisName: string
   locked?: boolean
+  demoLocked?: boolean
 }) {
   return (
     <div className="rounded-lg border border-slate-200 bg-white">
@@ -326,8 +353,8 @@ function CompanyParameterBlock({
           className={`space-y-5 p-4 ${locked ? 'pointer-events-none select-none blur-[5px]' : ''}`}
           aria-hidden={locked || undefined}
         >
-          <AxisParameterPanel axisLabel="X" axisName={xAxisName} params={company.xParameters} />
-          <AxisParameterPanel axisLabel="Y" axisName={yAxisName} params={company.yParameters} />
+          <AxisParameterPanel axisLabel="X" axisName={xAxisName} params={company.xParameters} demoLocked={demoLocked} />
+          <AxisParameterPanel axisLabel="Y" axisName={yAxisName} params={company.yParameters} demoLocked={demoLocked} />
         </div>
 
         {locked && (
@@ -348,10 +375,21 @@ function CompanyParameterBlock({
 // ── Main view ───────────────────────────────────────────────────────────────
 
 export function QuadrantView() {
-  const { quadrantData, b2bSurveyData } = useDashboardStore()
+  const { quadrantData, b2bSurveyData, data, dashboardName, showDemoQuadrant, showDemoNote } =
+    useDashboardStore()
   // Evidence is only paywalled on the survey-backed preview dashboards.
   const isSuitePreview = !!b2bSurveyData?.segments?.length
-  const report = quadrantData as QuadrantReport | null
+
+  const uploaded = quadrantData as QuadrantReport | null
+  const hasUploaded = !!(uploaded?.charted?.length || uploaded?.others?.length)
+  /** No analyst export, demo toggled on — generate one from the market itself. */
+  const demo = useMemo(
+    () => (!hasUploaded && showDemoQuadrant ? buildDemoQuadrant(data, dashboardName) : null),
+    [hasUploaded, showDemoQuadrant, data, dashboardName]
+  )
+  /** In demo mode every identifying field is withheld, not just the evidence. */
+  const isDemo = !hasUploaded && !!demo
+  const report = hasUploaded ? uploaded : demo
 
   const [search, setSearch] = useState('')
   const [quadrantFilter, setQuadrantFilter] = useState('all')
@@ -431,6 +469,8 @@ export function QuadrantView() {
           {report.yAxis.name} (Y)
         </p>
       </div>
+
+      {showDemoNote && <DemoDataNote />}
 
       {/* Market classification */}
       {(report.marketDefinition || report.providerCategories.length > 0) && (
@@ -643,8 +683,12 @@ export function QuadrantView() {
                   <td className="border-b border-slate-200 px-3 py-2.5 text-slate-800">
                     {c.company}
                   </td>
-                  <td className="border-b border-slate-200 px-3 py-2.5 text-slate-700">{c.hq}</td>
-                  <td className="border-b border-slate-200 px-3 py-2.5 text-slate-700">{c.role}</td>
+                  <td className="border-b border-slate-200 px-3 py-2.5 text-slate-700">
+                    {isDemo ? <LockedField /> : c.hq}
+                  </td>
+                  <td className="border-b border-slate-200 px-3 py-2.5 text-slate-700">
+                    {isDemo ? <LockedField /> : c.role}
+                  </td>
                   <td className="border-b border-slate-200 px-3 py-2.5">
                     <QuadrantPill quadrant={c.quadrant} />
                   </td>
@@ -737,11 +781,13 @@ export function QuadrantView() {
                       {c.brand}
                     </td>
                     <td className="border-b border-slate-200 px-3 py-2.5 text-slate-800">
-                      {c.company}
+                      {isDemo ? <LockedField /> : c.company}
                     </td>
-                    <td className="border-b border-slate-200 px-3 py-2.5 text-slate-700">{c.hq}</td>
                     <td className="border-b border-slate-200 px-3 py-2.5 text-slate-700">
-                      {c.role}
+                      {isDemo ? <LockedField /> : c.hq}
+                    </td>
+                    <td className="border-b border-slate-200 px-3 py-2.5 text-slate-700">
+                      {isDemo ? <LockedField /> : c.role}
                     </td>
                     <td className="border-b border-slate-200 px-3 py-2.5">
                       <QuadrantPill quadrant={c.quadrant} />
@@ -806,6 +852,7 @@ export function QuadrantView() {
                 xAxisName={report.xAxis.name}
                 yAxisName={report.yAxis.name}
                 locked={isSuitePreview && i > 0}
+                demoLocked={isDemo}
               />
             ))}
           </div>

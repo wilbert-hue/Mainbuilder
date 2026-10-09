@@ -34,6 +34,7 @@ export default function SharedDashboardPage() {
     setBuyerSurveyType,
     setQuadrantData,
     setShowDemoNote,
+    setShowDemoQuadrant,
     setLogoChoice,
     loadDefaultFilters,
     clearData,
@@ -84,6 +85,7 @@ export default function SharedDashboardPage() {
       setBuyerSurveyType(snapshot.buyerSurveyType ?? null)
       setQuadrantData(reviveQuadrantReport(snapshot.quadrantData))
       setShowDemoNote(snapshot.showDemoNote || false)
+      setShowDemoQuadrant(snapshot.showDemoQuadrant || false)
       setLogoChoice((snapshot.logoChoice === 'wmr' || snapshot.logoChoice === 'mi') ? snapshot.logoChoice : 'coherent')
 
       setStatus('ready')

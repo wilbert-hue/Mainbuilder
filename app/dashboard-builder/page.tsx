@@ -53,6 +53,7 @@ export default function DashboardBuilderPage() {
     setDashboardName,
     setCurrency,
     setShowDemoNote,
+    setShowDemoQuadrant,
     logoChoice,
     setLogoChoice,
     staticCustomerProp1,
@@ -78,6 +79,7 @@ export default function DashboardBuilderPage() {
   const [marketStatusMessage, setMarketStatusMessage] = useState('')
   const [processedData, setProcessedData] = useState<ComparisonData | null>(null)
   const [showDemoNoteToggle, setShowDemoNoteToggle] = useState(false)
+  const [showDemoQuadrantToggle, setShowDemoQuadrantToggle] = useState(false)
   const [shareUrl, setShareUrl] = useState<string | null>(null)
   const [isGeneratingLink, setIsGeneratingLink] = useState(false)
   const [linkCopied, setLinkCopied] = useState(false)
@@ -535,6 +537,7 @@ export default function DashboardBuilderPage() {
       distributorProposition3Data,
       pricingAnalysisData,
       showDemoNote,
+      showDemoQuadrant,
       logoChoice,
       b2bSurveyData,
       b2cSurveyData,
@@ -577,6 +580,7 @@ export default function DashboardBuilderPage() {
         b2cSurveyData,
         quadrantData,
         showDemoNote,
+        showDemoQuadrant,
         logoChoice,
       }
 
@@ -1297,6 +1301,28 @@ export default function DashboardBuilderPage() {
                         {choice === 'coherent' ? 'Coherent' : choice === 'mi' ? 'Coherent MI' : 'WMR'}
                       </button>
                     ))}
+                  </div>
+                  {/* Demo quadrant toggle */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-slate-400 font-medium">Show Demo Quadrant</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const next = !showDemoQuadrantToggle
+                        setShowDemoQuadrantToggle(next)
+                        setShowDemoQuadrant(next)
+                      }}
+                      className={`builder-toggle focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 focus:ring-offset-slate-900 ${
+                        showDemoQuadrantToggle ? 'builder-toggle-on' : 'builder-toggle-off'
+                      }`}
+                      aria-pressed={showDemoQuadrantToggle}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                          showDemoQuadrantToggle ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
                   </div>
                   {/* Demo note toggle */}
                   <div className="flex items-center gap-2">

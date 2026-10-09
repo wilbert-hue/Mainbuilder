@@ -39,6 +39,7 @@ export interface DashboardSnapshot {
   distributorProposition3Data: unknown
   pricingAnalysisData: unknown
   showDemoNote: boolean
+  showDemoQuadrant?: boolean
 }
 
 export class StorageError extends Error {
