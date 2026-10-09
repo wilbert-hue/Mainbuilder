@@ -7,7 +7,8 @@
  * /public/accolades so the dashboard stays self-contained.
  */
 
-const ACCOLADES_URL = 'https://www.coherentmarketinsights.com/accolades'
+import { useDashboardStore } from '@/lib/store'
+import { getBrand } from '@/lib/brand'
 
 const AWARDS = [
   { src: '/accolades/best-msme-award01.webp', alt: 'India 5000 Best MSME Awards' },
@@ -18,15 +19,29 @@ const AWARDS = [
   { src: '/accolades/best500Updated.webp', alt: 'Best 5000 MSME in India 2024' },
 ]
 
+/** Linked only when the brand publishes the page; otherwise a plain section. */
+function MaybeLink({ href, children }: { href: string | null; children: React.ReactNode }) {
+  const className = "block container mx-auto px-6 py-10"
+  if (!href) return <div className={className}>{children}</div>
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={`${className} transition-opacity hover:opacity-90`}
+    >
+      {children}
+    </a>
+  )
+}
+
 export function AccoladesSection() {
+  const { logoChoice } = useDashboardStore()
+  const brand = getBrand(logoChoice)
+
   return (
     <section className="bg-white border-t border-gray-200">
-      <a
-        href={ACCOLADES_URL}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="block container mx-auto px-6 py-10 transition-opacity hover:opacity-90"
-      >
+      <MaybeLink href={brand.accoladesUrl}>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
           <div>
             <span className="inline-flex items-center gap-2 rounded-full bg-[#eef7d6] px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.12em] text-[#0f3d5c]">
@@ -56,7 +71,7 @@ export function AccoladesSection() {
             ))}
           </div>
         </div>
-      </a>
+      </MaybeLink>
     </section>
   )
 }

@@ -30,15 +30,47 @@ const QUADRANTS = ['Leaders', 'Challengers', 'Trailblazers', 'Evolving Players']
  * Markets whose X axis is better described as technology or service capability
  * than product capability. Mirrors how the analyst exports title that axis.
  */
-function xAxisName(market: string): string {
+type MarketKind = 'technology' | 'service' | 'product'
+
+/**
+ * What the market mainly sells, read off its name. Drives the X axis title and
+ * the provider category, the same way an analyst export states both.
+ */
+function marketKind(market: string): MarketKind {
   const m = market.toLowerCase()
-  if (/\b(software|platform|analytics|ai\b|cloud|cyber|data|digital)/.test(m)) {
-    return 'Technology Capability'
+  if (/\b(software|platform|analytics|ai|cloud|cyber|data|digital|saas|fintech|finance)/.test(m)) {
+    return 'technology'
   }
-  if (/\b(service|services|training|consult|testing|inspection|maintenance)/.test(m)) {
-    return 'Service Capability'
+  if (/\b(service|services|training|consult|testing|inspection|maintenance|logistics)/.test(m)) {
+    return 'service'
   }
+  return 'product'
+}
+
+function xAxisName(kind: MarketKind): string {
+  if (kind === 'technology') return 'Technology Capability'
+  if (kind === 'service') return 'Service Capability'
   return 'Product Capability'
+}
+
+/** The kind of company the quadrant scores, and why that role was chosen. */
+function providerCategory(kind: MarketKind, subject: string): { category: string; rationale: string } {
+  if (kind === 'technology') {
+    return {
+      category: 'Solution Provider',
+      rationale: `Solution Provider was chosen because the competitive landscape for ${subject.toLowerCase()} is built around companies developing and licensing the platforms and software that deliver the capability.`,
+    }
+  }
+  if (kind === 'service') {
+    return {
+      category: 'Service Provider',
+      rationale: `Service Provider was chosen because the competitive landscape for ${subject.toLowerCase()} is built around companies delivering the work as a service rather than selling a physical product.`,
+    }
+  }
+  return {
+    category: 'Manufacturer',
+    rationale: `Manufacturer was chosen because the competitive landscape for ${subject.toLowerCase()} is built around companies producing and selling the physical equipment and materials that define the market.`,
+  }
 }
 
 /** "Battery Fire Safety Industry Analysis" → "Battery Fire Safety". */
@@ -227,7 +259,10 @@ export function buildDemoQuadrant(
 
   const market = (dashboardName || data.metadata?.market_name || 'Market').trim()
   const geo = data.dimensions.geographies?.all_geographies?.[0] || 'Global'
-  const xName = xAxisName(market)
+  const kind = marketKind(market)
+  const xName = xAxisName(kind)
+  const subject = marketSubject(market)
+  const provider = providerCategory(kind, subject)
   const yName = 'Business Capability'
   const params = axisParameters(market, geo, xName)
 
@@ -265,8 +300,8 @@ export function buildDemoQuadrant(
     marketType: '',
     marketDefinition: `Illustrative competitive positioning for ${marketSubject(market)}, generated from the segmentation in this dashboard.`,
     marketTypeRationale: '',
-    providerCategories: [],
-    providerRationale: '',
+    providerCategories: [provider.category],
+    providerRationale: provider.rationale,
     companyCount: CHARTED_COMPANIES + OTHER_COMPANIES,
     xAxis,
     yAxis,

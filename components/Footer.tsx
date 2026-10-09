@@ -1,45 +1,19 @@
 'use client'
 
-import Image from 'next/image'
 import { Phone, Mail, MapPin, Linkedin, Facebook, Twitter } from 'lucide-react'
+import { useDashboardStore } from '@/lib/store'
+import { getBrand } from '@/lib/brand'
 
-/** Every footer entry points at the live coherentmarketinsights.com page. */
-const CMI = 'https://www.coherentmarketinsights.com'
-
-const MENU_LINKS = [
-  { label: 'About Us', href: '/aboutus' },
-  { label: 'Industries', href: '/industries' },
-  { label: 'Services', href: '/services' },
-  { label: 'Contact Us', href: '/contact-us' },
-  { label: 'Careers', href: '/careers' },
-]
-
-const READER_CLUB_LINKS = [
-  { label: 'Latest Insights', href: '/latest-insights' },
-  { label: 'Press Release', href: '/press-releases' },
-  { label: 'Infographics', href: '/infographics' },
-  { label: 'Blogs', href: '/blog' },
-  { label: 'News', href: '/news' },
-]
-
-const HELP_LINKS = [
-  { label: 'Become Reseller', href: '/become-reseller' },
-  { label: 'How To Order?', href: '/how-to-order' },
-  { label: 'Terms and Conditions', href: '/terms-and-conditions' },
-  { label: 'Privacy Policy', href: '/privacy-policy' },
-  { label: 'Disclaimer', href: '/disclaimer' },
-  { label: 'Sitemap', href: '/sitemap.html' },
-  { label: 'Feeds', href: '/feeds' },
-]
-
-const SOCIAL = {
-  linkedin: 'https://www.linkedin.com/company/coherent-market-insights',
-  twitter: 'https://twitter.com/CoherentMI',
-  facebook: 'https://www.facebook.com/Coherent-Market-Insights-Pvt-Ltd-184735681994311/',
-  pinterest: 'https://www.pinterest.com/coherentMI/',
-}
-
+/**
+ * Site footer, rendered in the brand the dashboard was built under.
+ *
+ * Contact details, navigation and social links all come from `lib/brand`, so a
+ * Worldwide Market Reports dashboard never shows Coherent's footer.
+ */
 export function Footer({ variant = 'default' }: { variant?: 'default' | 'magma' }) {
+  const { logoChoice } = useDashboardStore()
+  const brand = getBrand(logoChoice)
+
   const magma = variant === 'magma'
   // Theme-dependent classes — magma reuses the electric-blue palette.
   const stripBg = magma ? 'bg-[#0726a0] border-b border-white/10' : 'bg-gray-200 border-b border-gray-300'
@@ -50,6 +24,19 @@ export function Footer({ variant = 'default' }: { variant?: 'default' | 'magma' 
   const divider = magma ? 'border-white/10' : 'border-gray-700'
   const copyText = magma ? 'text-white/60' : 'text-gray-400'
 
+  const socialLink = (href: string | undefined, className: string, label: string, icon: React.ReactNode) =>
+    href ? (
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={className}
+        aria-label={label}
+      >
+        {icon}
+      </a>
+    ) : null
+
   return (
     <>
       {/* Contact Us Strip */}
@@ -58,22 +45,14 @@ export function Footer({ variant = 'default' }: { variant?: 'default' | 'magma' 
           <div className="flex flex-wrap items-center gap-6 text-sm">
             <span className={`font-semibold ${stripText}`}>Contact Us</span>
             <div className="flex flex-wrap items-center gap-4">
-              <div className="flex items-center gap-2">
-                <Phone className={`h-4 w-4 ${stripText}`} />
-                <span className={stripText}>United States: <strong>+1-252-477-1362</strong></span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Phone className={`h-4 w-4 ${stripText}`} />
-                <span className={stripText}>United Kingdom: <strong>+44-203-957-8553 / +44-203-949-5508</strong></span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Phone className={`h-4 w-4 ${stripText}`} />
-                <span className={stripText}>Australia: <strong>+61-8-7924-7805</strong></span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Phone className={`h-4 w-4 ${stripText}`} />
-                <span className={stripText}>India: <strong>+91-848-285-0837</strong></span>
-              </div>
+              {brand.phones.map((p, i) => (
+                <div key={`${p.country}-${i}`} className="flex items-center gap-2">
+                  <Phone className={`h-4 w-4 ${stripText}`} />
+                  <span className={stripText}>
+                    {p.country}: <strong>{p.number}</strong>
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -83,124 +62,83 @@ export function Footer({ variant = 'default' }: { variant?: 'default' | 'magma' 
       <footer className={footerBg}>
         <div className="container mx-auto px-6 py-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
-            {/* Left Column - Contact and Office Information */}
+            {/* Contact and office information */}
             <div className="lg:col-span-2 space-y-4">
               <div>
                 <p className="text-white font-semibold mb-2">For Business Enquiry :</p>
                 <div className="flex items-center gap-2">
                   <Mail className="h-4 w-4" />
-                  <a href="mailto:sales@coherentmarketinsights.com" className="text-gray-300 hover:text-white">
-                    sales@coherentmarketinsights.com
+                  <a href={`mailto:${brand.email}`} className="text-gray-300 hover:text-white">
+                    {brand.email}
                   </a>
                 </div>
               </div>
-              
-              <div>
-                <p className="text-white font-semibold mb-2">Sales Office (U.S.) :</p>
-                <div className="flex items-start gap-2">
-                  <MapPin className="h-4 w-4 mt-1 flex-shrink-0" />
-                  <p className={`${bodyText} text-sm`}>
-                    Coherent Market Insights Pvt Ltd, 533 Airport Boulevard, Suite 400, Burlingame, CA 94010, United States
-                  </p>
+
+              {brand.offices.map((office) => (
+                <div key={office.heading}>
+                  <p className="text-white font-semibold mb-2">{office.heading}</p>
+                  <div className="flex items-start gap-2">
+                    <MapPin className="h-4 w-4 mt-1 flex-shrink-0" />
+                    <p className={`${bodyText} text-sm`}>{office.address}</p>
+                  </div>
                 </div>
+              ))}
+            </div>
+
+            {brand.columns.map((column) => (
+              <div key={column.heading}>
+                <h3 className="text-white font-semibold mb-4">{column.heading}</h3>
+                <ul className="space-y-2 text-sm">
+                  {column.links.map((link) => (
+                    <li key={link.href}>
+                      <a
+                        href={link.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`${linkText} transition-colors`}
+                      >
+                        {link.label}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
               </div>
-              
-              <div>
-                <p className="text-white font-semibold mb-2">Asia Pacific Intelligence Center (India) :</p>
-                <div className="flex items-start gap-2">
-                  <MapPin className="h-4 w-4 mt-1 flex-shrink-0" />
-                  <p className={`${bodyText} text-sm`}>
-                    Coherent Market Insights Pvt Ltd, 401-402, Bremen Business Center, University Road, Aundh, Pune - 411007, India.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Menu Column */}
-            <div>
-              <h3 className="text-white font-semibold mb-4">Menu</h3>
-              <ul className="space-y-2 text-sm">
-                {MENU_LINKS.map((l) => (
-                  <li key={l.href}>
-                    <a href={CMI + l.href} target="_blank" rel="noopener noreferrer" className={`${linkText} transition-colors`}>{l.label}</a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Reader Club Column */}
-            <div>
-              <h3 className="text-white font-semibold mb-4">Reader Club</h3>
-              <ul className="space-y-2 text-sm">
-                {READER_CLUB_LINKS.map((l) => (
-                  <li key={l.href}>
-                    <a href={CMI + l.href} target="_blank" rel="noopener noreferrer" className={`${linkText} transition-colors`}>{l.label}</a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Help Column */}
-            <div>
-              <h3 className="text-white font-semibold mb-4">Help</h3>
-              <ul className="space-y-2 text-sm">
-                {HELP_LINKS.map((l) => (
-                  <li key={l.href}>
-                    <a href={CMI + l.href} target="_blank" rel="noopener noreferrer" className={`${linkText} transition-colors`}>{l.label}</a>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            ))}
           </div>
 
-          {/* Right Section - HR, Social Media, Payment */}
+          {/* Social media and payment */}
           <div className={`mt-8 pt-8 border-t ${divider}`}>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {/* HR Contact */}
-              <div>
-                <p className="text-white font-semibold mb-2">HR Contact :</p>
-                <div className="flex items-center gap-2">
-                  <Phone className="h-4 w-4" />
-                  <span className={bodyText}>+91-7262891127</span>
-                </div>
-              </div>
-
-              {/* Social Media */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div>
                 <p className="text-white font-semibold mb-3">Connect With Us :</p>
                 <div className="flex gap-3">
-                  <a 
-                    href={SOCIAL.linkedin} target="_blank" rel="noopener noreferrer"
-                    className="w-10 h-10 bg-blue-600 rounded flex items-center justify-center text-white hover:bg-blue-700 transition-colors"
-                    aria-label="LinkedIn"
-                  >
+                  {socialLink(
+                    brand.socials.linkedin,
+                    'w-10 h-10 bg-blue-600 rounded flex items-center justify-center text-white hover:bg-blue-700 transition-colors',
+                    'LinkedIn',
                     <Linkedin className="h-5 w-5" />
-                  </a>
-                  <a 
-                    href={SOCIAL.twitter} target="_blank" rel="noopener noreferrer"
-                    className="w-10 h-10 bg-black rounded flex items-center justify-center text-white hover:bg-gray-800 transition-colors"
-                    aria-label="Twitter"
-                  >
+                  )}
+                  {socialLink(
+                    brand.socials.twitter,
+                    'w-10 h-10 bg-black rounded flex items-center justify-center text-white hover:bg-gray-800 transition-colors',
+                    'Twitter',
                     <Twitter className="h-5 w-5" />
-                  </a>
-                  <a 
-                    href={SOCIAL.facebook} target="_blank" rel="noopener noreferrer"
-                    className="w-10 h-10 bg-blue-700 rounded flex items-center justify-center text-white hover:bg-blue-800 transition-colors"
-                    aria-label="Facebook"
-                  >
+                  )}
+                  {socialLink(
+                    brand.socials.facebook,
+                    'w-10 h-10 bg-blue-700 rounded flex items-center justify-center text-white hover:bg-blue-800 transition-colors',
+                    'Facebook',
                     <Facebook className="h-5 w-5" />
-                  </a>
-                  <a 
-                    href={SOCIAL.pinterest} target="_blank" rel="noopener noreferrer"
-                    className="w-10 h-10 bg-red-600 rounded flex items-center justify-center text-white hover:bg-red-700 transition-colors font-bold"
-                    aria-label="Pinterest"
-                  >
+                  )}
+                  {socialLink(
+                    brand.socials.pinterest,
+                    'w-10 h-10 bg-red-600 rounded flex items-center justify-center text-white hover:bg-red-700 transition-colors font-bold',
+                    'Pinterest',
                     <span className="text-sm">P</span>
-                  </a>
+                  )}
                 </div>
               </div>
 
-              {/* Payment Methods */}
               <div>
                 <p className="text-white font-semibold mb-3">Secure Payment By :</p>
                 <div className="flex flex-wrap gap-3 items-center">
@@ -215,13 +153,10 @@ export function Footer({ variant = 'default' }: { variant?: 'default' | 'magma' 
 
           {/* Copyright */}
           <div className={`mt-8 pt-6 border-t ${divider} text-center`}>
-            <p className={`${copyText} text-sm`}>
-              © 2026 Coherent Market Insights Pvt Ltd. All Rights Reserved.
-            </p>
+            <p className={`${copyText} text-sm`}>{brand.copyright}</p>
           </div>
         </div>
       </footer>
     </>
   )
 }
-

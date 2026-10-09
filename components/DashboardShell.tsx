@@ -33,6 +33,7 @@ import { CustomScrollbar } from '@/components/ui/CustomScrollbar'
 import { GlobalKPICards } from '@/components/GlobalKPICards'
 import { getChartsForGroup } from '@/lib/chart-groups'
 import { suiteSubtitle } from '@/lib/dashboard-title'
+import { getBrand } from '@/lib/brand'
 import { Lightbulb, X, Layers, LayoutGrid, Settings } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { Footer } from '@/components/Footer'
@@ -139,6 +140,8 @@ export function DashboardShell({ readOnly = false }: Props) {
    * a buyer survey keeps the original layout, so the plain
    * market/customer/distributor flows are untouched.
    */
+  const brand = getBrand(logoChoice)
+
   const isSuitePreview = hasB2bSurvey
 
   const isMarketAnalysis = selectedChartGroup === 'market-analysis'
@@ -146,11 +149,11 @@ export function DashboardShell({ readOnly = false }: Props) {
   const isTaxonomy = selectedChartGroup === 'taxonomy'
 
   /**
-   * Market Analysis owns the filter sidebar and KPI row; in suite mode it is
-   * the only view that shows them. Taxonomy never does — it describes the
-   * workbook's scope and does not respond to the filters.
+   * The filter sidebar and KPI row belong to Market Analysis alone. Every other
+   * view renders its own dataset and ignores the filters, so carrying them
+   * across would imply they do something.
    */
-  const showSidebar = (!isSuitePreview || isMarketAnalysis) && !isTaxonomy
+  const showSidebar = isMarketAnalysis
 
   /** Views reported per country — suite mode only; taxonomy and market analysis never. */
   const isCountryScoped =
@@ -266,7 +269,7 @@ export function DashboardShell({ readOnly = false }: Props) {
         <div className="container mx-auto px-6 py-6 flex-1">
           <div className="mb-6 flex items-center justify-between gap-4">
             <div className="flex-shrink-0">
-              <a href="https://www.coherentmarketinsights.com" target="_blank" rel="noopener noreferrer" title="coherentmarketinsights.com">
+              <a href={brand.site} target="_blank" rel="noopener noreferrer" title={brand.name}>
                 <Image src={logoChoice === 'wmr' ? '/wmr-logo.png' : logoChoice === 'mi' ? '/mi-logo.png' : '/logo.png'} alt={logoChoice === 'wmr' ? 'Worldwide Market Reports Logo' : logoChoice === 'mi' ? 'Coherent MI Logo' : 'Coherent Market Insights Logo'} width={150} height={60} unoptimized className="h-auto w-auto max-w-[150px]" priority />
               </a>
             </div>
@@ -333,7 +336,7 @@ export function DashboardShell({ readOnly = false }: Props) {
         {/* Header */}
         <div className="mb-6 flex items-center justify-between gap-4">
           <div className="flex-shrink-0">
-            <a href="https://www.coherentmarketinsights.com" target="_blank" rel="noopener noreferrer" title="coherentmarketinsights.com">
+            <a href={brand.site} target="_blank" rel="noopener noreferrer" title={brand.name}>
               <Image src={logoChoice === 'wmr' ? '/wmr-logo.png' : logoChoice === 'mi' ? '/mi-logo.png' : '/logo.png'} alt={logoChoice === 'wmr' ? 'Worldwide Market Reports Logo' : logoChoice === 'mi' ? 'Coherent MI Logo' : 'Coherent Market Insights Logo'} width={150} height={60} unoptimized className="h-auto w-auto max-w-[150px]" priority />
             </a>
           </div>
