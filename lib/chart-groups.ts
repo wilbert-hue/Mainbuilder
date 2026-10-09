@@ -96,7 +96,8 @@ export const CHART_GROUPS: ChartGroup[] = [
   }
 ]
 
-export const DEFAULT_CHART_GROUP: ChartGroupId = 'market-analysis'
+/** Dashboards open on the taxonomy: the scope of the report before its numbers. */
+export const DEFAULT_CHART_GROUP: ChartGroupId = 'taxonomy'
 
 /**
  * Get chart group by ID

@@ -56,7 +56,16 @@ function ScoreDisc({ score }: { score: number | null }) {
 }
 
 /** Axis score disc that expands to show the parameter breakdown. */
-function AxisScoreCell({ score, params }: { score: number | null; params: QuadrantParameterScore[] }) {
+function AxisScoreCell({
+  score,
+  params,
+  locked = false,
+}: {
+  score: number | null
+  params: QuadrantParameterScore[]
+  /** Demo mode: the parameter names are real, their scores are withheld. */
+  locked?: boolean
+}) {
   if (params.length === 0) return <ScoreDisc score={score} />
   return (
     <details className="inline-block">
@@ -75,7 +84,7 @@ function AxisScoreCell({ score, params }: { score: number | null; params: Quadra
           >
             <span className="text-slate-700">{p.name}</span>
             <span className="font-bold tabular-nums" style={{ color: SCORE_BLUE }}>
-              {p.score ?? '—'}
+              {locked ? <LockedField /> : p.score ?? '—'}
             </span>
           </div>
         ))}
@@ -188,12 +197,18 @@ function AxisParameterPanel({
                   >
                     {p.name}
                   </span>
-                  <span
-                    className="shrink-0 rounded-full px-2 py-0.5 text-[0.75rem] font-bold tabular-nums text-white"
-                    style={{ backgroundColor: SCORE_BLUE }}
-                  >
-                    {p.score ?? '—'}
-                  </span>
+                  {demoLocked ? (
+                    <span className="shrink-0 text-slate-400" title="Available on subscription">
+                      <Lock className="h-3.5 w-3.5" />
+                    </span>
+                  ) : (
+                    <span
+                      className="shrink-0 rounded-full px-2 py-0.5 text-[0.75rem] font-bold tabular-nums text-white"
+                      style={{ backgroundColor: SCORE_BLUE }}
+                    >
+                      {p.score ?? '—'}
+                    </span>
+                  )}
                 </button>
               </li>
             )
@@ -693,10 +708,10 @@ export function QuadrantView() {
                     <QuadrantPill quadrant={c.quadrant} />
                   </td>
                   <td className="whitespace-nowrap border-b border-slate-200 px-3 py-2.5">
-                    <AxisScoreCell score={c.xScore} params={c.xParameters} />
+                    <AxisScoreCell score={c.xScore} params={c.xParameters} locked={isDemo} />
                   </td>
                   <td className="whitespace-nowrap border-b border-slate-200 px-3 py-2.5">
-                    <AxisScoreCell score={c.yScore} params={c.yParameters} />
+                    <AxisScoreCell score={c.yScore} params={c.yParameters} locked={isDemo} />
                   </td>
                   <td className="border-b border-slate-200 px-3 py-2.5">
                     <ScoreDisc score={c.overallScore} />
