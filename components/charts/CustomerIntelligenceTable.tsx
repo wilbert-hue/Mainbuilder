@@ -246,6 +246,21 @@ function PropositionTableDashboard({
 }) {
   const rawHeaders = data.headers?.length ? data.headers : Object.keys(data.rows[0] || {})
   const parentHeaders = data.parentHeaders
+  // Columns under the last band are the procurement group; they get their own
+  // colour so the derived intelligence reads apart from the fixed profile.
+  const accentBand = parentHeaders?.length ? parentHeaders[parentHeaders.length - 1] : null
+  const isAccentColumn = (index: number) =>
+    !!accentBand && accentBand.colSpan > 0 && index >= accentBand.startCol
+  /** Each procurement column gets its own tint so they read as separate facets. */
+  const accentTone = (index: number) => {
+    const tones = [
+      { head: 'bg-amber-100 text-amber-900 border-amber-200', cell: 'bg-amber-50/70 border-amber-100' },
+      { head: 'bg-emerald-100 text-emerald-900 border-emerald-200', cell: 'bg-emerald-50/70 border-emerald-100' },
+      { head: 'bg-violet-100 text-violet-900 border-violet-200', cell: 'bg-violet-50/70 border-violet-100' },
+      { head: 'bg-rose-100 text-rose-900 border-rose-200', cell: 'bg-rose-50/70 border-rose-100' },
+    ]
+    return tones[(index - (accentBand?.startCol ?? 0)) % tones.length]
+  }
   const hidden = HIDDEN_COLUMNS[intelligenceSource]
   // Banded headers carry colSpans tied to the full column list, so dropping a
   // column there would misalign the band — leave those sheets untouched.
@@ -325,7 +340,9 @@ function PropositionTableDashboard({
               {headers.map((header, index) => (
                 <th
                   key={index}
-                  className="px-3 py-2.5 text-left text-xs font-semibold border-r border-sky-200/80 last:border-r-0 max-w-[14rem] truncate"
+                  className={`px-3 py-2.5 text-left text-xs font-semibold border-r last:border-r-0 min-w-[11rem] max-w-[16rem] ${
+                    isAccentColumn(index) ? accentTone(index).head : 'border-sky-200/80'
+                  }`}
                   title={transformHeader(header, currency)}
                 >
                   {transformHeader(header, currency)}
@@ -342,7 +359,9 @@ function PropositionTableDashboard({
                 {headers.map((header, colIndex) => (
                   <td
                     key={colIndex}
-                    className="px-3 py-2.5 text-sm text-slate-800 border-b border-slate-100 border-r border-slate-100/80 last:border-r-0 align-top max-w-[18rem]"
+                    className={`px-3 py-2.5 text-sm text-slate-800 border-b border-slate-100 border-r last:border-r-0 align-top min-w-[11rem] max-w-[18rem] ${
+                      isAccentColumn(colIndex) ? accentTone(colIndex).cell : 'border-slate-100/80'
+                    }`}
                   >
                     {isRowNumberColumn(String(header)) ? (
                       <span>{rowIndex + 1}</span>

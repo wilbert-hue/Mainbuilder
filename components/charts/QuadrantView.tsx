@@ -455,7 +455,7 @@ export function QuadrantView() {
       : buildMethodologySteps(paramsPerAxis, xNames.length + yNames.length || 10)
   const defaultMethodologyNote = `Scoring inputs: each axis is built from ${spell(
     paramsPerAxis
-  )} market-specific parameters, defined in the Market Scoring Parameters section above. All parameters are equally weighted.`
+  )} market-specific parameters, set out in the Parameter Definitions section above. All parameters are equally weighted.`
 
   // Country mix per quadrant, shown beneath the chart.
   const countryMix = QUADRANT_KEYS.map((q) => {
@@ -515,6 +515,36 @@ export function QuadrantView() {
                 <div className="mt-2 text-[0.84rem] text-slate-500">{report.providerRationale}</div>
               )}
             </div>
+          </div>
+        </section>
+      )}
+
+      {/* Scoring parameters at a glance — definitions follow at the end */}
+      {(xNames.length > 0 || yNames.length > 0) && (
+        <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <h2 className="mb-2 text-lg font-bold text-slate-900">Market Scoring Parameters</h2>
+          <p className="mb-4 text-[0.92rem] leading-relaxed text-slate-500">
+            The X and Y axes and these {xNames.length + yNames.length} parameters were defined for{' '}
+            <strong className="text-slate-700">{report.market}</strong> and form the basis of the
+            company scores below.
+          </p>
+          <div className="grid gap-4 md:grid-cols-2">
+            {[
+              { label: `X — ${report.xAxis.name}`, names: xNames },
+              { label: `Y — ${report.yAxis.name}`, names: yNames },
+            ].map((axis) => (
+              <div
+                key={axis.label}
+                className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-4"
+              >
+                <div className="mb-2 font-bold text-slate-900">{axis.label}</div>
+                <ol className="list-decimal space-y-1.5 pl-5 text-[0.92rem] font-semibold text-[#0f3d5c]">
+                  {axis.names.map((name) => (
+                    <li key={name}>{name}</li>
+                  ))}
+                </ol>
+              </div>
+            ))}
           </div>
         </section>
       )}
@@ -877,7 +907,7 @@ export function QuadrantView() {
       {/* Scoring parameters */}
       {(xNames.length > 0 || yNames.length > 0) && (
         <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h2 className="mb-2 text-lg font-bold text-slate-900">Market Scoring Parameters</h2>
+          <h2 className="mb-2 text-lg font-bold text-slate-900">Parameter Definitions</h2>
           <p className="mb-4 text-[0.92rem] leading-relaxed text-slate-500">
             X and Y axes and these {xNames.length + yNames.length} parameters are defined for{' '}
             <strong className="text-slate-700">{report.market}</strong> and used to calculate the
