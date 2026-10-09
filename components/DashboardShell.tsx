@@ -368,13 +368,11 @@ export function DashboardShell({ readOnly = false }: Props) {
           </div>
         )}
 
-        {/* Chart View moves onto a full-width strip once a survey is loaded, so
-            the views that hide the sidebar can still be switched from the top. */}
-        {hasAnySurvey && (
-          <div className="mb-6">
-            <ChartGroupSelector orientation="horizontal" />
-          </div>
-        )}
+        {/* Chart View is always a full-width strip above the dashboard, so the
+            views are switched from the same place whatever the sidebar does. */}
+        <div className="mb-6">
+          <ChartGroupSelector orientation="horizontal" />
+        </div>
 
         <div className="grid grid-cols-12 gap-6">
           {/* Sidebar */}
@@ -400,7 +398,6 @@ export function DashboardShell({ readOnly = false }: Props) {
                 <div className="max-h-[calc(100vh-6rem)] relative">
                   <CustomScrollbar containerRef={sidebarScrollRef}>
                     <div ref={sidebarScrollRef} className="overflow-y-auto pr-6 space-y-3 sidebar-scroll max-h-[calc(100vh-6rem)]">
-                      {!hasAnySurvey && <ChartGroupSelector />}
                       <FilterPresets />
                       <EnhancedFilterPanel />
                     </div>
