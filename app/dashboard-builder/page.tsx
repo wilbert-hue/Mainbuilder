@@ -10,7 +10,8 @@ import { IntelligenceDataInput, type IntelligenceMode } from '@/components/dashb
 import { BuyerSurveyDataInput, type BuyerSurveyMode } from '@/components/dashboard-builder/BuyerSurveyDataInput'
 import { parseBuyerSurvey, type BuyerSurveyKind } from '@/lib/buyer-survey-types'
 import { parseQuadrantReport } from '@/lib/quadrant-types'
-import { STATIC_PROP1_DATA, STATIC_DISTRIBUTOR_PROP1_DATA } from '@/components/charts/CustomerIntelligenceTable'
+import { STATIC_DISTRIBUTOR_PROP1_DATA } from '@/components/charts/CustomerIntelligenceTable'
+import { buildStaticCustomerTemplate } from '@/lib/static-customer-template'
 import { postDashboardSave } from '@/lib/share-upload'
 import { AuthStatus } from '@/components/AuthStatus'
 import { PreviousDashboards } from '@/components/PreviousDashboards'
@@ -1812,7 +1813,9 @@ export default function DashboardBuilderPage() {
                     onClick={() => {
                       if (staticCustomerProp1) {
                         // Load static data directly into the store — no file needed
-                        setRawIntelligenceData(STATIC_PROP1_DATA)
+                        setRawIntelligenceData(
+                          buildStaticCustomerTemplate(useDashboardStore.getState().data)
+                        )
                         setProposition2Data(null)
                         setProposition3Data(null)
                         setIntelligenceType(modeToStoreType(intelMode))

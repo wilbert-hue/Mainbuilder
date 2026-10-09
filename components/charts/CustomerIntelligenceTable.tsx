@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useDashboardStore } from '@/lib/store'
 import { Building2, Users } from 'lucide-react'
 import { AccessDataCell, contactFieldOf } from './AccessDataCell'
+import { buildStaticCustomerTemplate } from '@/lib/static-customer-template'
 
 // ---------------------------------------------------------------------------
 // Static Proposition 1 data — exact format from the reference template
@@ -419,7 +420,11 @@ export function CustomerIntelligenceTable({
   const [activeTab, setActiveTab] = useState<TabType>(getDefaultTab())
   // staticProp1 comes from the store (set via the builder toggle)
   const staticProp1 = intelligenceSource === 'customer' ? staticCustomerProp1 : staticDistributorProp1
-  const staticData = intelligenceSource === 'distributor' ? STATIC_DISTRIBUTOR_PROP1_DATA : STATIC_PROP1_DATA
+  // The customer template's trailing columns follow this market's segments.
+  const staticData =
+    intelligenceSource === 'distributor'
+      ? STATIC_DISTRIBUTOR_PROP1_DATA
+      : (buildStaticCustomerTemplate(data) as PropositionData)
 
   useEffect(() => {
     const currentTabHasData =
