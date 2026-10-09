@@ -143,13 +143,18 @@ export function DashboardShell({ readOnly = false }: Props) {
 
   const isMarketAnalysis = selectedChartGroup === 'market-analysis'
 
-  /** Market Analysis owns the filter sidebar and KPI row; in suite mode it is
-   *  the only view that shows them. */
-  const showSidebar = !isSuitePreview || isMarketAnalysis
+  const isTaxonomy = selectedChartGroup === 'taxonomy'
+
+  /**
+   * Market Analysis owns the filter sidebar and KPI row; in suite mode it is
+   * the only view that shows them. Taxonomy never does — it describes the
+   * workbook's scope and does not respond to the filters.
+   */
+  const showSidebar = (!isSuitePreview || isMarketAnalysis) && !isTaxonomy
 
   /** Views reported per country — suite mode only; taxonomy and market analysis never. */
   const isCountryScoped =
-    isSuitePreview && !isMarketAnalysis && selectedChartGroup !== 'taxonomy'
+    isSuitePreview && !isMarketAnalysis && !isTaxonomy
 
   /** These dashboards cover one market, so the strip lists it alone. */
   const countryOptions = [COVERED_COUNTRY]
@@ -173,7 +178,6 @@ export function DashboardShell({ readOnly = false }: Props) {
     if (!hasMarketData && !STANDALONE_CHARTS.includes(chartId)) {
       return false
     }
-    if (chartId === 'taxonomy' && !hasB2bSurvey) return false
     if (chartId === 'b2b-survey' && !hasB2bSurvey) return false
     if (chartId === 'b2c-survey' && !hasB2cSurvey) return false
     if (chartId === 'coherent-quadrant' && !hasQuadrant) return false
