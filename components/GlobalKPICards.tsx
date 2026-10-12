@@ -168,13 +168,16 @@ export function GlobalKPICards() {
     const actualStartYear = availableYears.length > 0 ? Math.min(...availableYears) : startYear
     const actualEndYear = availableYears.length > 0 ? Math.max(...availableYears) : endYear
 
-    // KPI market size uses filter year range; CAGR uses standard 2026–2033 when those years exist
-    const cagrStartYear = availableYears.includes(METRICS_START_YEAR)
-      ? METRICS_START_YEAR
-      : actualStartYear
-    const cagrEndYear = availableYears.includes(METRICS_END_YEAR)
-      ? METRICS_END_YEAR
-      : actualEndYear
+    // KPI market size uses the filter year range. CAGR runs over the window the
+    // report declares, falling back to the standard 2026–2033 when it does not.
+    const declaredCagrStart = data.metadata?.cagr_start_year
+    const declaredCagrEnd = data.metadata?.cagr_end_year
+    const pickCagrYear = (declared: number | undefined, standard: number, fallback: number) => {
+      if (declared !== undefined && availableYears.includes(declared)) return declared
+      return availableYears.includes(standard) ? standard : fallback
+    }
+    const cagrStartYear = pickCagrYear(declaredCagrStart, METRICS_START_YEAR, actualStartYear)
+    const cagrEndYear = pickCagrYear(declaredCagrEnd, METRICS_END_YEAR, actualEndYear)
 
     let marketSizeStart = 0
     let marketSizeEnd = 0

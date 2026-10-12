@@ -13,6 +13,9 @@ export interface Metadata {
   currency: string;
   value_unit: string;
   volume_unit: string;
+  /** Overrides the default 2026–2033 CAGR window when the report uses its own. */
+  cagr_start_year?: number;
+  cagr_end_year?: number;
   has_value: boolean;
   has_volume: boolean;
 }
