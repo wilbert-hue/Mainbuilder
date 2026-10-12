@@ -103,6 +103,8 @@ export default function DashboardBuilderPage() {
     setIntelligenceType(modeToStoreType(intelMode))
   }, [intelMode, setIntelligenceType])
 
+  const [isDraggingValue, setIsDraggingValue] = useState(false)
+  const [isDraggingVolume, setIsDraggingVolume] = useState(false)
   const [isDraggingCustomerIntel, setIsDraggingCustomerIntel] = useState(false)
   const [isDraggingDistributorIntel, setIsDraggingDistributorIntel] = useState(false)
 
@@ -325,6 +327,42 @@ export default function DashboardBuilderPage() {
   }
 
   // Intelligence file drop handlers
+  /** Accepts the spreadsheet formats the market ingest understands. */
+  const isMarketFile = (file: File) => /.(csv|xlsx|xls)$/i.test(file.name)
+
+  const handleValueFileDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDraggingValue(false)
+
+    const file = e.dataTransfer.files?.[0]
+    if (!file) return
+    if (!isMarketFile(file)) {
+      setMarketStatus('error')
+      setMarketStatusMessage('Value file must be a CSV, XLSX or XLS file.')
+      return
+    }
+    setValueFile(file)
+    setMarketStatus('idle')
+    setMarketStatusMessage('')
+    setProcessedData(null)
+  }
+
+  const handleVolumeFileDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDraggingVolume(false)
+
+    const file = e.dataTransfer.files?.[0]
+    if (!file) return
+    if (!isMarketFile(file)) {
+      setMarketStatus('error')
+      setMarketStatusMessage('Volume file must be a CSV, XLSX or XLS file.')
+      return
+    }
+    setVolumeFile(file)
+  }
+
   const handleCustomerIntelDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault()
     e.stopPropagation()
@@ -1420,7 +1458,15 @@ export default function DashboardBuilderPage() {
                 <label className="block text-sm font-medium text-slate-200 mb-2">
                   Value File (Required) <span className="text-red-500">*</span>
                 </label>
-                <div className="mt-1 flex justify-center px-6 pt-5 pb-6 builder-upload-zone">
+                <div
+                  className={`mt-1 flex justify-center px-6 pt-5 pb-6 ${
+                    isDraggingValue ? 'builder-upload-zone-active' : 'builder-upload-zone'
+                  }`}
+                  onDrop={handleValueFileDrop}
+                  onDragOver={handleDragOver}
+                  onDragEnter={(e) => handleDragEnter(e, setIsDraggingValue)}
+                  onDragLeave={(e) => handleDragLeave(e, setIsDraggingValue)}
+                >
                   <div className="space-y-1 text-center">
                     <FileSpreadsheet className="mx-auto h-12 w-12 text-slate-500" />
                     <div className="flex text-sm text-slate-400">
@@ -1513,7 +1559,15 @@ export default function DashboardBuilderPage() {
                     Select how volume figures in your file should be labeled on charts and KPIs
                   </p>
                 </div>
-                <div className="mt-1 flex justify-center px-6 pt-5 pb-6 builder-upload-zone">
+                <div
+                  className={`mt-1 flex justify-center px-6 pt-5 pb-6 ${
+                    isDraggingVolume ? 'builder-upload-zone-active' : 'builder-upload-zone'
+                  }`}
+                  onDrop={handleVolumeFileDrop}
+                  onDragOver={handleDragOver}
+                  onDragEnter={(e) => handleDragEnter(e, setIsDraggingVolume)}
+                  onDragLeave={(e) => handleDragLeave(e, setIsDraggingVolume)}
+                >
                   <div className="space-y-1 text-center">
                     <FileSpreadsheet className="mx-auto h-12 w-12 text-slate-500" />
                     <div className="flex text-sm text-slate-400">
