@@ -332,15 +332,21 @@ function PropositionTableDashboard({
                     <th
                       key={index}
                       colSpan={ph.colSpan}
-                      className={`px-3 text-xs font-semibold uppercase tracking-wide border-r last:border-r-0 ${
+                      title={ph.name?.trim() || undefined}
+                      className={`px-3 align-middle text-xs font-semibold uppercase tracking-wide border-r last:border-r-0 ${
                         blank
                           ? 'p-0 bg-sky-100 border-sky-200/80'
                           : accent
-                          ? 'py-2.5 text-center bg-[#7c5a12] text-amber-50 border-amber-700'
-                          : 'py-2.5 text-left border-slate-600'
+                          ? 'py-2 text-left bg-[#7c5a12] text-amber-50 border-amber-700'
+                          : 'py-2 text-left border-slate-600'
                       }`}
                     >
-                      {ph.name?.trim() || ''}
+                      {/* A band can be wider than the viewport, so its label
+                          sticks to the left edge of the scroll area — otherwise
+                          scrolling right leaves an apparently empty strip. */}
+                      <span className="sticky left-3 inline-block max-w-[min(100%,34rem)] truncate leading-tight">
+                        {ph.name?.trim() || ''}
+                      </span>
                     </th>
                   )
                 })}
