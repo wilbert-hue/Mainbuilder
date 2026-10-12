@@ -323,15 +323,27 @@ function PropositionTableDashboard({
           {parentHeaders && parentHeaders.length > 0 && (
             <thead>
               <tr className="bg-slate-700 text-white">
-                {parentHeaders.map((ph, index) => (
-                  <th
-                    key={index}
-                    colSpan={ph.colSpan}
-                    className="px-3 py-2 text-center text-xs font-semibold uppercase tracking-wide border-r border-slate-600 last:border-r-0"
-                  >
-                    {ph.name || '\u00a0'}
-                  </th>
-                ))}
+                {parentHeaders.map((ph, index) => {
+                  const accent = parentHeaders.length > 1 && index === parentHeaders.length - 1
+                  // An unnamed band painted a bare dark strip above the column
+                  // names; blend those into the header row instead.
+                  const blank = !ph.name?.trim()
+                  return (
+                    <th
+                      key={index}
+                      colSpan={ph.colSpan}
+                      className={`px-3 text-xs font-semibold uppercase tracking-wide border-r last:border-r-0 ${
+                        blank
+                          ? 'p-0 bg-sky-100 border-sky-200/80'
+                          : accent
+                          ? 'py-2.5 text-center bg-[#7c5a12] text-amber-50 border-amber-700'
+                          : 'py-2.5 text-left border-slate-600'
+                      }`}
+                    >
+                      {ph.name?.trim() || ''}
+                    </th>
+                  )
+                })}
               </tr>
             </thead>
           )}
