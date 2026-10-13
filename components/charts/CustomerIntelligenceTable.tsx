@@ -10,6 +10,8 @@ import {
 } from '@/lib/static-customer-template'
 import { Lock } from 'lucide-react'
 import MethodologyPanel from './MethodologyPanel'
+import { buildDemoMethodology } from '@/lib/demo-methodology'
+import { DEMO_SUBSCRIBE_NOTE } from '@/components/DemoDataNote'
 import type { MethodologySection } from '@/lib/intelligence-sheet-types'
 
 // ---------------------------------------------------------------------------
@@ -369,7 +371,7 @@ function PropositionTableDashboard({
                         {renderCellValue(header, row[header], currency)}
                       </span>
                     ) : templateMode ? (
-                      <span className="text-slate-400" title="Available on subscription">
+                      <span className="text-slate-400" title={DEMO_SUBSCRIBE_NOTE}>
                         <Lock className="h-3.5 w-3.5" />
                       </span>
                     ) : suitePreview && contactFieldOf(String(header)) ? (
@@ -442,10 +444,18 @@ export function CustomerIntelligenceTable({
   // staticProp1 comes from the store (set via the builder toggle)
   const staticProp1 = intelligenceSource === 'customer' ? staticCustomerProp1 : staticDistributorProp1
   // The customer template's trailing columns follow this market's segments.
-  const staticData =
-    intelligenceSource === 'distributor'
-      ? (buildStaticDistributorTemplate() as PropositionData)
-      : (buildStaticCustomerTemplate(data, dashboardName ?? undefined) as PropositionData)
+  const staticData = useMemo(() => {
+    const template =
+      intelligenceSource === 'distributor'
+        ? (buildStaticDistributorTemplate() as PropositionData)
+        : (buildStaticCustomerTemplate(data, dashboardName ?? undefined) as PropositionData)
+    // No workbook means no METHODOLOGY rows to parse, so the block is written
+    // from the market name instead.
+    return {
+      ...template,
+      methodology: buildDemoMethodology(dashboardName ?? data?.metadata?.market_name, intelligenceSource),
+    } as PropositionData
+  }, [intelligenceSource, data, dashboardName])
 
   useEffect(() => {
     const currentTabHasData =
@@ -534,8 +544,9 @@ export function CustomerIntelligenceTable({
           <p className="text-sm text-slate-500 mt-1.5">{subtitle}</p>
         </div>
 
-        <div className="rounded-lg border border-teal-200 bg-teal-50 px-4 py-2 text-sm text-teal-800">
-          Showing static template — 20-row reference layout for Proposition 1.
+        <div className="flex items-center gap-2 rounded-lg border border-amber-300 bg-amber-50 px-4 py-2.5 text-sm font-medium text-amber-900">
+          <Lock className="h-4 w-4 shrink-0 text-amber-600" />
+          {DEMO_SUBSCRIBE_NOTE}
         </div>
 
         <PropositionTableDashboard

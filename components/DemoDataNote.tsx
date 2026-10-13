@@ -6,6 +6,9 @@
  * and deliberately do not show it.
  */
 
+/** Shown wherever a demo dashboard withholds a value behind a lock. */
+export const DEMO_SUBSCRIBE_NOTE = 'Please subscribe for real world data'
+
 export const DEMO_DATA_NOTE =
   'Data presented is dummy, and simply for representation. Kindly subscribe to this platform for real world data.'
 

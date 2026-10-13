@@ -132,6 +132,9 @@ export async function POST(request: NextRequest) {
       quadrantS3Key: quadrantPersist.s3Key,
       showDemoNote: body.showDemoNote === true,
       showDemoQuadrant: body.showDemoQuadrant === true,
+      showDemoB2bSurvey: body.showDemoB2bSurvey === true,
+      staticCustomerProp1: body.staticCustomerProp1 === true,
+      staticDistributorProp1: body.staticDistributorProp1 === true,
       logoChoice: (['wmr', 'mi'].includes(body.logoChoice as string) ? body.logoChoice : 'coherent') as 'coherent' | 'wmr' | 'mi',
       ownerId,
     }

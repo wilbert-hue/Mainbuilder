@@ -73,6 +73,11 @@ export interface DashboardDocument {
   quadrantS3Key?: string | null
   showDemoNote: boolean
   showDemoQuadrant?: boolean
+  /** Generated demo Voice of Customer (B2B) report */
+  showDemoB2bSurvey?: boolean
+  /** Locked 20-row intelligence templates */
+  staticCustomerProp1?: boolean
+  staticDistributorProp1?: boolean
   logoChoice?: 'coherent' | 'wmr' | 'mi'
 }
 

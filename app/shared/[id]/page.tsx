@@ -35,6 +35,9 @@ export default function SharedDashboardPage() {
     setQuadrantData,
     setShowDemoNote,
     setShowDemoQuadrant,
+    setShowDemoB2bSurvey,
+    setStaticCustomerProp1,
+    setStaticDistributorProp1,
     setLogoChoice,
     loadDefaultFilters,
     clearData,
@@ -86,6 +89,9 @@ export default function SharedDashboardPage() {
       setQuadrantData(reviveQuadrantReport(snapshot.quadrantData))
       setShowDemoNote(snapshot.showDemoNote || false)
       setShowDemoQuadrant(snapshot.showDemoQuadrant || false)
+      setShowDemoB2bSurvey(snapshot.showDemoB2bSurvey || false)
+      setStaticCustomerProp1(snapshot.staticCustomerProp1 || false)
+      setStaticDistributorProp1(snapshot.staticDistributorProp1 || false)
       setLogoChoice((snapshot.logoChoice === 'wmr' || snapshot.logoChoice === 'mi') ? snapshot.logoChoice : 'coherent')
 
       setStatus('ready')

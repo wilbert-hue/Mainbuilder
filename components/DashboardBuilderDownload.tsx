@@ -30,6 +30,10 @@ export function DashboardBuilderDownload() {
     buyerSurveyType,
     quadrantData,
     showDemoNote,
+    showDemoQuadrant,
+    showDemoB2bSurvey,
+    staticCustomerProp1,
+    staticDistributorProp1,
     dashboardId,
     setDashboardId,
     fromDashboardBuilder,
@@ -76,6 +80,10 @@ export function DashboardBuilderDownload() {
         b2cSurveyData: b2cSurveyData ?? null,
         quadrantData: quadrantData ?? null,
         showDemoNote: showDemoNote ?? false,
+        showDemoQuadrant: showDemoQuadrant ?? false,
+        showDemoB2bSurvey: showDemoB2bSurvey ?? false,
+        staticCustomerProp1: staticCustomerProp1 ?? false,
+        staticDistributorProp1: staticDistributorProp1 ?? false,
       }
 
       // Estimate payload size to give user a heads-up on very large datasets

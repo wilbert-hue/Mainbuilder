@@ -24,6 +24,9 @@ import {
   type BuyerSurveyReport,
 } from '@/lib/buyer-survey-types'
 import { BuyerSurveyChart, BuyerSurveyLegend } from './BuyerSurveyChart'
+import { buildDemoBuyerSurvey } from '@/lib/demo-buyer-survey'
+import { Lock } from 'lucide-react'
+import { DEMO_SUBSCRIBE_NOTE } from '@/components/DemoDataNote'
 
 interface Props {
   /** Which report to render. */
@@ -146,7 +149,27 @@ function ExecutiveSummaryCard({ report }: { report: BuyerSurveyReport }) {
   )
 }
 
-function QuestionCard({ question, index }: { question: BuyerSurveyQuestion; index: number }) {
+/** Chart and takeaway withheld on a demo dashboard. */
+function LockedAnswer() {
+  return (
+    <div className="flex flex-col items-center justify-center gap-3 rounded-md border border-dashed border-amber-300 bg-amber-50/60 px-6 py-12 text-center">
+      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+        <Lock className="h-6 w-6" />
+      </div>
+      <p className="text-sm font-semibold text-amber-900">{DEMO_SUBSCRIBE_NOTE}</p>
+    </div>
+  )
+}
+
+function QuestionCard({
+  question,
+  index,
+  locked = false,
+}: {
+  question: BuyerSurveyQuestion
+  index: number
+  locked?: boolean
+}) {
   // Exports label questions inconsistently ("q1", "Q1", "1") — normalise to "Q.1".
   const raw = question.id || String(index + 1)
   const digits = raw.match(/\d+/)?.[0]
@@ -166,14 +189,20 @@ function QuestionCard({ question, index }: { question: BuyerSurveyQuestion; inde
         )}
       </div>
 
-      {/* Chart */}
-      <div className="px-4 pt-5">
-        <BuyerSurveyChart options={question.options} chartType={question.chartType} />
-        <BuyerSurveyLegend options={question.options} />
+      {/* Chart — locked on a demo dashboard, where there are no answers to plot. */}
+      <div className="px-4 pt-5 pb-1">
+        {locked ? (
+          <LockedAnswer />
+        ) : (
+          <>
+            <BuyerSurveyChart options={question.options} chartType={question.chartType} />
+            <BuyerSurveyLegend options={question.options} />
+          </>
+        )}
       </div>
 
       {/* Takeaway */}
-      {question.keyInsight && (
+      {!locked && question.keyInsight && (
         <div className="mt-4 border-t border-slate-200 px-4 py-4">
           <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.12em] text-[#1A759F]">
             Takeaways
@@ -277,8 +306,17 @@ function MethodologyPanel({ report }: { report: BuyerSurveyReport }) {
 // ── Main view ───────────────────────────────────────────────────────────────
 
 export function BuyerSurveyView({ kind }: Props) {
-  const { b2bSurveyData, b2cSurveyData } = useDashboardStore()
-  const report = kind === 'b2c' ? b2cSurveyData : b2bSurveyData
+  const { b2bSurveyData, b2cSurveyData, showDemoB2bSurvey, data, dashboardName } = useDashboardStore()
+  const uploaded = kind === 'b2c' ? b2cSurveyData : b2bSurveyData
+
+  /** No analyst export, demo toggled on — write the questionnaire from the market. */
+  const demo = useMemo(
+    () => (!uploaded && kind === 'b2b' && showDemoB2bSurvey ? buildDemoBuyerSurvey(data, dashboardName) : null),
+    [uploaded, kind, showDemoB2bSurvey, data, dashboardName]
+  )
+  /** In demo mode the questions are real; the answers behind them are withheld. */
+  const isDemo = !uploaded && !!demo
+  const report = uploaded ?? demo
 
   const [activeSegment, setActiveSegment] = useState(0)
   const [search, setSearch] = useState('')
@@ -434,7 +472,9 @@ export function BuyerSurveyView({ kind }: Props) {
               No questions match the current filters.
             </div>
           ) : (
-            visibleQuestions.map((q, i) => <QuestionCard key={q.id + i} question={q} index={i} />)
+            visibleQuestions.map((q, i) => (
+              <QuestionCard key={q.id + i} question={q} index={i} locked={isDemo} />
+            ))
           )}
         </div>
       </div>

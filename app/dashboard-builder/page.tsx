@@ -57,6 +57,7 @@ export default function DashboardBuilderPage() {
     setCurrency,
     setShowDemoNote,
     setShowDemoQuadrant,
+    setShowDemoB2bSurvey,
     logoChoice,
     setLogoChoice,
     staticCustomerProp1,
@@ -83,6 +84,7 @@ export default function DashboardBuilderPage() {
   const [processedData, setProcessedData] = useState<ComparisonData | null>(null)
   const [showDemoNoteToggle, setShowDemoNoteToggle] = useState(false)
   const [showDemoQuadrantToggle, setShowDemoQuadrantToggle] = useState(false)
+  const [showDemoB2bSurveyToggle, setShowDemoB2bSurveyToggle] = useState(false)
   const [shareUrl, setShareUrl] = useState<string | null>(null)
   const [isGeneratingLink, setIsGeneratingLink] = useState(false)
   const [linkCopied, setLinkCopied] = useState(false)
@@ -579,6 +581,9 @@ export default function DashboardBuilderPage() {
       pricingAnalysisData,
       showDemoNote,
       showDemoQuadrant,
+      showDemoB2bSurvey,
+      staticCustomerProp1: staticCustomer,
+      staticDistributorProp1: staticDistributor,
       logoChoice,
       b2bSurveyData,
       b2cSurveyData,
@@ -622,6 +627,9 @@ export default function DashboardBuilderPage() {
         quadrantData,
         showDemoNote,
         showDemoQuadrant,
+        showDemoB2bSurvey,
+        staticCustomerProp1: staticCustomer,
+        staticDistributorProp1: staticDistributor,
         logoChoice,
       }
 
@@ -1363,6 +1371,28 @@ export default function DashboardBuilderPage() {
                       <span
                         className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
                           showDemoQuadrantToggle ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                  </div>
+                  {/* Demo Voice of Customer (B2B) toggle */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-slate-400 font-medium">Show Demo Voice of Customer</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const next = !showDemoB2bSurveyToggle
+                        setShowDemoB2bSurveyToggle(next)
+                        setShowDemoB2bSurvey(next)
+                      }}
+                      className={`builder-toggle focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 focus:ring-offset-slate-900 ${
+                        showDemoB2bSurveyToggle ? 'builder-toggle-on' : 'builder-toggle-off'
+                      }`}
+                      aria-pressed={showDemoB2bSurveyToggle}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                          showDemoB2bSurveyToggle ? 'translate-x-6' : 'translate-x-1'
                         }`}
                       />
                     </button>
