@@ -94,25 +94,41 @@ function pluralise(value: string): string {
 }
 
 /**
- * Segment type → procurement column: "By Solution Type" becomes "Solutions
- * they procure", "BY technology types" becomes "Technologies they procure".
+ * Segment type → procurement column, naming the market it belongs to:
+ * "Online Substation Monitoring System - By Polymer Type - they procure".
+ *
+ * The segment type is kept verbatim, so the column reads as the taxonomy the
+ * report itself uses.
  */
-export function segmentTypeToColumn(segmentType: string): string {
-  const stripped = segmentType
-    .trim()
-    .replace(/^by\s+/i, '')
-    .replace(/\s+types?$/i, '')
-    .trim()
-  const subject = normaliseCase(stripped || segmentType.trim())
-  return `${pluralise(subject)} they procure`
+/**
+ * "Online Substation Monitoring System Market" → "Online Substation Monitoring
+ * System". Strips repeatedly, so "… Industry Analysis" reduces fully too.
+ */
+function marketSubject(market: string): string {
+  let subject = market.trim()
+  for (;;) {
+    const next = subject.replace(/\s*(industry|market|analysis|report)\s*$/i, '').trim()
+    if (next === subject || !next) break
+    subject = next
+  }
+  return subject || market.trim()
+}
+
+export function segmentTypeToColumn(segmentType: string, market?: string): string {
+  const taxonomy = segmentType.trim()
+  const subject = market ? marketSubject(market) : ''
+  return subject ? `${subject} - ${taxonomy} - they procure` : `${taxonomy} - they procure`
 }
 
 /** The market's segment types as Procurement Intelligence column names. */
-export function procurementColumns(data: ComparisonData | null | undefined): string[] {
+export function procurementColumns(
+  data: ComparisonData | null | undefined,
+  market?: string
+): string[] {
   const types = Object.keys(data?.dimensions?.segments ?? {}).filter((t) => !isAudienceSegment(t))
   const columns: string[] = []
   for (const type of types) {
-    const name = segmentTypeToColumn(type)
+    const name = segmentTypeToColumn(type, market)
     // Two segment types can reduce to the same label; keep the first.
     if (name && !columns.includes(name)) columns.push(name)
   }
@@ -174,9 +190,11 @@ export function buildStaticDistributorTemplate(): TemplateData {
 }
 
 export function buildStaticCustomerTemplate(
-  data: ComparisonData | null | undefined
+  data: ComparisonData | null | undefined,
+  /** Dashboard name; its subject leads each procurement column. */
+  market?: string
 ): TemplateData {
-  const segmentColumns = procurementColumns(data)
+  const segmentColumns = procurementColumns(data, market ?? data?.metadata?.market_name)
   const headers = [...STATIC_CUSTOMER_BASE_HEADERS, ...segmentColumns]
 
   // Blank, not "xx": the table renders an empty cell as a locked placeholder.

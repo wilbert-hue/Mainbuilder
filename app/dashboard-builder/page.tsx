@@ -1870,7 +1870,10 @@ export default function DashboardBuilderPage() {
                       if (staticCustomerProp1) {
                         // Load static data directly into the store — no file needed
                         setRawIntelligenceData(
-                          buildStaticCustomerTemplate(useDashboardStore.getState().data)
+                          buildStaticCustomerTemplate(
+                            useDashboardStore.getState().data,
+                            useDashboardStore.getState().dashboardName ?? dashboardNameInput
+                          )
                         )
                         setProposition2Data(null)
                         setProposition3Data(null)

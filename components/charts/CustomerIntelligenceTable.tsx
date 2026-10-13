@@ -223,7 +223,11 @@ function PropositionTableDashboard({
   const parentHeaders = data.parentHeaders
   // Columns under the last band are the procurement group; they get their own
   // colour so the derived intelligence reads apart from the fixed profile.
-  const accentBand = parentHeaders?.length ? parentHeaders[parentHeaders.length - 1] : null
+  // Only a trailing *derived* group is tinted. A table with a single band —
+  // the distributor directory — is plain throughout; treating its one band as
+  // the accent coloured every column.
+  const accentBand =
+    parentHeaders && parentHeaders.length > 1 ? parentHeaders[parentHeaders.length - 1] : null
   const isAccentColumn = (index: number) =>
     !!accentBand && accentBand.colSpan > 0 && index >= accentBand.startCol
   /** Each procurement column gets its own tint so they read as separate facets. */
@@ -440,7 +444,7 @@ export function CustomerIntelligenceTable({
   const staticData =
     intelligenceSource === 'distributor'
       ? (buildStaticDistributorTemplate() as PropositionData)
-      : (buildStaticCustomerTemplate(data) as PropositionData)
+      : (buildStaticCustomerTemplate(data, dashboardName ?? undefined) as PropositionData)
 
   useEffect(() => {
     const currentTabHasData =
