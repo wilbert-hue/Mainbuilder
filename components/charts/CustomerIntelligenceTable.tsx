@@ -4,7 +4,11 @@ import { useState, useEffect, useMemo } from 'react'
 import { useDashboardStore } from '@/lib/store'
 import { Building2, Users } from 'lucide-react'
 import { AccessDataCell, contactFieldOf } from './AccessDataCell'
-import { buildStaticCustomerTemplate } from '@/lib/static-customer-template'
+import {
+  buildStaticCustomerTemplate,
+  buildStaticDistributorTemplate,
+} from '@/lib/static-customer-template'
+import { Lock } from 'lucide-react'
 
 // ---------------------------------------------------------------------------
 // Static Proposition 1 data — exact format from the reference template
@@ -49,38 +53,6 @@ export const STATIC_PROP1_DATA: PropositionData = {
 // ---------------------------------------------------------------------------
 // Static Distributor Proposition 1 data
 // ---------------------------------------------------------------------------
-export const STATIC_DISTRIBUTOR_PROP1_PARENT_HEADERS: ParentHeader[] = [
-  { name: 'S. No.',                   startCol: 0, colSpan: 1 },
-  { name: 'Distributor Information',  startCol: 1, colSpan: 6 },
-  { name: 'Contact Details',          startCol: 7, colSpan: 6 },
-]
-
-export const STATIC_DISTRIBUTOR_PROP1_HEADERS = [
-  'S.No.',
-  'Distributor/Company Name',
-  'Distributor Type',
-  'Product/Brand Portfolio',
-  'Application/Use',
-  'Headquarter/Geographic Coverage',
-  'Key Industries/End Users Served',
-  'Key Contact Person',
-  'Designation/Role',
-  'Email Address',
-  'Phone No. (Direct/Alternate)',
-  'LinkedIn Profile',
-  'Website URL',
-]
-
-export const STATIC_DISTRIBUTOR_PROP1_DATA: PropositionData = {
-  headers: STATIC_DISTRIBUTOR_PROP1_HEADERS,
-  rows: Array.from({ length: 20 }, (_, i) => {
-    const row: Record<string, any> = { 'S.No.': i + 1 }
-    STATIC_DISTRIBUTOR_PROP1_HEADERS.slice(1).forEach((h) => { row[h] = 'xx' })
-    return row
-  }),
-  parentHeaders: STATIC_DISTRIBUTOR_PROP1_PARENT_HEADERS,
-}
-
 const USD_TO_INR = 84
 const USD_TO_EUR = 0.92
 
@@ -235,6 +207,7 @@ function PropositionTableDashboard({
   currency,
   intelligenceSource,
   suitePreview,
+  templateMode = false,
 }: {
   data: PropositionData
   tier: TierKey
@@ -243,6 +216,8 @@ function PropositionTableDashboard({
   currency: TableCurrency
   intelligenceSource: 'customer' | 'distributor'
   suitePreview: boolean
+  /** Static template: every empty cell reads as withheld, not missing. */
+  templateMode?: boolean
 }) {
   const rawHeaders = data.headers?.length ? data.headers : Object.keys(data.rows[0] || {})
   const parentHeaders = data.parentHeaders
@@ -387,6 +362,10 @@ function PropositionTableDashboard({
                       <span className="line-clamp-3" title={renderCellValue(header, row[header], currency)}>
                         {renderCellValue(header, row[header], currency)}
                       </span>
+                    ) : templateMode ? (
+                      <span className="text-slate-400" title="Available on subscription">
+                        <Lock className="h-3.5 w-3.5" />
+                      </span>
                     ) : suitePreview && contactFieldOf(String(header)) ? (
                       <AccessDataCell row={row} field={contactFieldOf(String(header))!} />
                     ) : (
@@ -460,7 +439,7 @@ export function CustomerIntelligenceTable({
   // The customer template's trailing columns follow this market's segments.
   const staticData =
     intelligenceSource === 'distributor'
-      ? STATIC_DISTRIBUTOR_PROP1_DATA
+      ? (buildStaticDistributorTemplate() as PropositionData)
       : (buildStaticCustomerTemplate(data) as PropositionData)
 
   useEffect(() => {
@@ -510,8 +489,12 @@ export function CustomerIntelligenceTable({
     count: number
   }[] = [
     { id: 'prop1', label: (p1 as any)?.sheetLabel || 'Proposition 1', tier: 'standard', hasData: !!hasProp1, count: p1?.rows?.length || 0 },
-    { id: 'prop2', label: (p2 as any)?.sheetLabel || 'Proposition 2', tier: 'advance', hasData: !!hasProp2, count: p2?.rows?.length || 0 },
-    { id: 'prop3', label: (p3 as any)?.sheetLabel || 'Proposition 3', tier: 'premium', hasData: !!hasProp3, count: p3?.rows?.length || 0 },
+    ...(staticProp1
+      ? []
+      : [
+          { id: 'prop2' as TabType, label: (p2 as any)?.sheetLabel || 'Proposition 2', tier: 'advance' as TierKey, hasData: !!hasProp2, count: p2?.rows?.length || 0 },
+          { id: 'prop3' as TabType, label: (p3 as any)?.sheetLabel || 'Proposition 3', tier: 'premium' as TierKey, hasData: !!hasProp3, count: p3?.rows?.length || 0 },
+        ]),
   ]
 
   const tierLabelShort = (t: TierKey) =>
@@ -558,6 +541,7 @@ export function CustomerIntelligenceTable({
           currency={tableCurrency}
           intelligenceSource={intelligenceSource}
           suitePreview={isSuitePreview}
+          templateMode={staticProp1}
         />
       </div>
     )
@@ -671,6 +655,7 @@ export function CustomerIntelligenceTable({
           currency={tableCurrency}
           intelligenceSource={intelligenceSource}
           suitePreview={isSuitePreview}
+          templateMode={staticProp1}
         />
       )}
 

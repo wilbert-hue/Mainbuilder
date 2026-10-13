@@ -723,7 +723,7 @@ export function QuadrantView() {
               {charted.map((c, i) => (
                 <tr key={i} className={i % 2 === 1 ? 'bg-slate-100/70' : ''}>
                   <td className="border-b border-slate-200 px-3 py-2.5 font-medium text-slate-900">
-                    {c.brand}
+                    {isDemo ? <LockedField /> : c.brand}
                   </td>
                   <td className="border-b border-slate-200 px-3 py-2.5 text-slate-800">
                     {c.company}
@@ -823,10 +823,10 @@ export function QuadrantView() {
                 {visibleOthers.map((c, i) => (
                   <tr key={i} className={i % 2 === 1 ? 'bg-slate-100/70' : ''}>
                     <td className="border-b border-slate-200 px-3 py-2.5 font-medium text-slate-900">
-                      {c.brand}
+                      {isDemo ? <LockedField /> : c.brand}
                     </td>
                     <td className="border-b border-slate-200 px-3 py-2.5 text-slate-800">
-                      {isDemo ? <LockedField /> : c.company}
+                      {c.company}
                     </td>
                     <td className="border-b border-slate-200 px-3 py-2.5 text-slate-700">
                       {isDemo ? <LockedField /> : c.hq}

@@ -10,8 +10,10 @@ import { IntelligenceDataInput, type IntelligenceMode } from '@/components/dashb
 import { BuyerSurveyDataInput, type BuyerSurveyMode } from '@/components/dashboard-builder/BuyerSurveyDataInput'
 import { parseBuyerSurvey, type BuyerSurveyKind } from '@/lib/buyer-survey-types'
 import { parseQuadrantReport } from '@/lib/quadrant-types'
-import { STATIC_DISTRIBUTOR_PROP1_DATA } from '@/components/charts/CustomerIntelligenceTable'
-import { buildStaticCustomerTemplate } from '@/lib/static-customer-template'
+import {
+  buildStaticCustomerTemplate,
+  buildStaticDistributorTemplate,
+} from '@/lib/static-customer-template'
 import { postDashboardSave } from '@/lib/share-upload'
 import { AuthStatus } from '@/components/AuthStatus'
 import { PreviousDashboards } from '@/components/PreviousDashboards'
@@ -1986,7 +1988,7 @@ export default function DashboardBuilderPage() {
                     type="button"
                     onClick={() => {
                       if (staticDistributorProp1) {
-                        setDistributorRawIntelligenceData(STATIC_DISTRIBUTOR_PROP1_DATA)
+                        setDistributorRawIntelligenceData(buildStaticDistributorTemplate())
                         setDistributorProposition2Data(null)
                         setDistributorProposition3Data(null)
                         setIntelligenceType(modeToStoreType(intelMode))

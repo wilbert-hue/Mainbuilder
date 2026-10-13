@@ -90,14 +90,14 @@ export function IntelligenceDatabaseViews({ preferredSource }: IntelligenceDatab
       )}
 
       {effectiveSource === 'customer' && showCustomer && (
-        <CustomerIntelligenceTable title="Customer Intelligence Database" />
+        <CustomerIntelligenceTable title="B2B - Customer Intelligence Database - Existing customers and Potential customers" />
       )}
 
       {effectiveSource === 'distributor' && showDistributor &&
         (hasDistributorWorkbook ? (
           <CustomerIntelligenceTable
             intelligenceSource="distributor"
-            title="Distributor Intelligence Database"
+            title="Distributor Intelligence Database - Existing distributors and Potential distributors"
           />
         ) : (
           <DistributorsIntelligence title="Distributors Intelligence Database" height={500} />

@@ -125,16 +125,65 @@ export function procurementColumns(data: ComparisonData | null | undefined): str
  * Cells carry "xx" placeholders: this is a layout preview, shown when the
  * builder's static toggle is on, not a data set.
  */
+/**
+ * Distributor directory columns, matching the verified distributor workbook.
+ * No derived band here: a distributor row describes the company, not what it
+ * procures.
+ */
+export const STATIC_DISTRIBUTOR_HEADERS = [
+  '#',
+  'Company',
+  'Website',
+  'Founded',
+  'Headquarters',
+  'Continent / Geography',
+  'Operational Presence',
+  'Ownership',
+  'Employees',
+  'Core Categories',
+  'Specialty Focus',
+  'Key Products / Technologies',
+  'Online / Offline / Both',
+  'Contact Person',
+  'Role',
+  'Email',
+  'LinkedIn',
+  'Office No.',
+  'Office Email',
+  'Country Code / Region Code',
+]
+
+/** Builds the 20-row distributor template. Cells are blank so the table
+ *  renders each as a locked placeholder. */
+export function buildStaticDistributorTemplate(): TemplateData {
+  const headers = STATIC_DISTRIBUTOR_HEADERS
+  const rows = Array.from({ length: 20 }, () => {
+    const row: Record<string, unknown> = {}
+    headers.forEach((h) => {
+      row[h] = ''
+    })
+    return row
+  })
+  return {
+    headers,
+    rows,
+    parentHeaders: [
+      { name: 'Distributor Profile & Contact Details', startCol: 0, colSpan: headers.length },
+    ],
+  }
+}
+
 export function buildStaticCustomerTemplate(
   data: ComparisonData | null | undefined
 ): TemplateData {
   const segmentColumns = procurementColumns(data)
   const headers = [...STATIC_CUSTOMER_BASE_HEADERS, ...segmentColumns]
 
+  // Blank, not "xx": the table renders an empty cell as a locked placeholder.
   const rows = Array.from({ length: 20 }, () => {
     const row: Record<string, unknown> = {}
     headers.forEach((h) => {
-      row[h] = 'xx'
+      row[h] = ''
     })
     return row
   })
