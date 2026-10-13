@@ -1353,50 +1353,6 @@ export default function DashboardBuilderPage() {
                       </button>
                     ))}
                   </div>
-                  {/* Demo quadrant toggle */}
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-slate-400 font-medium">Show Demo Quadrant</span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const next = !showDemoQuadrantToggle
-                        setShowDemoQuadrantToggle(next)
-                        setShowDemoQuadrant(next)
-                      }}
-                      className={`builder-toggle focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 focus:ring-offset-slate-900 ${
-                        showDemoQuadrantToggle ? 'builder-toggle-on' : 'builder-toggle-off'
-                      }`}
-                      aria-pressed={showDemoQuadrantToggle}
-                    >
-                      <span
-                        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
-                          showDemoQuadrantToggle ? 'translate-x-6' : 'translate-x-1'
-                        }`}
-                      />
-                    </button>
-                  </div>
-                  {/* Demo Voice of Customer (B2B) toggle */}
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-slate-400 font-medium">Show Demo Voice of Customer</span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const next = !showDemoB2bSurveyToggle
-                        setShowDemoB2bSurveyToggle(next)
-                        setShowDemoB2bSurvey(next)
-                      }}
-                      className={`builder-toggle focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 focus:ring-offset-slate-900 ${
-                        showDemoB2bSurveyToggle ? 'builder-toggle-on' : 'builder-toggle-off'
-                      }`}
-                      aria-pressed={showDemoB2bSurveyToggle}
-                    >
-                      <span
-                        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
-                          showDemoB2bSurveyToggle ? 'translate-x-6' : 'translate-x-1'
-                        }`}
-                      />
-                    </button>
-                  </div>
                   {/* Demo note toggle */}
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-slate-400 font-medium">Show Demo Note</span>
@@ -2151,11 +2107,37 @@ export default function DashboardBuilderPage() {
 
           {activeTab === 'survey' && (
           <div className="builder-card p-8">
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold text-white mb-2">4. B2B / B2C Survey</h2>
-              <p className="text-sm text-slate-400">
-                Add buyer-survey findings to your dashboard from a JSON export
-              </p>
+            <div className="mb-6 flex items-start justify-between gap-6">
+              <div>
+                <h2 className="text-2xl font-bold text-white mb-2">4. B2B / B2C Survey</h2>
+                <p className="text-sm text-slate-400">
+                  Add buyer-survey findings to your dashboard from a JSON export
+                </p>
+              </div>
+              <div className="flex items-center gap-5 flex-shrink-0">
+                  {/* Demo Voice of Customer (B2B) toggle */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-slate-400 font-medium">Show Demo Voice of Customer</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const next = !showDemoB2bSurveyToggle
+                        setShowDemoB2bSurveyToggle(next)
+                        setShowDemoB2bSurvey(next)
+                      }}
+                      className={`builder-toggle focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 focus:ring-offset-slate-900 ${
+                        showDemoB2bSurveyToggle ? 'builder-toggle-on' : 'builder-toggle-off'
+                      }`}
+                      aria-pressed={showDemoB2bSurveyToggle}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                          showDemoB2bSurveyToggle ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                  </div>
+              </div>
             </div>
 
             <BuyerSurveyDataInput mode={surveyMode} onModeChange={setSurveyMode} />
@@ -2286,11 +2268,37 @@ export default function DashboardBuilderPage() {
 
           {activeTab === 'quadrant' && (
           <div className="builder-card p-8">
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold text-white mb-2">5. Coherent Quadrant</h2>
-              <p className="text-sm text-slate-400">
-                Add competitive quadrant positioning to your dashboard from a JSON export
-              </p>
+            <div className="mb-6 flex items-start justify-between gap-6">
+              <div>
+                <h2 className="text-2xl font-bold text-white mb-2">5. Coherent Quadrant</h2>
+                <p className="text-sm text-slate-400">
+                  Add competitive quadrant positioning to your dashboard from a JSON export
+                </p>
+              </div>
+              <div className="flex items-center gap-5 flex-shrink-0">
+                  {/* Demo quadrant toggle */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-slate-400 font-medium">Show Demo Quadrant</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const next = !showDemoQuadrantToggle
+                        setShowDemoQuadrantToggle(next)
+                        setShowDemoQuadrant(next)
+                      }}
+                      className={`builder-toggle focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 focus:ring-offset-slate-900 ${
+                        showDemoQuadrantToggle ? 'builder-toggle-on' : 'builder-toggle-off'
+                      }`}
+                      aria-pressed={showDemoQuadrantToggle}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                          showDemoQuadrantToggle ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                  </div>
+              </div>
             </div>
 
             <div className="space-y-8">
