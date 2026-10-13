@@ -213,6 +213,17 @@ const LOCKED_CELL_NOTE = 'Kindly subscribe to access these details'
  */
 const LOCKED_COLUMN_DASHBOARD_ID = 'e0d3b37e7c3982c9464c82dc'
 
+/**
+ * A cell with nothing in it. On the locked columns the source workbook writes a
+ * lone dash for "not disclosed", which is the same thing as empty.
+ */
+const isEmptyCell = (value: unknown, dashIsEmpty: boolean): boolean => {
+  if (value === undefined || value === null) return true
+  const text = String(value).trim()
+  if (text === '') return true
+  return dashIsEmpty && /^[-–—]+$/.test(text)
+}
+
 /** "Annual Revenue" and "Partnership & Purchasing Intent", however they are spelled. */
 const isLockedColumn = (header: string): boolean => {
   const h = header.trim().toLowerCase()
@@ -383,7 +394,7 @@ function PropositionTableDashboard({
                   >
                     {isRowNumberColumn(String(header)) ? (
                       <span>{rowIndex + 1}</span>
-                    ) : row[header] !== undefined && row[header] !== null && row[header] !== '' ? (
+                    ) : !isEmptyCell(row[header], lockBlankColumns && isLockedColumn(String(header))) ? (
                       <span className="line-clamp-3" title={renderCellValue(header, row[header], currency)}>
                         {renderCellValue(header, row[header], currency)}
                       </span>
