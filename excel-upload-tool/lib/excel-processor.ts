@@ -188,6 +188,57 @@ function removeConsecutiveRepeats(
 }
 
 /**
+ * Detect a dedicated country column, e.g. "Region | Country | Segment | Sub-Segment".
+ * When present, the country — not the region — is the geography each data row
+ * belongs to, and the region becomes its parent in the hierarchy.
+ */
+export function detectCountryColumn(headers: string[]): string | null {
+  for (const header of headers) {
+    if (/^country$/i.test(header.trim())) return header.trim()
+  }
+  return null
+}
+
+/** Rows whose Region reads "North America (By Country)" are country rollups, not data. */
+const COUNTRY_ROLLUP_PATTERN = /\s*\(\s*by\s*country\s*\)\s*$/i
+
+/**
+ * Collapse spelling variants of the same country so the rollup rows line up with
+ * the detail rows: "U.S"/"US", "Rest of Europe"/"Rest Of Europe",
+ * "Rest of Asia Pacifc"/"Rest of Asia Pacific", "… and Africa"/"… & Africa".
+ *
+ * A region's catch-all bucket is keyed on the region alone, because files name
+ * it inconsistently from one segment to the next — "Rest of Middle East" under
+ * By Power Rating is the same country as "Rest of Middle East and Africa" under
+ * By Technology.
+ */
+function countryKey(value: string, region: string): string {
+  const normalised = value
+    .toLowerCase()
+    .replace(/&/g, 'and')
+    .replace(/pacifc/g, 'pacific')
+    .replace(/[^a-z0-9]/g, '')
+  if (normalised.startsWith('restof')) {
+    return `restof@${region.toLowerCase().replace(/[^a-z0-9]/g, '')}`
+  }
+  return normalised
+}
+
+/** Add `source`'s numbers into `target`, creating branches as needed. */
+function addInto(target: Record<string, any>, source: Record<string, any>): void {
+  for (const [key, value] of Object.entries(source)) {
+    if (key === 'CAGR') continue // recalculated from the aggregated series
+    if (typeof value === 'number') {
+      const existing = target[key]
+      target[key] = (typeof existing === 'number' ? existing : 0) + value
+    } else if (value && typeof value === 'object') {
+      if (!target[key] || typeof target[key] !== 'object') target[key] = {}
+      addInto(target[key], value as Record<string, any>)
+    }
+  }
+}
+
+/**
  * Build nested JSON structure from rows
  * Structure: Geography > SegmentType > ...segments... > { Year: value }
  */
@@ -195,19 +246,53 @@ function buildNestedStructure(
   rows: Record<string, any>[],
   segmentColumns: string[],
   yearColumns: string[],
-  includeData: boolean = true
+  includeData: boolean = true,
+  countryColumn: string | null = null
 ): RawJsonData {
   const result: RawJsonData = {}
-  
+
   // Determine geography column (first column) and segment type column (second column)
-  const geographyColumn = segmentColumns[0] || 'Region'
+  const regionColumn = segmentColumns[0] || 'Region'
   const segmentTypeColumn = segmentColumns[1] || 'Segment'
   const remainingSegments = segmentColumns.slice(2)
-  
+
+  // When the file carries a Country column, geography is the country. Work out
+  // each country's canonical spelling and parent region from the detail rows,
+  // and keep the "(By Country)" rollup rows aside — they are regional totals
+  // broken down by country, and counting them as data would double the market.
+  const canonicalCountry = new Map<string, string>()
+  const countryRegion = new Map<string, string>()
+  const countryRollup = new Map<string, Record<string, any>>()
+
+  if (countryColumn) {
+    for (const row of rows) {
+      const region = (row[regionColumn] || '').toString().trim()
+      const country = (row[countryColumn] || '').toString().trim()
+      if (!country) continue
+      const key = countryKey(country, region.replace(COUNTRY_ROLLUP_PATTERN, ''))
+      if (!key) continue
+      if (COUNTRY_ROLLUP_PATTERN.test(region)) {
+        if (!countryRollup.has(key)) countryRollup.set(key, row)
+      } else if (region) {
+        // Prefer the fullest spelling the file uses, so the dashboard shows
+        // "Rest of Middle East and Africa" rather than "Rest of Middle East".
+        const current = canonicalCountry.get(key)
+        if (!current || country.length > current.length) canonicalCountry.set(key, country)
+        if (!countryRegion.has(key)) countryRegion.set(key, region)
+      }
+    }
+  }
+
   for (const row of rows) {
-    const geography = (row[geographyColumn] || '').toString().trim()
+    const region = (row[regionColumn] || '').toString().trim()
+    if (countryColumn && COUNTRY_ROLLUP_PATTERN.test(region)) continue
+
+    const rawCountry = countryColumn ? (row[countryColumn] || '').toString().trim() : ''
+    const geography = rawCountry
+      ? canonicalCountry.get(countryKey(rawCountry, region)) || rawCountry
+      : region
     const segmentType = (row[segmentTypeColumn] || '').toString().trim()
-    
+
     if (!geography || !segmentType) continue
     
     // Initialize geography if not exists
@@ -299,7 +384,46 @@ function buildNestedStructure(
       }
     }
   }
-  
+
+  // Roll each region up from its countries. The file only measures at country
+  // level, so without this a region would have no segment breakdown of its own.
+  if (countryColumn) {
+    for (const [key, country] of canonicalCountry) {
+      const region = countryRegion.get(key)
+      if (!region || region === country) continue
+      const countryData = result[country]
+      if (!countryData) continue
+      if (!result[region]) result[region] = {}
+      addInto(result[region] as Record<string, any>, countryData as Record<string, any>)
+    }
+  }
+
+  // Give every region a "By Country" segment listing its countries. This is what
+  // the dashboard reads to nest countries under their region, and it carries the
+  // rollup totals where the file provides them.
+  if (countryColumn) {
+    for (const [key, country] of canonicalCountry) {
+      const region = countryRegion.get(key)
+      if (!region || region === country) continue
+
+      if (!result[region]) result[region] = {}
+      if (!result[region]['By Country']) result[region]['By Country'] = {}
+      const byCountry = result[region]['By Country'] as Record<string, any>
+      if (!byCountry[country]) byCountry[country] = {}
+
+      const rollup = countryRollup.get(key)
+      if (includeData && rollup) {
+        for (const yearCol of yearColumns) {
+          const cleanedValue = cleanValue(rollup[yearCol])
+          byCountry[country][yearCol] = cleanedValue !== undefined ? cleanedValue : null
+        }
+        if (rollup['CAGR'] !== undefined && rollup['CAGR'] !== null && rollup['CAGR'] !== '') {
+          byCountry[country]['CAGR'] = cleanValue(rollup['CAGR'])
+        }
+      }
+    }
+  }
+
   return result
 }
 
@@ -413,7 +537,8 @@ export function convertExcelToJson(excelBuffer: Buffer, isCsv: boolean = false):
   // Detect columns
   const segmentColumns = detectSegmentationColumns(headers)
   const yearColumns = detectYearColumns(headers)
-  
+  const countryColumn = detectCountryColumn(headers)
+
   if (segmentColumns.length === 0) {
     throw new Error('Could not detect segmentation columns')
   }
@@ -435,15 +560,20 @@ export function convertExcelToJson(excelBuffer: Buffer, isCsv: boolean = false):
     rows.push(row)
   }
   
-  // Remove consecutive repeats
-  const filteredRows = removeConsecutiveRepeats(rows, segmentColumns)
-  
+  // Remove consecutive repeats. The country must be part of the comparison, or
+  // the same segment measured in two countries looks like a repeated row.
+  const filteredRows = removeConsecutiveRepeats(
+    rows,
+    countryColumn ? [...segmentColumns, countryColumn] : segmentColumns
+  )
+
   // Build nested structure
   const nestedStructure = buildNestedStructure(
     filteredRows,
     segmentColumns,
     yearColumns,
-    true // include data
+    true, // include data
+    countryColumn
   )
   
   return nestedStructure
