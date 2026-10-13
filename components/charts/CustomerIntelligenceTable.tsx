@@ -9,6 +9,8 @@ import {
   buildStaticDistributorTemplate,
 } from '@/lib/static-customer-template'
 import { Lock } from 'lucide-react'
+import MethodologyPanel from './MethodologyPanel'
+import type { MethodologySection } from '@/lib/intelligence-sheet-types'
 
 // ---------------------------------------------------------------------------
 // Static Proposition 1 data — exact format from the reference template
@@ -128,6 +130,8 @@ interface PropositionData {
   parentHeaders?: ParentHeader[] | null
   /** Title / definition lines that sat above the table in the source sheet. */
   notes?: string[]
+  /** Parsed METHODOLOGY block, when the source sheet opens with one. */
+  methodology?: MethodologySection[]
 }
 
 type TabType = 'prop1' | 'prop2' | 'prop3'
@@ -276,6 +280,12 @@ function PropositionTableDashboard({
           {tierLabel}
         </span>
       </div>
+
+      {/* Methodology — how the directory below was assembled. Collapsible, as
+          the source workbook's outline groups are. */}
+      {data.methodology && data.methodology.length > 0 && (
+        <MethodologyPanel sections={data.methodology} />
+      )}
 
       {/* Sheet preamble — the title/definition lines that sit above the table in
           the source workbook. Rendered as a caption so they stay readable

@@ -6,6 +6,11 @@ import {
   isPlaceholderValue,
   type DemoGenerationContext,
 } from '@/lib/intelligence-demo-generator'
+import { hasMethodologyBlock, parseMethodologyBlock } from '@/lib/methodology-parser'
+import type { MethodologySection } from '@/lib/intelligence-sheet-types'
+
+/** How deep to look for the table when the sheet opens with a METHODOLOGY block. */
+const METHODOLOGY_SEARCH_ROWS = 60
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300
@@ -47,9 +52,96 @@ function alignPropositionPayload(
  * Detects if the first row contains parent headers (merged cells spanning multiple columns)
  * Parent headers are identified by having some cells empty while others have values
  */
-function detectParentHeaders(row1: any[], row2: any[]): { hasParentHeaders: boolean; parentHeaders: { name: string; startCol: number; colSpan: number }[] } {
+type DetectedParents = {
+  hasParentHeaders: boolean
+  parentHeaders: { name: string; startCol: number; colSpan: number }[]
+  /**
+   * Column names when the two header rows must be read together, i.e. the
+   * layout has most labels on the top row and only a band's columns below it.
+   * Null when the ordinary "parents on top, columns beneath" layout applies.
+   */
+  mergedHeaders: string[] | null
+}
+
+const isFilled = (cell: any) => cell !== undefined && cell !== null && String(cell).trim() !== ''
+
+/**
+ * Detect the inverted header pair our intelligence exports use.
+ *
+ * There, the plain columns are merged *vertically* across both header rows, so
+ * their labels sit on the top row, and only the "Procurement Intelligence" band
+ * is a true parent: a banner on the top row with its column names beneath.
+ *
+ *   row 22: Company Name | Type | … | Entity Type | Procurement Intelligence (…)
+ *   row 23:              |      |   |             | X - they procure | Y - … | Z - …
+ *
+ * The ordinary detector reads this backwards — it sees 23 labels above 3 and
+ * concludes there are no parents — so the band is recognised on its own terms:
+ * each run of columns named on the lower row must be headed by exactly one
+ * label on the upper row, with plain columns on either side.
+ */
+function detectMergedHeaderPair(row1: any[], row2: any[]): DetectedParents | null {
+  const width = Math.max(row1.length, row2.length)
+  const lowerCols: number[] = []
+  for (let i = 0; i < width; i++) if (isFilled(row2[i])) lowerCols.push(i)
+  if (lowerCols.length < 2) return null
+
+  // Plain columns: named above, nothing beneath them.
+  const plainCols: number[] = []
+  for (let i = 0; i < width; i++) if (isFilled(row1[i]) && !isFilled(row2[i])) plainCols.push(i)
+  if (plainCols.length < 3) return null
+
+  // Split the lower row's columns into contiguous runs — one per band.
+  const runs: number[][] = []
+  for (const col of lowerCols) {
+    const last = runs[runs.length - 1]
+    if (last && col === last[last.length - 1] + 1) last.push(col)
+    else runs.push([col])
+  }
+
+  // Every run must be headed by a single banner on the row above.
+  for (const run of runs) {
+    if (run.length < 2) return null
+    if (!isFilled(row1[run[0]])) return null
+    if (run.slice(1).some((c) => isFilled(row1[c]))) return null
+  }
+
+  const headers: string[] = []
+  for (let i = 0; i < width; i++) {
+    headers[i] = String((isFilled(row2[i]) ? row2[i] : row1[i]) ?? '').trim()
+  }
+
+  // Bands for the banners, plus unnamed bands over the plain columns so the
+  // header strip still spans the whole table.
+  const parentHeaders: { name: string; startCol: number; colSpan: number }[] = []
+  let cursor = 0
+  for (const run of runs) {
+    if (run[0] > cursor) {
+      parentHeaders.push({ name: '', startCol: cursor, colSpan: run[0] - cursor })
+    }
+    parentHeaders.push({
+      name: String(row1[run[0]]).trim(),
+      startCol: run[0],
+      colSpan: run.length,
+    })
+    cursor = run[run.length - 1] + 1
+  }
+  if (cursor < width) {
+    parentHeaders.push({ name: '', startCol: cursor, colSpan: width - cursor })
+  }
+
+  return { hasParentHeaders: true, parentHeaders, mergedHeaders: headers }
+}
+
+function detectParentHeaders(row1: any[], row2: any[]): DetectedParents {
   if (!row1 || !row2 || row1.length === 0 || row2.length === 0) {
-    return { hasParentHeaders: false, parentHeaders: [] }
+    return { hasParentHeaders: false, parentHeaders: [], mergedHeaders: null }
+  }
+
+  const merged = detectMergedHeaderPair(row1, row2)
+  if (merged) {
+    console.log('Detected merged header pair:', merged.parentHeaders)
+    return merged
   }
 
   // Check if row1 has significantly fewer non-empty cells than row2 (indicating merged parent headers)
@@ -66,7 +158,7 @@ function detectParentHeaders(row1: any[], row2: any[]): { hasParentHeaders: bool
     row1NonEmpty > 0 && row1NonEmpty * 2 <= row2NonEmpty && row2NonEmpty >= 3
 
   if (!hasParentHeaders) {
-    return { hasParentHeaders: false, parentHeaders: [] }
+    return { hasParentHeaders: false, parentHeaders: [], mergedHeaders: null }
   }
 
   // Build parent headers with their column spans
@@ -112,7 +204,7 @@ function detectParentHeaders(row1: any[], row2: any[]): { hasParentHeaders: bool
 
   console.log('Detected parent headers:', parentHeaders)
 
-  return { hasParentHeaders: true, parentHeaders }
+  return { hasParentHeaders: true, parentHeaders, mergedHeaders: null }
 }
 
 /** First column normalized for matching S.No. style row markers */
@@ -153,7 +245,7 @@ const MAX_HEADER_LABEL_CHARS = 150
  * A genuine header row populates several columns, carries short labels rather
  * than prose, and is followed by a data row of comparable width.
  */
-function findPlainHeaderRow(rows: any[][], searchRows = 15): number {
+function findPlainHeaderRow(rows: any[][], searchRows: number): number {
   const limit = Math.min(rows.length - 1, searchRows)
   for (let i = 0; i < limit; i++) {
     const here = populatedCellCount(rows[i])
@@ -182,15 +274,22 @@ function findHeaderBlockStartRow(rows: any[][]): number {
   // Parent headers are structural: they sit at the top of the sheet, above at
   // most a few title/banner rows. Scanning the whole sheet let a sparse row in
   // the middle of the data masquerade as a header block, so cap the search.
+  //
+  // A METHODOLOGY block is far taller than a banner — a few dozen rows of
+  // sections and bullets — so the cap is raised when one is present, or the
+  // table beneath it would never be found.
   const PARENT_HEADER_SEARCH_ROWS = 10
-  const limit = Math.min(rows.length - 1, PARENT_HEADER_SEARCH_ROWS)
+  const searchRows = hasMethodologyBlock(rows, METHODOLOGY_SEARCH_ROWS)
+    ? METHODOLOGY_SEARCH_ROWS
+    : PARENT_HEADER_SEARCH_ROWS
+  const limit = Math.min(rows.length - 1, searchRows)
   for (let i = 0; i < limit; i++) {
     const d = detectParentHeaders(rows[i] || [], rows[i + 1] || [])
     if (d.hasParentHeaders) return i
   }
   // Last resort before the caller falls back to "first non-empty row": look for
   // a single-row header block below any title/definition banner.
-  return findPlainHeaderRow(rows)
+  return findPlainHeaderRow(rows, Math.max(searchRows, 15))
 }
 
 function pickPropositionSheetName(sheetNames: string[], propositionNumber: number): string | null {
@@ -240,6 +339,8 @@ type IntelligenceSheetPayload = {
   sheetLabel: string
   /** Title / definition lines that sit above the table in the source sheet. */
   notes: string[]
+  /** Parsed METHODOLOGY block, when the sheet opens with one. */
+  methodology?: MethodologySection[]
 }
 
 /**
@@ -291,7 +392,7 @@ function processIntelligenceJsonGrid(
     }
   }
 
-  const { hasParentHeaders, parentHeaders } = detectParentHeaders(
+  const { hasParentHeaders, parentHeaders, mergedHeaders } = detectParentHeaders(
     jsonData[headerStart] || [],
     jsonData[headerStart + 1] || []
   )
@@ -300,7 +401,8 @@ function processIntelligenceJsonGrid(
   let dataStartRow: number
 
   if (hasParentHeaders) {
-    headers = (jsonData[headerStart + 1] || []).map((h: any) => String(h || '').trim())
+    headers =
+      mergedHeaders ?? (jsonData[headerStart + 1] || []).map((h: any) => String(h || '').trim())
     dataStartRow = headerStart + 2
 
     // Detect a 3rd header row: some Excel templates have a secondary/duplicate header
@@ -377,6 +479,7 @@ function processIntelligenceJsonGrid(
   })
 
   const rows = ensureIntelligenceRows(filteredHeaders, rawRows, demoContext)
+  const methodology = parseMethodologyBlock(jsonData, headerStart)
 
   let adjustedParentHeaders: { name: string; startCol: number; colSpan: number }[] = []
   if (hasParentHeaders) {
@@ -410,7 +513,10 @@ function processIntelligenceJsonGrid(
     rowCount: rows.length,
     sheetName,
     sheetLabel: deriveSheetLabel(sheetName),
-    notes: collectPreambleNotes(jsonData, headerStart),
+    // A METHODOLOGY block is structured, so it is parsed into sections and the
+    // flat note list is left empty — the two would otherwise repeat each other.
+    notes: methodology ? [] : collectPreambleNotes(jsonData, headerStart),
+    methodology,
   }
 }
 
@@ -644,6 +750,7 @@ export async function POST(request: NextRequest) {
               sheetName: p1.sheetName,
               sheetLabel: p1.sheetLabel,
               notes: p1.notes,
+              methodology: p1.methodology,
             },
             message: `Processed ${p1.rowCount} rows from ${p1.sheetName}`,
           })
@@ -679,6 +786,7 @@ export async function POST(request: NextRequest) {
               sheetName: p1.sheetName,
               sheetLabel: p1.sheetLabel,
               notes: p1.notes,
+              methodology: p1.methodology,
             },
             message: `Processed ${p1.rowCount} rows from ${p1.sheetName}`,
           })
@@ -727,19 +835,20 @@ export async function POST(request: NextRequest) {
     console.log(`Header block starts at row ${headerStart}`)
 
     // Detect if we have parent headers (two-row header structure)
-    const { hasParentHeaders, parentHeaders } = detectParentHeaders(
+    const { hasParentHeaders, parentHeaders, mergedHeaders } = detectParentHeaders(
       jsonData[headerStart],
       jsonData[headerStart + 1]
     )
+    const tailMethodology = parseMethodologyBlock(jsonData, headerStart)
 
     let headers: string[]
     let dataStartRow: number
 
     if (hasParentHeaders) {
       // Two-row header structure: parent headers, then child headers beneath
-      headers = (jsonData[headerStart + 1] || []).map((h: any) =>
-        String(h || '').trim()
-      )
+      headers =
+        mergedHeaders ??
+        (jsonData[headerStart + 1] || []).map((h: any) => String(h || '').trim())
       dataStartRow = headerStart + 2
       console.log('Using two-row header structure')
       console.log('Parent headers:', parentHeaders)
@@ -863,7 +972,8 @@ export async function POST(request: NextRequest) {
         rows: rows,
         rowCount: rows.length,
         sheetName: firstSheetName,
-        notes: collectPreambleNotes(jsonData, headerStart)
+        notes: tailMethodology ? [] : collectPreambleNotes(jsonData, headerStart),
+        methodology: tailMethodology,
       },
       message: `Processed ${rows.length} rows from ${firstSheetName}`
     })

@@ -849,6 +849,7 @@ export default function DashboardBuilderPage() {
         parentHeaders: p1.parentHeaders ?? null,
         sheetLabel: p1.sheetLabel || undefined,
         notes: p1.notes || undefined,
+        methodology: p1.methodology || undefined,
       })
       setP2({
         headers: p2.headers || [],
@@ -883,6 +884,7 @@ export default function DashboardBuilderPage() {
       parentHeaders: processedData.parentHeaders || null,
       sheetLabel: processedData.sheetLabel || undefined,
       notes: processedData.notes || undefined,
+      methodology: processedData.methodology || undefined,
     })
     setP2(null)
     setP3(null)

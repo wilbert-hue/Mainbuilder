@@ -4,6 +4,7 @@ import type { ChartGroupId } from './chart-groups'
 import { DEFAULT_CHART_GROUP } from './chart-groups'
 import type { BuyerSurveyReport } from './buyer-survey-types'
 import type { QuadrantReport } from './quadrant-types'
+import type { IntelligenceSheetData } from './intelligence-sheet-types'
 
 interface DashboardStore {
   data: ComparisonData | null
@@ -22,13 +23,13 @@ interface DashboardStore {
   customerIntelligenceData: any[] | null // Store customer intelligence data
   distributorIntelligenceData: any[] | null // Store distributor intelligence data
   parentHeaders: { prop1: string; prop2: string; prop3: string } | null // Store parent headers for propositions
-  rawIntelligenceData: { headers: string[]; rows: Record<string, any>[]; parentHeaders?: { name: string; startCol: number; colSpan: number }[] | null; sheetLabel?: string; notes?: string[] } | null // Store raw Excel data as-is
-  proposition2Data: { headers: string[]; rows: Record<string, any>[]; parentHeaders?: { name: string; startCol: number; colSpan: number }[] | null; sheetLabel?: string; notes?: string[] } | null // Store Proposition 2 data
-  proposition3Data: { headers: string[]; rows: Record<string, any>[]; parentHeaders?: { name: string; startCol: number; colSpan: number }[] | null; sheetLabel?: string; notes?: string[] } | null // Store Proposition 3 data
+  rawIntelligenceData: IntelligenceSheetData | null // Store raw Excel data as-is
+  proposition2Data: IntelligenceSheetData | null // Store Proposition 2 data
+  proposition3Data: IntelligenceSheetData | null // Store Proposition 3 data
   /** Distributor workbook upload (separate from customer proposition data when both are used) */
-  distributorRawIntelligenceData: { headers: string[]; rows: Record<string, any>[]; parentHeaders?: { name: string; startCol: number; colSpan: number }[] | null; sheetLabel?: string; notes?: string[] } | null
-  distributorProposition2Data: { headers: string[]; rows: Record<string, any>[]; parentHeaders?: { name: string; startCol: number; colSpan: number }[] | null; sheetLabel?: string; notes?: string[] } | null
-  distributorProposition3Data: { headers: string[]; rows: Record<string, any>[]; parentHeaders?: { name: string; startCol: number; colSpan: number }[] | null; sheetLabel?: string; notes?: string[] } | null
+  distributorRawIntelligenceData: IntelligenceSheetData | null
+  distributorProposition2Data: IntelligenceSheetData | null
+  distributorProposition3Data: IntelligenceSheetData | null
   competitiveIntelligenceData: { headers: string[]; rows: Record<string, any>[] } | null // Store competitive intelligence CSV data
   /** Parsed B2B buyer-survey JSON report (Customer Intelligence B2B module) */
   b2bSurveyData: BuyerSurveyReport | null
@@ -70,12 +71,12 @@ interface DashboardStore {
   setCustomerIntelligenceData: (data: any[]) => void
   setDistributorIntelligenceData: (data: any[]) => void
   setParentHeaders: (headers: { prop1: string; prop2: string; prop3: string } | null) => void
-  setRawIntelligenceData: (data: { headers: string[]; rows: Record<string, any>[]; parentHeaders?: { name: string; startCol: number; colSpan: number }[] | null; sheetLabel?: string; notes?: string[] } | null) => void
-  setProposition2Data: (data: { headers: string[]; rows: Record<string, any>[]; parentHeaders?: { name: string; startCol: number; colSpan: number }[] | null; sheetLabel?: string; notes?: string[] } | null) => void
-  setProposition3Data: (data: { headers: string[]; rows: Record<string, any>[]; parentHeaders?: { name: string; startCol: number; colSpan: number }[] | null; sheetLabel?: string; notes?: string[] } | null) => void
-  setDistributorRawIntelligenceData: (data: { headers: string[]; rows: Record<string, any>[]; parentHeaders?: { name: string; startCol: number; colSpan: number }[] | null; sheetLabel?: string; notes?: string[] } | null) => void
-  setDistributorProposition2Data: (data: { headers: string[]; rows: Record<string, any>[]; parentHeaders?: { name: string; startCol: number; colSpan: number }[] | null; sheetLabel?: string; notes?: string[] } | null) => void
-  setDistributorProposition3Data: (data: { headers: string[]; rows: Record<string, any>[]; parentHeaders?: { name: string; startCol: number; colSpan: number }[] | null; sheetLabel?: string; notes?: string[] } | null) => void
+  setRawIntelligenceData: (data: IntelligenceSheetData | null) => void
+  setProposition2Data: (data: IntelligenceSheetData | null) => void
+  setProposition3Data: (data: IntelligenceSheetData | null) => void
+  setDistributorRawIntelligenceData: (data: IntelligenceSheetData | null) => void
+  setDistributorProposition2Data: (data: IntelligenceSheetData | null) => void
+  setDistributorProposition3Data: (data: IntelligenceSheetData | null) => void
   setCompetitiveIntelligenceData: (data: { headers: string[]; rows: Record<string, any>[] } | null) => void
   setB2bSurveyData: (data: BuyerSurveyReport | null) => void
   setB2cSurveyData: (data: BuyerSurveyReport | null) => void
