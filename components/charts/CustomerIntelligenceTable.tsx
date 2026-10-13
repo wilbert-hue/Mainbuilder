@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
+import { usePathname } from 'next/navigation'
 import { useDashboardStore } from '@/lib/store'
 import { Building2, Users } from 'lucide-react'
 import { AccessDataCell, contactFieldOf } from './AccessDataCell'
@@ -205,6 +206,19 @@ const isRowNumberColumn = (header: string): boolean =>
 
 const LOCKED_CELL_NOTE = 'Kindly subscribe to access these details'
 
+/**
+ * One shared dashboard shows a lock where these columns are blank, instead of
+ * the usual em dash. Scoped to that link by request — every other dashboard
+ * keeps the dash, so widen this only if the client asks for it elsewhere.
+ */
+const LOCKED_COLUMN_DASHBOARD_ID = 'e0d3b37e7c3982c9464c82dc'
+
+/** "Annual Revenue" and "Partnership & Purchasing Intent", however they are spelled. */
+const isLockedColumn = (header: string): boolean => {
+  const h = header.trim().toLowerCase()
+  return /annuals*revenue/.test(h) || (/partnership/.test(h) && /intent/.test(h))
+}
+
 function PropositionTableDashboard({
   data,
   tier,
@@ -213,6 +227,7 @@ function PropositionTableDashboard({
   intelligenceSource,
   suitePreview,
   templateMode = false,
+  lockBlankColumns = false,
 }: {
   data: PropositionData
   tier: TierKey
@@ -222,6 +237,8 @@ function PropositionTableDashboard({
   suitePreview: boolean
   /** Static template: every empty cell reads as withheld, not missing. */
   templateMode?: boolean
+  /** Blank revenue/intent cells read as withheld rather than missing. */
+  lockBlankColumns?: boolean
 }) {
   const rawHeaders = data.headers?.length ? data.headers : Object.keys(data.rows[0] || {})
   const parentHeaders = data.parentHeaders
@@ -370,7 +387,7 @@ function PropositionTableDashboard({
                       <span className="line-clamp-3" title={renderCellValue(header, row[header], currency)}>
                         {renderCellValue(header, row[header], currency)}
                       </span>
-                    ) : templateMode ? (
+                    ) : templateMode || (lockBlankColumns && isLockedColumn(String(header))) ? (
                       <span className="text-slate-400" title={DEMO_SUBSCRIBE_NOTE}>
                         <Lock className="h-3.5 w-3.5" />
                       </span>
@@ -469,6 +486,10 @@ export function CustomerIntelligenceTable({
   }, [p1, p2, p3, activeTab, hasProp1, hasProp2, hasProp3])
 
   const hasData = hasProp1 || hasProp2 || hasProp3
+
+  // Scoped to one shared link; see LOCKED_COLUMN_DASHBOARD_ID.
+  const pathname = usePathname()
+  const lockBlankColumns = !!pathname?.includes(LOCKED_COLUMN_DASHBOARD_ID)
 
   const marketLine = useMemo(
     () => buildMarketLine(dashboardName, data, filters),
@@ -670,6 +691,7 @@ export function CustomerIntelligenceTable({
           intelligenceSource={intelligenceSource}
           suitePreview={isSuitePreview}
           templateMode={staticProp1}
+          lockBlankColumns={lockBlankColumns}
         />
       )}
 
