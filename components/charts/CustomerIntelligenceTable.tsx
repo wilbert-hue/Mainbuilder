@@ -207,7 +207,6 @@ function PropositionTableDashboard({
   data,
   tier,
   bannerTitle,
-  showDemoNote,
   currency,
   intelligenceSource,
   suitePreview,
@@ -216,7 +215,6 @@ function PropositionTableDashboard({
   data: PropositionData
   tier: TierKey
   bannerTitle: string
-  showDemoNote: boolean
   currency: TableCurrency
   intelligenceSource: 'customer' | 'distributor'
   suitePreview: boolean
@@ -266,12 +264,6 @@ function PropositionTableDashboard({
           </p>
           <p className="text-xs sm:text-sm text-slate-300 mt-1">
             Verified directory and insight on customers
-            {showDemoNote ? (
-              <>
-                {' '}
-                · <span className="text-sky-200">Demo Data</span>
-              </>
-            ) : null}
           </p>
         </div>
         <span
@@ -419,7 +411,6 @@ export function CustomerIntelligenceTable({
     dashboardName,
     data,
     filters,
-    showDemoNote,
     currency,
     staticCustomerProp1,
     staticDistributorProp1,
@@ -551,7 +542,6 @@ export function CustomerIntelligenceTable({
           data={staticData}
           tier="standard"
           bannerTitle={bannerTitle}
-          showDemoNote={false}
           currency={tableCurrency}
           intelligenceSource={intelligenceSource}
           suitePreview={isSuitePreview}
@@ -665,7 +655,6 @@ export function CustomerIntelligenceTable({
           data={activeData}
           tier={activeTier}
           bannerTitle={bannerTitle}
-          showDemoNote={showDemoNote}
           currency={tableCurrency}
           intelligenceSource={intelligenceSource}
           suitePreview={isSuitePreview}

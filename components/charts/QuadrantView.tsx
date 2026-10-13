@@ -23,7 +23,6 @@ import { useMemo, useState } from 'react'
 import { Lock } from 'lucide-react'
 import { useDashboardStore } from '@/lib/store'
 import { buildDemoQuadrant } from '@/lib/demo-quadrant'
-import { DemoDataNote } from '@/components/DemoDataNote'
 import {
   normaliseQuadrant,
   sortByQuadrant,
@@ -390,7 +389,7 @@ function CompanyParameterBlock({
 // ── Main view ───────────────────────────────────────────────────────────────
 
 export function QuadrantView() {
-  const { quadrantData, b2bSurveyData, data, dashboardName, showDemoQuadrant, showDemoNote } =
+  const { quadrantData, b2bSurveyData, data, dashboardName, showDemoQuadrant } =
     useDashboardStore()
   // Evidence is only paywalled on the survey-backed preview dashboards.
   const isSuitePreview = !!b2bSurveyData?.segments?.length
@@ -405,6 +404,8 @@ export function QuadrantView() {
   /** In demo mode every identifying field is withheld, not just the evidence. */
   const isDemo = !hasUploaded && !!demo
   const report = hasUploaded ? uploaded : demo
+  /** A real upload is never paywalled; the preview blur belongs to demo data only. */
+  const evidencePaywalled = isSuitePreview && !hasUploaded
 
   const [search, setSearch] = useState('')
   const [quadrantFilter, setQuadrantFilter] = useState('all')
@@ -484,8 +485,6 @@ export function QuadrantView() {
           {report.yAxis.name} (Y)
         </p>
       </div>
-
-      {showDemoNote && <DemoDataNote />}
 
       {/* Market classification */}
       {(report.marketDefinition || report.providerCategories.length > 0) && (
@@ -886,7 +885,7 @@ export function QuadrantView() {
           </h2>
           <p className="mb-4 text-[0.86rem] text-slate-500">
             Click any parameter to read its scoring rationale and supporting evidence.
-            {isSuitePreview &&
+            {evidencePaywalled &&
               ' Full evidence is shown for the leading company; the rest is available on subscription.'}
           </p>
           <div className="space-y-4">
@@ -896,7 +895,7 @@ export function QuadrantView() {
                 company={c}
                 xAxisName={report.xAxis.name}
                 yAxisName={report.yAxis.name}
-                locked={isSuitePreview && i > 0}
+                locked={evidencePaywalled && i > 0}
                 demoLocked={isDemo}
               />
             ))}
