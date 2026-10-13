@@ -227,7 +227,7 @@ const isEmptyCell = (value: unknown, dashIsEmpty: boolean): boolean => {
 /** "Annual Revenue" and "Partnership & Purchasing Intent", however they are spelled. */
 const isLockedColumn = (header: string): boolean => {
   const h = header.trim().toLowerCase()
-  return /annuals*revenue/.test(h) || (/partnership/.test(h) && /intent/.test(h))
+  return /annual\s*revenue/.test(h) || (/partnership/.test(h) && /intent/.test(h))
 }
 
 function PropositionTableDashboard({
