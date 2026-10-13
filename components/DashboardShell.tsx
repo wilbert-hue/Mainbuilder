@@ -40,7 +40,7 @@ import { Footer } from '@/components/Footer'
 import { CredibilitySection } from '@/components/CredibilitySection'
 import { AccoladesSection } from '@/components/AccoladesSection'
 import { WhyCoherentSection } from '@/components/WhyCoherentSection'
-import { CountryGate, COVERED_COUNTRY } from '@/components/CountryGate'
+import { CountryGate, COVERED_COUNTRY, GLOBAL_SCOPE } from '@/components/CountryGate'
 import { DemoDataNote } from '@/components/DemoDataNote'
 import Image from 'next/image'
 
@@ -161,6 +161,13 @@ export function DashboardShell({ readOnly = false }: Props) {
 
   /** These dashboards cover one market, so the strip lists it alone. */
   const countryOptions = [COVERED_COUNTRY]
+
+  /**
+   * The quadrant scores vendors worldwide, so its strip reads Global rather
+   * than naming the covered country.
+   */
+  const isQuadrantOnly = viewMode === 'tabs' && activeTab === 'coherent-quadrant'
+  const gateCountries = isQuadrantOnly ? [GLOBAL_SCOPE] : countryOptions
 
   /** Market name on top; a loaded survey adds the module list beneath it. */
   const headingTitle = dashboardName || 'Market Analysis'
@@ -312,12 +319,17 @@ export function DashboardShell({ readOnly = false }: Props) {
               </div>
             )}
             <div className="p-6">
-              <CountryGate>
-              {activePanel === 'intelligence' && <IntelligenceDatabaseViews />}
-              {activePanel === 'b2b-survey' && <BuyerSurveyView kind="b2b" />}
-              {activePanel === 'b2c-survey' && <BuyerSurveyView kind="b2c" />}
-              {activePanel === 'coherent-quadrant' && <QuadrantView />}
-              </CountryGate>
+              {activePanel === 'coherent-quadrant' ? (
+                <CountryGate key="quadrant" countries={[GLOBAL_SCOPE]}>
+                  <QuadrantView />
+                </CountryGate>
+              ) : (
+                <CountryGate key={activePanel}>
+                  {activePanel === 'intelligence' && <IntelligenceDatabaseViews />}
+                  {activePanel === 'b2b-survey' && <BuyerSurveyView kind="b2b" />}
+                  {activePanel === 'b2c-survey' && <BuyerSurveyView kind="b2c" />}
+                </CountryGate>
+              )}
             </div>
           </div>
         </div>
@@ -421,7 +433,7 @@ export function DashboardShell({ readOnly = false }: Props) {
           } space-y-6`}>
 
             {/* Every view except Market Analysis is country-scoped. */}
-            <MaybeCountryGate key={selectedChartGroup} enabled={isCountryScoped} countries={countryOptions}>
+            <MaybeCountryGate key={selectedChartGroup + String(isQuadrantOnly)} enabled={isCountryScoped} countries={gateCountries}>
 
             {/* Tab Navigation */}
             <div className="bg-white rounded-lg shadow">

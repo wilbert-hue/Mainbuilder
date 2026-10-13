@@ -13,6 +13,9 @@ import { Lock, Globe } from 'lucide-react'
 
 export const COVERED_COUNTRY = 'India'
 
+/** Views scored across all geographies show this instead of a country list. */
+export const GLOBAL_SCOPE = 'Global'
+
 /** Fallback strip for dashboards without a market workbook to read geographies from. */
 export const FALLBACK_COUNTRIES = [
   'India',
