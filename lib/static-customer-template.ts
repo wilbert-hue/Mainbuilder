@@ -51,8 +51,6 @@ export const STATIC_CUSTOMER_BASE_HEADERS = [
 export const PROCUREMENT_INTELLIGENCE_BANNER =
   'Procurement Intelligence (derived by primary research and/or real-time trigger signals and/or captured intent)'
 
-/** Columns to fall back on when no market workbook has been uploaded yet. */
-const FALLBACK_SEGMENT_COLUMNS = ['Solutions they procure', 'Technologies they procure']
 
 /** Title-case a value that arrived all-lower or all-upper, leaving "AP Module" alone. */
 function normaliseCase(value: string): string {
@@ -132,7 +130,9 @@ export function procurementColumns(
     // Two segment types can reduce to the same label; keep the first.
     if (name && !columns.includes(name)) columns.push(name)
   }
-  return columns.length ? columns : FALLBACK_SEGMENT_COLUMNS
+  // No invented fallback: a market whose segments are all audience ones simply
+  // has nothing to show here, and the band is dropped rather than made up.
+  return columns
 }
 
 /**
@@ -206,21 +206,24 @@ export function buildStaticCustomerTemplate(
     return row
   })
 
-  return {
-    headers,
-    rows,
-    // One unnamed band over the fixed columns, then the derived group.
-    parentHeaders: [
-      {
-        name: 'Company Profile & Contact Details',
-        startCol: 0,
-        colSpan: STATIC_CUSTOMER_BASE_HEADERS.length,
-      },
-      {
-        name: PROCUREMENT_INTELLIGENCE_BANNER,
-        startCol: STATIC_CUSTOMER_BASE_HEADERS.length,
-        colSpan: segmentColumns.length,
-      },
-    ],
-  }
+  const parentHeaders = [
+    {
+      name: 'Company Profile & Contact Details',
+      startCol: 0,
+      colSpan: STATIC_CUSTOMER_BASE_HEADERS.length,
+    },
+    // A zero-width band would break the header spans, so it only exists when
+    // the market actually has something to procure.
+    ...(segmentColumns.length
+      ? [
+          {
+            name: PROCUREMENT_INTELLIGENCE_BANNER,
+            startCol: STATIC_CUSTOMER_BASE_HEADERS.length,
+            colSpan: segmentColumns.length,
+          },
+        ]
+      : []),
+  ]
+
+  return { headers, rows, parentHeaders }
 }
