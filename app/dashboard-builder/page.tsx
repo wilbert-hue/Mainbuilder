@@ -591,13 +591,16 @@ export default function DashboardBuilderPage() {
       quadrantData,
     } = storeState
 
+    if (demoOnlyReady && !name) setDashboardName(dashboardNameInput.trim())
+
     if (
       !data &&
       !rawIntelligenceData &&
       !pricingAnalysisData &&
       !b2bSurveyData &&
       !b2cSurveyData &&
-      !quadrantData
+      !quadrantData &&
+      !demoOnlyReady
     ) {
       setShareLinkError('Please process your dashboard data first before generating a link.')
       return
@@ -1164,8 +1167,19 @@ export default function DashboardBuilderPage() {
 
   const hadQuadrantUploadSuccess = quadrantStatus === 'success'
 
+  /**
+   * A demo view is generated from the market name, so toggling one on is
+   * enough to build a dashboard — no upload required. The name is the only
+   * input it needs.
+   */
+  const demoOnlyReady =
+    (showDemoQuadrantToggle || showDemoB2bSurveyToggle) && !!dashboardNameInput.trim()
+
   // Navigate to dashboard
   const handleViewDashboard = () => {
+    // The demo views read the market name from the store, so make sure it is
+    // there even when nothing was uploaded to carry it across.
+    if (demoOnlyReady) setDashboardName(dashboardNameInput.trim())
     // If only intelligence data was processed (no market data in this session),
     // clear any existing market data from the store to show intelligence-only view
     if (marketStatus !== 'success' && (hadIntelligenceUploadSuccess || hadSurveyUploadSuccess || hadQuadrantUploadSuccess)) {
@@ -2481,7 +2495,7 @@ export default function DashboardBuilderPage() {
         </div>
 
         {/* View Dashboard Button - Shows when any data is processed (hidden on Previous tab) */}
-        {activeTab !== 'previous' && (marketStatus === 'success' || hadIntelligenceUploadSuccess || pricingStatus === 'success' || hadSurveyUploadSuccess || hadQuadrantUploadSuccess) && (
+        {activeTab !== 'previous' && (marketStatus === 'success' || hadIntelligenceUploadSuccess || pricingStatus === 'success' || hadSurveyUploadSuccess || hadQuadrantUploadSuccess || demoOnlyReady) && (
           <div className="mt-6 space-y-4">
             {/* View Dashboard */}
             <div className="builder-callout-ready">
@@ -2494,7 +2508,9 @@ export default function DashboardBuilderPage() {
                       hadIntelligenceUploadSuccess && 'Intelligence',
                       pricingStatus === 'success' && 'Pricing',
                       hadSurveyUploadSuccess && 'Survey',
-                      hadQuadrantUploadSuccess && 'Quadrant'
+                      hadQuadrantUploadSuccess && 'Quadrant',
+                      !hadQuadrantUploadSuccess && showDemoQuadrantToggle && 'Demo Quadrant',
+                      showDemoB2bSurveyToggle && 'Demo Voice of Customer',
                     ].filter(Boolean).join(', ')} data processed. Open your workspace when you are ready.
                   </p>
                 </div>

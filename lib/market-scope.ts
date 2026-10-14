@@ -85,6 +85,22 @@ function mentions(name: string, scope: string): boolean {
 }
 
 /**
+ * The market name without its leading geography: "Brazil Wound Care Market"
+ * reads as "Wound Care Market". Used where copy already states the geography
+ * separately and repeating it would read as a stutter.
+ */
+export function stripScopePrefix(marketName: string | null | undefined): string {
+  const name = (marketName ?? '').trim()
+  if (!name) return ''
+  const prefixes = [...KNOWN_SCOPES].sort((a, b) => b.length - a.length)
+  for (const scope of prefixes) {
+    const match = new RegExp(`^${escapeRegExp(scope)}\\s+`, 'i')
+    if (match.test(name)) return name.replace(match, '').trim() || name
+  }
+  return name
+}
+
+/**
  * The scope label for a dashboard: a geography the workbook itself reports,
  * if the market name mentions one, otherwise a geography from the known list,
  * otherwise "Global".

@@ -12,15 +12,13 @@
  */
 
 import type { MethodologySection } from '@/lib/intelligence-sheet-types'
+import { stripScopePrefix } from '@/lib/market-scope'
 
-/** "Global Advance Wound Care Market" → "Advance Wound Care". */
+/** "Brazil Advance Wound Care Market" → "Advance Wound Care". */
 function marketSubject(market: string): string {
-  let subject = market.trim()
+  let subject = stripScopePrefix(market)
   for (;;) {
-    const next = subject
-      .replace(/\s*(industry|market|analysis|report|devices?)\s*$/i, '')
-      .replace(/^(global|worldwide)\s+/i, '')
-      .trim()
+    const next = subject.replace(/\s*(industry|market|analysis|report|devices?)\s*$/i, '').trim()
     if (next === subject || !next) break
     subject = next
   }

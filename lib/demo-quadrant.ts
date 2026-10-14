@@ -12,6 +12,7 @@
  */
 
 import type { ComparisonData } from '@/lib/types'
+import { marketScopeLabel } from '@/lib/market-scope'
 import type {
   QuadrantAxis,
   QuadrantCompany,
@@ -248,17 +249,22 @@ function makeCompany(
 }
 
 /**
- * Build the demo quadrant for a market workbook. Returns null without data,
- * so the caller can simply fall back to "no quadrant".
+ * Build the demo quadrant for a market.
+ *
+ * A workbook is not required: the market name alone is enough to write the
+ * axes, the provider category and the company population, so a dashboard can
+ * be the quadrant and nothing else. Returns null only when there is no market
+ * to name.
  */
 export function buildDemoQuadrant(
   data: ComparisonData | null | undefined,
   dashboardName?: string | null
 ): QuadrantReport | null {
-  if (!data?.dimensions) return null
+  const market = (dashboardName || data?.metadata?.market_name || '').trim()
+  if (!market) return null
 
-  const market = (dashboardName || data.metadata?.market_name || 'Market').trim()
-  const geo = data.dimensions.geographies?.all_geographies?.[0] || 'Global'
+  const geographies = data?.dimensions?.geographies?.all_geographies ?? []
+  const geo = geographies[0] || marketScopeLabel(market)
   const kind = marketKind(market)
   const xName = xAxisName(kind)
   const subject = marketSubject(market)

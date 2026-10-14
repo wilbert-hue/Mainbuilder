@@ -63,7 +63,10 @@ export async function POST(request: NextRequest) {
     quadrantData,
   } = body
 
-  if (!data && !rawIntelligenceData && !pricingAnalysisData && !b2bSurveyData && !b2cSurveyData && !quadrantData) {
+  // A demo dashboard carries no upload: its market name and toggle are the input.
+  const hasDemoReport = body.showDemoQuadrant === true || body.showDemoB2bSurvey === true
+
+  if (!data && !rawIntelligenceData && !pricingAnalysisData && !b2bSurveyData && !b2cSurveyData && !quadrantData && !hasDemoReport) {
     return NextResponse.json(
       { error: 'No dashboard data provided. Upload at least one data file before generating a link.' },
       { status: 400 }

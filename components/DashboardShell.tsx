@@ -103,6 +103,8 @@ export function DashboardShell({ readOnly = false }: Props) {
     intelligenceType,
     pricingAnalysisData,
     showDemoNote,
+    showDemoQuadrant,
+    showDemoB2bSurvey,
     logoChoice,
     b2bSurveyData,
     b2cSurveyData,
@@ -129,9 +131,17 @@ export function DashboardShell({ readOnly = false }: Props) {
     distributorProposition3Data?.rows?.length
   )
 
-  const hasB2bSurvey = !!b2bSurveyData?.segments?.length
+  const hasUploadedB2bSurvey = !!b2bSurveyData?.segments?.length
+  /**
+   * A demo view needs only a market to name, so a dashboard can be the demo
+   * quadrant or the demo survey and nothing else.
+   */
+  const hasNamedMarket = !!data || !!dashboardName
+  const hasB2bSurvey = hasUploadedB2bSurvey || (showDemoB2bSurvey && hasNamedMarket)
   const hasB2cSurvey = !!b2cSurveyData?.segments?.length
-  const hasQuadrant = !!(quadrantData?.charted?.length || quadrantData?.others?.length)
+  const hasQuadrant =
+    !!(quadrantData?.charted?.length || quadrantData?.others?.length) ||
+    (showDemoQuadrant && hasNamedMarket)
   /** Any JSON-sourced view; these move Chart View to the top strip. */
   const hasAnySurvey = hasB2bSurvey || hasB2cSurvey || hasQuadrant
 
@@ -143,7 +153,7 @@ export function DashboardShell({ readOnly = false }: Props) {
    */
   const brand = getBrand(logoChoice)
 
-  const isSuitePreview = hasB2bSurvey
+  const isSuitePreview = hasUploadedB2bSurvey
 
   const isMarketAnalysis = selectedChartGroup === 'market-analysis'
 

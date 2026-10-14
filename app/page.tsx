@@ -25,6 +25,9 @@ function DashboardPageContent() {
     b2bSurveyData,
     b2cSurveyData,
     quadrantData,
+    showDemoQuadrant,
+    showDemoB2bSurvey,
+    dashboardName,
   } = useDashboardStore()
   const [mounted, setMounted] = useState(false)
   const [hasCheckedStore, setHasCheckedStore] = useState(false)
@@ -47,7 +50,10 @@ function DashboardPageContent() {
     quadrantData?.charted?.length ||
     quadrantData?.others?.length
   )
-  const hasAnyData = hasMarketData || hasIntelligenceData || hasPricingData || hasJsonReportData
+  /** A demo view is generated from the market name, so that name is the data. */
+  const hasDemoReport = !!dashboardName && (showDemoQuadrant || showDemoB2bSurvey)
+  const hasAnyData =
+    hasMarketData || hasIntelligenceData || hasPricingData || hasJsonReportData || hasDemoReport
 
   useEffect(() => {
     setMounted(true)

@@ -13,6 +13,7 @@
  */
 
 import type { ComparisonData } from '@/lib/types'
+import { marketScopeLabel, stripScopePrefix } from '@/lib/market-scope'
 import type {
   BuyerSegment,
   BuyerSurveyQuestion,
@@ -23,14 +24,11 @@ import type {
 /** Respondent count quoted on the title card and every question header. */
 const DEMO_SAMPLE_SIZE = 120
 
-/** "Global Advance Wound Care Market" → "Advance Wound Care". */
+/** "Brazil Advance Wound Care Market" → "Advance Wound Care". */
 function marketSubject(market: string): string {
-  let subject = market.trim()
+  let subject = stripScopePrefix(market)
   for (;;) {
-    const next = subject
-      .replace(/\s*(industry|market|analysis|report)\s*$/i, '')
-      .replace(/^(global|worldwide)\s+/i, '')
-      .trim()
+    const next = subject.replace(/\s*(industry|market|analysis|report)\s*$/i, '').trim()
     if (next === subject || !next) break
     subject = next
   }
@@ -223,20 +221,23 @@ function questionnaire(subject: string, segmentType: string | null): BuyerSurvey
 }
 
 /**
- * Build the demo B2B survey for a market workbook. Returns null without data,
- * so the caller falls back to "no survey loaded".
+ * Build the demo B2B survey for a market.
+ *
+ * A workbook is not required — the market name carries the questionnaire — so
+ * a dashboard can be this survey and nothing else. Returns null only when
+ * there is no market to name.
  */
 export function buildDemoBuyerSurvey(
   data: ComparisonData | null | undefined,
   dashboardName?: string | null
 ): BuyerSurveyReport | null {
-  if (!data?.dimensions) return null
+  const market = (dashboardName || data?.metadata?.market_name || '').trim()
+  if (!market) return null
 
-  const market = (dashboardName || data.metadata?.market_name || 'Market').trim()
   const subject = marketSubject(market)
   const flavour = marketFlavour(subject)
-  const geo = data.dimensions.geographies?.all_geographies?.[0] || 'Global'
-  const segmentType = Object.keys(data.dimensions.segments ?? {})[0] ?? null
+  const geo = data?.dimensions?.geographies?.all_geographies?.[0] || marketScopeLabel(market)
+  const segmentType = Object.keys(data?.dimensions?.segments ?? {})[0] ?? null
 
   const buyers = buyerSegments(flavour)
   const segments = questionnaire(subject, segmentType)
