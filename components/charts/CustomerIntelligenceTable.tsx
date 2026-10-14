@@ -478,10 +478,12 @@ export function CustomerIntelligenceTable({
         ? (buildStaticDistributorTemplate() as PropositionData)
         : (buildStaticCustomerTemplate(data, dashboardName ?? undefined) as PropositionData)
     // No workbook means no METHODOLOGY rows to parse, so the block is written
-    // from the market name instead.
+    // from the market name instead. Only the customer directory carries one —
+    // a distributor list is not assembled this way.
+    if (intelligenceSource === 'distributor') return template
     return {
       ...template,
-      methodology: buildDemoMethodology(dashboardName ?? data?.metadata?.market_name, intelligenceSource),
+      methodology: buildDemoMethodology(dashboardName ?? data?.metadata?.market_name),
     } as PropositionData
   }, [intelligenceSource, data, dashboardName])
 

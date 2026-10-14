@@ -23,6 +23,8 @@ import { useMemo, useState } from 'react'
 import { Lock } from 'lucide-react'
 import { useDashboardStore } from '@/lib/store'
 import { buildDemoQuadrant } from '@/lib/demo-quadrant'
+import { buildDemoMethodology } from '@/lib/demo-methodology'
+import MethodologyPanel from './MethodologyPanel'
 import {
   normaliseQuadrant,
   sortByQuadrant,
@@ -449,6 +451,19 @@ export function QuadrantView() {
   const xNames = report.xAxis.parameters.map((p) => p.name)
   const yNames = report.yAxis.parameters.map((p) => p.name)
   const paramsPerAxis = xNames.length || 5
+  /**
+   * The primary-research block the intelligence directories carry. Only that
+   * section: the steps further down already describe the desk research,
+   * screening and scoring behind the chart.
+   */
+  const primaryResearch = useMemo(
+    () =>
+      buildDemoMethodology(report?.market || dashboardName).filter((section) =>
+        /primary research/i.test(section.title)
+      ),
+    [report?.market, dashboardName]
+  )
+
   // A report that ships its own methodology wins; otherwise the standard steps.
   const methodologySteps =
     report.methodology.length > 0
@@ -942,6 +957,11 @@ export function QuadrantView() {
 
       {/* Research Methodology — closes every quadrant */}
       <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        {primaryResearch.length > 0 && (
+          <div className="mb-5 overflow-hidden rounded-lg border border-slate-200">
+            <MethodologyPanel sections={primaryResearch} />
+          </div>
+        )}
         <h2 className="mb-3 text-lg font-bold text-slate-900">Research Methodology</h2>
         <p className="mb-5 text-[0.92rem] leading-relaxed text-slate-500">
           This quadrant was compiled independently through structured desk research, supplemented by

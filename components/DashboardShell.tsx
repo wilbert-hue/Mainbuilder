@@ -11,7 +11,7 @@
  *   - app/shared/[id]/page.tsx  (shared-link flow)
  */
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useMemo } from 'react'
 import { useDashboardStore } from '@/lib/store'
 import { EnhancedFilterPanel } from '@/components/filters/EnhancedFilterPanel'
 import { GroupedBarChart } from '@/components/charts/GroupedBarChart'
@@ -40,7 +40,8 @@ import { Footer } from '@/components/Footer'
 import { CredibilitySection } from '@/components/CredibilitySection'
 import { AccoladesSection } from '@/components/AccoladesSection'
 import { WhyCoherentSection } from '@/components/WhyCoherentSection'
-import { CountryGate, GLOBAL_SCOPE } from '@/components/CountryGate'
+import { CountryGate } from '@/components/CountryGate'
+import { marketScopeLabel } from '@/lib/market-scope'
 import { DemoDataNote } from '@/components/DemoDataNote'
 import Image from 'next/image'
 
@@ -160,10 +161,14 @@ export function DashboardShell({ readOnly = false }: Props) {
     isSuitePreview && !isMarketAnalysis && !isTaxonomy
 
   /**
-   * These dashboards report one market worldwide, not per country, so the
-   * strip names the global scope rather than a single covered country.
-   */
-  const countryOptions = [GLOBAL_SCOPE]
+    * The strip names the geography the market itself reports on — "Global" for
+    * a global study, "Brazil" for a Brazilian one — never a country the report
+    * does not cover.
+    */
+  const countryOptions = useMemo(
+    () => [marketScopeLabel(dashboardName ?? data?.metadata?.market_name, data?.dimensions?.geographies?.all_geographies ?? [])],
+    [dashboardName, data]
+  )
 
   /** Market name on top; a loaded survey adds the module list beneath it. */
   const headingTitle = dashboardName || 'Market Analysis'

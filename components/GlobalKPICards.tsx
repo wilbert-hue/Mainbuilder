@@ -2,12 +2,26 @@
 
 import { useMemo } from 'react'
 import { useDashboardStore } from '@/lib/store'
-import { TrendingUp, DollarSign, Calendar, Activity } from 'lucide-react'
+import { TrendingUp, DollarSign, Calendar, Activity, Lock } from 'lucide-react'
 import { formatIndianNumber, formatIndianNumberWithCommas, formatCurrencyValue, formatMeasure, getCurrencySymbol } from '@/lib/utils'
 import { METRICS_END_YEAR, METRICS_START_YEAR, calculateCAGRFromTimeSeries } from '@/lib/metrics-calculator'
+import { DEMO_SUBSCRIBE_NOTE } from '@/components/DemoDataNote'
+
+/**
+ * A KPI figure, or a lock in its place on a demo dashboard. The label above it
+ * still reads normally — what is withheld is the number, not what it measures.
+ */
+function KpiValue({ locked, children }: { locked: boolean; children: React.ReactNode }) {
+  if (!locked) return <>{children}</>
+  return (
+    <span className="inline-flex items-center text-slate-400" title={DEMO_SUBSCRIBE_NOTE}>
+      <Lock className="h-4 w-4" />
+    </span>
+  )
+}
 
 export function GlobalKPICards() {
-  const { data, filters, currency } = useDashboardStore()
+  const { data, filters, currency, showDemoNote } = useDashboardStore()
 
   const kpiData = useMemo(() => {
     if (!data) return null
@@ -289,11 +303,13 @@ export function GlobalKPICards() {
                 {kpiData.dataTypeLabel} {kpiData.startYear}
               </p>
               <p className="text-base font-bold text-black leading-tight">
-                {kpiData.dataType === 'value' && kpiData.isINR
-                  ? `₹ ${kpiData.marketSizeStart.toFixed(2)} Cr.`
-                  : kpiData.dataType === 'value'
-                  ? `${kpiData.currencySymbol} ${formatMeasure(kpiData.marketSizeStart, kpiData.unit)}`
-                  : `${formatMeasure(kpiData.marketSizeStart, kpiData.unit)}`}
+                <KpiValue locked={showDemoNote}>
+                  {kpiData.dataType === 'value' && kpiData.isINR
+                    ? `₹ ${kpiData.marketSizeStart.toFixed(2)} Cr.`
+                    : kpiData.dataType === 'value'
+                    ? `${kpiData.currencySymbol} ${formatMeasure(kpiData.marketSizeStart, kpiData.unit)}`
+                    : `${formatMeasure(kpiData.marketSizeStart, kpiData.unit)}`}
+                </KpiValue>
               </p>
             </div>
           </div>
@@ -308,11 +324,13 @@ export function GlobalKPICards() {
                 {kpiData.dataTypeLabel} {kpiData.endYear}
               </p>
               <p className="text-base font-bold text-black leading-tight">
-                {kpiData.dataType === 'value' && kpiData.isINR
-                  ? `₹ ${kpiData.marketSizeEnd.toFixed(2)} Cr.`
-                  : kpiData.dataType === 'value'
-                  ? `${kpiData.currencySymbol} ${formatMeasure(kpiData.marketSizeEnd, kpiData.unit)}`
-                  : `${formatMeasure(kpiData.marketSizeEnd, kpiData.unit)}`}
+                <KpiValue locked={showDemoNote}>
+                  {kpiData.dataType === 'value' && kpiData.isINR
+                    ? `₹ ${kpiData.marketSizeEnd.toFixed(2)} Cr.`
+                    : kpiData.dataType === 'value'
+                    ? `${kpiData.currencySymbol} ${formatMeasure(kpiData.marketSizeEnd, kpiData.unit)}`
+                    : `${formatMeasure(kpiData.marketSizeEnd, kpiData.unit)}`}
+                </KpiValue>
               </p>
             </div>
           </div>
@@ -327,7 +345,7 @@ export function GlobalKPICards() {
                 CAGR ({kpiData.cagrStartYear}-{kpiData.cagrEndYear})
               </p>
               <p className="text-base font-bold text-black leading-tight">
-                {kpiData.cagr.toFixed(2)}%
+                <KpiValue locked={showDemoNote}>{kpiData.cagr.toFixed(2)}%</KpiValue>
               </p>
             </div>
           </div>
@@ -342,15 +360,19 @@ export function GlobalKPICards() {
                 Absolute Growth ({kpiData.startYear}-{kpiData.endYear})
               </p>
               <p className="text-base font-bold text-black leading-tight">
-                {kpiData.dataType === 'value' && kpiData.isINR
-                  ? `₹ ${kpiData.absoluteGrowth.toFixed(2)} Cr.`
-                  : kpiData.dataType === 'value'
-                  ? `${kpiData.currencySymbol} ${formatMeasure(kpiData.absoluteGrowth, kpiData.unit)}`
-                  : `${formatMeasure(kpiData.absoluteGrowth, kpiData.unit)}`}
+                <KpiValue locked={showDemoNote}>
+                  {kpiData.dataType === 'value' && kpiData.isINR
+                    ? `₹ ${kpiData.absoluteGrowth.toFixed(2)} Cr.`
+                    : kpiData.dataType === 'value'
+                    ? `${kpiData.currencySymbol} ${formatMeasure(kpiData.absoluteGrowth, kpiData.unit)}`
+                    : `${formatMeasure(kpiData.absoluteGrowth, kpiData.unit)}`}
+                </KpiValue>
               </p>
-              <p className="text-[10px] text-gray-600 mt-0.5">
-                +{kpiData.growthPercentage.toFixed(1)}% increase
-              </p>
+              {!showDemoNote && (
+                <p className="text-[10px] text-gray-600 mt-0.5">
+                  +{kpiData.growthPercentage.toFixed(1)}% increase
+                </p>
+              )}
             </div>
           </div>
         </div>
