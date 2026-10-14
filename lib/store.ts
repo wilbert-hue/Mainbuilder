@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { sanitiseComparisonData } from '@/lib/label-sanity'
 import type { FilterState, ComparisonData } from './types'
 import type { ChartGroupId } from './chart-groups'
 import { DEFAULT_CHART_GROUP } from './chart-groups'
@@ -296,7 +297,10 @@ export const useDashboardStore = create<DashboardStore>((set, get) => ({
   staticDistributorProp1: false,
   dashboardId: null,
   
-  setData: (data) => {
+  setData: (rawData) => {
+    // Strip any model commentary that came through the taxonomy before it can
+    // reach a filter, a chart axis or a KPI header.
+    const data = sanitiseComparisonData(rawData)
     const defaultFilters = getDefaultFilters(data)
     const defaultOpportunityFilters = getDefaultOpportunityFilters(data)
     

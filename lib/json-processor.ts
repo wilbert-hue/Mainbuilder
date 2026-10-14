@@ -1,3 +1,4 @@
+import { sanitiseComparisonData } from '@/lib/label-sanity'
 /**
  * Dynamic JSON Processor
  * Processes any market JSON structure and converts it to ComparisonData format
@@ -1699,7 +1700,7 @@ export async function processJsonDataAsync(
     
     console.log(`Async processing complete. Records: ${valueRecords.length} value, ${volumeRecords.length} volume`)
     
-    return {
+    return sanitiseComparisonData({
       metadata,
       dimensions: {
         geographies: geographyDimension,
@@ -1713,7 +1714,7 @@ export async function processJsonDataAsync(
           geography_segment_matrix: volumeRecords,
         },
       },
-    }
+    })
   } catch (error) {
     console.error('Error in processJsonDataAsync:', error)
     throw new Error(
