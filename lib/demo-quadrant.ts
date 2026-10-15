@@ -13,6 +13,7 @@
 
 import type { ComparisonData } from '@/lib/types'
 import { marketScopeLabel } from '@/lib/market-scope'
+import { isTechnologyMarket } from '@/lib/module-labels'
 import type {
   QuadrantAxis,
   QuadrantCompany,
@@ -34,17 +35,23 @@ const QUADRANTS = ['Leaders', 'Challengers', 'Trailblazers', 'Evolving Players']
 type MarketKind = 'technology' | 'service' | 'product'
 
 /**
+ * Work that is delivered rather than sold as a product or licensed as software.
+ * Checked first: a market named "… Services" is a service market even when the
+ * work itself is technical.
+ */
+const SERVICE_MARKET =
+  /\b(services?|servicing|consult\w*|training|testing|inspection|maintenance|logistics|outsourc\w*|managed\s+\w+|repair|installation|surveying|monitoring)\b/i
+
+/**
  * What the market mainly sells, read off its name. Drives the X axis title and
  * the provider category, the same way an analyst export states both.
+ *
+ * The technology test is shared with the channel-partner naming, so a market
+ * cannot be a software market for one label and a hardware market for another.
  */
 function marketKind(market: string): MarketKind {
-  const m = market.toLowerCase()
-  if (/\b(software|platform|analytics|ai|cloud|cyber|data|digital|saas|fintech|finance)/.test(m)) {
-    return 'technology'
-  }
-  if (/\b(service|services|training|consult|testing|inspection|maintenance|logistics)/.test(m)) {
-    return 'service'
-  }
+  if (SERVICE_MARKET.test(market)) return 'service'
+  if (isTechnologyMarket(market)) return 'technology'
   return 'product'
 }
 
