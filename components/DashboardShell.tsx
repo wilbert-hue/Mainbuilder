@@ -41,7 +41,7 @@ import { CredibilitySection } from '@/components/CredibilitySection'
 import { AccoladesSection } from '@/components/AccoladesSection'
 import { WhyCoherentSection } from '@/components/WhyCoherentSection'
 import { CountryGate } from '@/components/CountryGate'
-import { marketScopeLabel } from '@/lib/market-scope'
+import { reportScopeLabel } from '@/lib/market-scope'
 import { distributorShortLabel } from '@/lib/module-labels'
 import { DemoDataNote } from '@/components/DemoDataNote'
 import Image from 'next/image'
@@ -178,8 +178,16 @@ export function DashboardShell({ readOnly = false }: Props) {
     * does not cover.
     */
   const countryOptions = useMemo(
-    () => [marketScopeLabel(dashboardName ?? data?.metadata?.market_name, data?.dimensions?.geographies?.all_geographies ?? [])],
-    [dashboardName, data]
+    () => [
+      reportScopeLabel(
+        // These views state their own coverage; an India quadrant is India
+        // even when the market family is titled "Global".
+        [quadrantData?.geo, b2bSurveyData?.geo, b2cSurveyData?.geo],
+        dashboardName ?? data?.metadata?.market_name,
+        data?.dimensions?.geographies?.all_geographies ?? []
+      ),
+    ],
+    [quadrantData, b2bSurveyData, b2cSurveyData, dashboardName, data]
   )
 
   /** Market name on top; a loaded survey adds the module list beneath it. */

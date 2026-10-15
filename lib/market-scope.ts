@@ -101,6 +101,45 @@ export function stripScopePrefix(marketName: string | null | undefined): string 
 }
 
 /**
+ * The scope label for the views a dashboard actually carries.
+ *
+ * A report states the geography it covers — an India quadrant says "india" —
+ * and that beats the word in the market title, which is often "Global" simply
+ * because the family of reports is. The title is the fallback, for a dashboard
+ * whose views carry no geography of their own.
+ */
+export function reportScopeLabel(
+  reportGeographies: (string | null | undefined)[],
+  marketName: string | null | undefined,
+  geographies: string[] = []
+): string {
+  for (const geo of reportGeographies) {
+    const value = (geo ?? '').trim()
+    if (value) return titleCaseGeography(value)
+  }
+  return marketScopeLabel(marketName, geographies)
+}
+
+/**
+ * Title-case a geography however the analyst typed it — "india", "INDIA",
+ * "north america" — while leaving abbreviations alone: "U.S." and "UAE" are
+ * already written the way they should read.
+ */
+export function titleCaseGeography(value: string): string {
+  return value
+    .trim()
+    .split(/\s+/)
+    .map((word) => {
+      // "U.S.", "U.K." — dotted abbreviations are already correct.
+      if (word.includes('.')) return word
+      // "UAE", "GCC", "EU" — so is a short all-caps token.
+      if (word.length <= 4 && word === word.toUpperCase()) return word
+      return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+    })
+    .join(' ')
+}
+
+/**
  * The scope label for a dashboard: a geography the workbook itself reports,
  * if the market name mentions one, otherwise a geography from the known list,
  * otherwise "Global".

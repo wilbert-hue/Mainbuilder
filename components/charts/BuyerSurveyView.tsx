@@ -181,10 +181,21 @@ function QuestionCard({
         <span className="shrink-0 rounded bg-[#E8833A] px-2 py-1 text-xs font-bold text-white">
           {label}
         </span>
-        <span className="flex-1 text-sm font-bold leading-snug text-[#0f3d5c]">
-          {question.text}
-        </span>
-        {question.n !== null && (
+        {/* The question itself is withheld on a demo dashboard, not just its answer. */}
+        {locked ? (
+          <span
+            className="flex flex-1 items-center gap-2 text-sm font-semibold text-slate-400"
+            title={DEMO_SUBSCRIBE_NOTE}
+          >
+            <Lock className="h-3.5 w-3.5 shrink-0" />
+            {DEMO_SUBSCRIBE_NOTE}
+          </span>
+        ) : (
+          <span className="flex-1 text-sm font-bold leading-snug text-[#0f3d5c]">
+            {question.text}
+          </span>
+        )}
+        {!locked && question.n !== null && (
           <span className="shrink-0 text-xs text-slate-500">Sample Size - {question.n} Respondents</span>
         )}
       </div>

@@ -23,6 +23,7 @@ import { useMemo, useState } from 'react'
 import { Lock } from 'lucide-react'
 import { useDashboardStore } from '@/lib/store'
 import { buildDemoQuadrant } from '@/lib/demo-quadrant'
+import { titleCaseGeography } from '@/lib/market-scope'
 import { buildDemoMethodology } from '@/lib/demo-methodology'
 import MethodologyPanel from './MethodologyPanel'
 import {
@@ -41,6 +42,19 @@ const NAVY = '#002857'
 const SCORE_BLUE = '#1e3a8a'
 
 /** Rows shown before "Other Noticeable Player" is expanded. */
+/**
+ * Notes that describe how the export was produced rather than what it found —
+ * "Set by the market brief (_pipeline/market_brief.json)." A client should
+ * never read our pipeline's filenames, so these are dropped.
+ */
+const INTERNAL_NOTE = /_pipeline|\.json\b|market[_\s]?brief|placeholder|\bTBD\b|^set by the/i
+
+/** Report prose, or nothing when it is really a note to ourselves. */
+function clientFacing(text: string | null | undefined): string {
+  const value = (text ?? '').trim()
+  return value && !INTERNAL_NOTE.test(value) ? value : ''
+}
+
 const OTHERS_PREVIEW_ROWS = 4
 
 // ── Small pieces ────────────────────────────────────────────────────────────
@@ -495,7 +509,7 @@ export function QuadrantView() {
       >
         <h1 className="mb-1 text-2xl font-bold tracking-tight">Vendor Intelligence (Coherent Quadrant)</h1>
         <p className="opacity-90">
-          {report.market} · {report.geo} · {report.companyCount}{' '}
+          {report.market} · {titleCaseGeography(report.geo)} · {report.companyCount}{' '}
           {report.providerCategories[0] || 'companies'} scored on {report.xAxis.name} (X) and{' '}
           {report.yAxis.name} (Y)
         </p>
@@ -525,8 +539,10 @@ export function QuadrantView() {
                   <li key={i}>{p}</li>
                 ))}
               </ol>
-              {report.providerRationale && (
-                <div className="mt-2 text-[0.84rem] text-slate-500">{report.providerRationale}</div>
+              {clientFacing(report.providerRationale) && (
+                <div className="mt-2 text-[0.84rem] text-slate-500">
+                  {clientFacing(report.providerRationale)}
+                </div>
               )}
             </div>
           </div>
