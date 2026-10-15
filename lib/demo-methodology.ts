@@ -13,6 +13,12 @@
 
 import type { MethodologySection } from '@/lib/intelligence-sheet-types'
 import { stripScopePrefix } from '@/lib/market-scope'
+import {
+  designationsFor,
+  marketFlavour,
+  organisationsFor,
+  type MarketFlavour,
+} from '@/lib/market-flavour'
 
 /** "Brazil Advance Wound Care Market" → "Advance Wound Care". */
 function marketSubject(market: string): string {
@@ -25,60 +31,22 @@ function marketSubject(market: string): string {
   return subject || market.trim()
 }
 
-/** Buyer-side organisations, chosen by what the market plainly is. */
-function organisations(subject: string): string[] {
-  const s = subject.toLowerCase()
-  if (/(health|medical|clinic|wound|surgical|patient|pharma|diagnost|therapy|device)/.test(s)) {
-    return [
-      'Multinational hospital chains',
-      'Regional public healthcare networks',
-      'Large non profit nursing home networks',
-      'Independent private clinics',
-      'Mid sized home healthcare groups',
-    ]
-  }
-  if (/(software|platform|cloud|analytics|data|digital|saas|cyber|ai)/.test(s)) {
-    return [
-      'Global enterprise IT organisations',
-      'Regional managed service providers',
-      'Public sector technology departments',
-      'High growth technology companies',
-      'Mid market shared service centres',
-    ]
-  }
-  if (/(energy|power|oil|gas|solar|battery|grid|utility|renewable)/.test(s)) {
-    return [
-      'National utility operators',
-      'Independent power producers',
-      'Industrial energy consumers',
-      'Engineering and EPC contractors',
-      'Regional grid infrastructure operators',
-    ]
-  }
-  return [
-    'Multinational manufacturing groups',
-    'Regional industrial operators',
-    'Large distribution and trading networks',
-    'Independent mid sized producers',
-    'Public sector procurement bodies',
-  ]
-}
 
-/** Buy-side job titles — the people a primary-research call actually reaches. */
-function designations(): string[] {
-  return [
-    'Procurement Manager',
-    'Purchasing Specialist',
-    'Supply Chain Lead',
-    'Category Manager',
-    'Head of Operations',
-    'Technical Evaluation Lead',
-  ]
-}
-
-/** Events that mark a live buying window for this market. */
-function triggerSignals(subject: string): string[] {
+/**
+ * Events that mark a live buying window for this market. A retailer's buying
+ * window opens on a range review or a new store, not on plant capacity.
+ */
+function triggerSignals(subject: string, flavour: MarketFlavour): string[] {
   const lower = subject.toLowerCase()
+  if (flavour === 'consumer') {
+    return [
+      `Running a category range review covering ${lower}`,
+      `Opening new stores or outlets that will stock ${lower}`,
+      `Launching a private label or own-brand line in ${lower}`,
+      `Expanding into a new region or export market with ${lower}`,
+      `Listing ${lower} with a new wholesale or e-commerce channel`,
+    ]
+  }
   return [
     `Opening a new ${lower} facility or expanding existing capacity`,
     `Hiring specialists or certified staff for a new ${lower} programme`,
@@ -100,14 +68,15 @@ export function buildDemoMethodology(
   if (!name) return []
 
   const subject = marketSubject(name)
+  const flavour = marketFlavour(name)
   const audience = intelligenceSource === 'distributor' ? 'distributors and channel partners' : 'buyers'
 
   return [
     {
       title: 'Primary Research',
       groups: [
-        { title: 'Organizations we surveyed', items: organisations(subject) },
-        { title: 'Designations we spoke to', items: designations() },
+        { title: 'Organizations we surveyed', items: organisationsFor(flavour) },
+        { title: 'Designations we spoke to', items: designationsFor(flavour) },
       ],
       paragraphs: [
         `Verified telephone and email interviews with ${audience} active in ${subject}, re-validated every quarter.`,
@@ -115,7 +84,7 @@ export function buildDemoMethodology(
     },
     {
       title: 'Real-time Trigger Signals',
-      groups: [{ items: triggerSignals(subject) }],
+      groups: [{ items: triggerSignals(subject, flavour) }],
       paragraphs: ['…and 50+ other trigger signals'],
     },
     {

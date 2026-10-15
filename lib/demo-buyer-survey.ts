@@ -14,6 +14,12 @@
 
 import type { ComparisonData } from '@/lib/types'
 import { marketScopeLabel, stripScopePrefix } from '@/lib/market-scope'
+import {
+  designationsFor,
+  marketFlavour,
+  organisationsFor,
+  type MarketFlavour,
+} from '@/lib/market-flavour'
 import type {
   BuyerSegment,
   BuyerSurveyQuestion,
@@ -35,22 +41,20 @@ function marketSubject(market: string): string {
   return subject || market.trim()
 }
 
-type MarketFlavour = 'healthcare' | 'technology' | 'energy' | 'industrial'
-
-function marketFlavour(subject: string): MarketFlavour {
-  const s = subject.toLowerCase()
-  if (/(health|medical|clinic|wound|surgical|patient|pharma|diagnost|therapy|care|device)/.test(s)) {
-    return 'healthcare'
-  }
-  if (/(software|platform|cloud|analytics|data|digital|saas|cyber|\bai\b|fintech)/.test(s)) {
-    return 'technology'
-  }
-  if (/(energy|power|oil|gas|solar|battery|grid|utility|renewable|fuel)/.test(s)) return 'energy'
-  return 'industrial'
-}
-
 /** Who buys, and how each buyer type buys. */
 function buyerSegments(flavour: MarketFlavour): { whoBuys: string; segments: BuyerSegment[] } {
+  if (flavour === 'consumer') {
+    return {
+      whoBuys:
+        'Category buyers, merchandising managers, and supply chain professionals within retail chains, wholesale distributors, and hospitality groups that stock and resell the category.',
+      segments: [
+        { name: 'Supermarket and Grocery Chains', description: '' },
+        { name: 'Specialty and Convenience Retailers', description: '' },
+        { name: 'Hotels, Restaurants and Bars', description: '' },
+        { name: 'Wholesalers and Online Retailers', description: '' },
+      ],
+    }
+  }
   if (flavour === 'healthcare') {
     return {
       whoBuys:
@@ -99,51 +103,6 @@ function buyerSegments(flavour: MarketFlavour): { whoBuys: string; segments: Buy
   }
 }
 
-function organisations(flavour: MarketFlavour): string[] {
-  if (flavour === 'healthcare') {
-    return [
-      'Multinational hospital chains',
-      'Regional public healthcare networks',
-      'Large non profit nursing home networks',
-      'Independent private clinics',
-      'Mid sized home healthcare groups',
-    ]
-  }
-  if (flavour === 'technology') {
-    return [
-      'Global enterprise IT organisations',
-      'Regional managed service providers',
-      'Public sector technology departments',
-      'High growth technology companies',
-      'Mid market shared service centres',
-    ]
-  }
-  if (flavour === 'energy') {
-    return [
-      'National utility operators',
-      'Independent power producers',
-      'Industrial energy consumers',
-      'Engineering and EPC contractors',
-      'Regional grid infrastructure operators',
-    ]
-  }
-  return [
-    'Multinational manufacturing groups',
-    'Regional industrial operators',
-    'Large distribution and trading networks',
-    'Independent mid sized producers',
-    'Public sector procurement bodies',
-  ]
-}
-
-const DESIGNATIONS = [
-  'Procurement Manager',
-  'Purchasing Specialist',
-  'Supply Chain Lead',
-  'Category Manager',
-  'Head of Operations',
-  'Technical Evaluation Lead',
-]
 
 /** Consumer-side job titles do not apply; a B2C panel is profiled instead. */
 const B2C_RESPONDENT_PROFILE = [
@@ -361,9 +320,9 @@ export function buildDemoBuyerSurvey(
       whoBuys: buyers.whoBuys,
       buyerSegments: buyers.segments,
       organisationsHeading: isConsumer ? 'Households We Surveyed' : 'Organisations We Surveyed',
-      organisations: isConsumer ? B2C_HOUSEHOLDS : organisations(flavour),
+      organisations: isConsumer ? B2C_HOUSEHOLDS : organisationsFor(flavour),
       designationsHeading: isConsumer ? 'Who We Spoke To' : 'Designations We Spoke To',
-      designations: isConsumer ? B2C_RESPONDENT_PROFILE : DESIGNATIONS,
+      designations: isConsumer ? B2C_RESPONDENT_PROFILE : designationsFor(flavour),
       respondentProfile: '',
     },
     methodology: {
@@ -374,7 +333,7 @@ export function buildDemoBuyerSurvey(
       geography: geo,
       module,
       reportCovers: segments.map((s) => s.title),
-      whoQualified: isConsumer ? B2C_RESPONDENT_PROFILE : DESIGNATIONS,
+      whoQualified: isConsumer ? B2C_RESPONDENT_PROFILE : designationsFor(flavour),
       reportConfidence: '',
     },
     executiveSummary: null,

@@ -12,8 +12,9 @@
  */
 
 import type { ComparisonData } from '@/lib/types'
-import { marketScopeLabel } from '@/lib/market-scope'
+import { marketScopeLabel, stripScopePrefix } from '@/lib/market-scope'
 import { isTechnologyMarket } from '@/lib/module-labels'
+import { isConsumerMarket } from '@/lib/market-flavour'
 import type {
   QuadrantAxis,
   QuadrantCompany,
@@ -75,6 +76,13 @@ function providerCategory(kind: MarketKind, subject: string): { category: string
       rationale: `Service Provider was chosen because the competitive landscape for ${subject.toLowerCase()} is built around companies delivering the work as a service rather than selling a physical product.`,
     }
   }
+  // A consumer market is made by brand owners, not by equipment suppliers.
+  if (isConsumerMarket(subject)) {
+    return {
+      category: 'Brand Owner / Producer',
+      rationale: `Brand Owner / Producer was chosen because the competitive landscape for ${subject.toLowerCase()} is built around the companies that produce and brand the goods reaching retail, wholesale and hospitality buyers.`,
+    }
+  }
   return {
     category: 'Manufacturer',
     rationale: `Manufacturer was chosen because the competitive landscape for ${subject.toLowerCase()} is built around companies producing and selling the physical equipment and materials that define the market.`,
@@ -83,7 +91,9 @@ function providerCategory(kind: MarketKind, subject: string): { category: string
 
 /** "Battery Fire Safety Industry Analysis" → "Battery Fire Safety". */
 function marketSubject(market: string): string {
-  let subject = market.trim()
+  // The geography is stated separately on the quadrant, so the subject drops
+  // it: "global scottish whisky" reads as a stutter in the rationale.
+  let subject = stripScopePrefix(market)
   // Strip repeatedly, so "India Market Analysis" reduces to "India" rather
   // than stopping at "India Market".
   for (;;) {
