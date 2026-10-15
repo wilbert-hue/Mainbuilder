@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import { useDashboardStore } from '@/lib/store'
 import { CHART_GROUPS, type ChartGroupId } from '@/lib/chart-groups'
 import { BarChart3, Target, Trophy, Users, Building2, DollarSign, Factory, ShoppingCart, Grid2x2, ListTree } from 'lucide-react'
+import { distributorShortLabel } from '@/lib/module-labels'
 
 // Icon mapping for each chart group
 const iconMap: Record<string, any> = {
@@ -48,6 +49,8 @@ export function ChartGroupSelector({ orientation = 'vertical' }: ChartGroupSelec
     quadrantData,
     showDemoQuadrant,
     showDemoB2bSurvey,
+    showDemoB2cSurvey,
+    dashboardName,
   } = useDashboardStore()
 
   const hasMarketData = !!data
@@ -85,7 +88,7 @@ export function ChartGroupSelector({ orientation = 'vertical' }: ChartGroupSelec
 
   // Buyer survey reports (uploaded as JSON in the builder)
   const hasB2bSurveyData = !!b2bSurveyData?.segments?.length || showDemoB2bSurvey
-  const hasB2cSurveyData = !!b2cSurveyData?.segments?.length
+  const hasB2cSurveyData = !!b2cSurveyData?.segments?.length || showDemoB2cSurvey
   const hasQuadrantData =
     !!(quadrantData?.charted?.length || quadrantData?.others?.length) || showDemoQuadrant
 
@@ -198,10 +201,10 @@ export function ChartGroupSelector({ orientation = 'vertical' }: ChartGroupSelec
                 className={`w-3 h-3 flex-shrink-0 ${isSelected ? 'text-white' : 'text-black'}`} 
               />
               <span className="text-xs font-medium leading-tight">
-                {group.label === 'Coherent Opportunity Matrix' 
+                {group.label === 'Coherent Opportunity Matrix'
                   ? <span>Coherent Opportunity<br/>Matrix</span>
-                  : group.label === 'Distributor Intelligence'
-                    ? <span>Distributor<br/>Intelligence</span>
+                  : group.id === 'distributor-intelligence'
+                    ? <span>{distributorShortLabel(dashboardName)}</span>
                     : group.label}
               </span>
             </button>

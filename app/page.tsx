@@ -27,6 +27,7 @@ function DashboardPageContent() {
     quadrantData,
     showDemoQuadrant,
     showDemoB2bSurvey,
+    showDemoB2cSurvey,
     dashboardName,
   } = useDashboardStore()
   const [mounted, setMounted] = useState(false)
@@ -51,7 +52,7 @@ function DashboardPageContent() {
     quadrantData?.others?.length
   )
   /** A demo view is generated from the market name, so that name is the data. */
-  const hasDemoReport = !!dashboardName && (showDemoQuadrant || showDemoB2bSurvey)
+  const hasDemoReport = !!dashboardName && (showDemoQuadrant || showDemoB2bSurvey || showDemoB2cSurvey)
   const hasAnyData =
     hasMarketData || hasIntelligenceData || hasPricingData || hasJsonReportData || hasDemoReport
 

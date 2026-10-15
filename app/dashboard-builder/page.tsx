@@ -58,6 +58,7 @@ export default function DashboardBuilderPage() {
     setShowDemoNote,
     setShowDemoQuadrant,
     setShowDemoB2bSurvey,
+    setShowDemoB2cSurvey,
     logoChoice,
     setLogoChoice,
     staticCustomerProp1,
@@ -85,6 +86,7 @@ export default function DashboardBuilderPage() {
   const [showDemoNoteToggle, setShowDemoNoteToggle] = useState(false)
   const [showDemoQuadrantToggle, setShowDemoQuadrantToggle] = useState(false)
   const [showDemoB2bSurveyToggle, setShowDemoB2bSurveyToggle] = useState(false)
+  const [showDemoB2cSurveyToggle, setShowDemoB2cSurveyToggle] = useState(false)
   const [shareUrl, setShareUrl] = useState<string | null>(null)
   const [isGeneratingLink, setIsGeneratingLink] = useState(false)
   const [linkCopied, setLinkCopied] = useState(false)
@@ -582,6 +584,7 @@ export default function DashboardBuilderPage() {
       showDemoNote,
       showDemoQuadrant,
       showDemoB2bSurvey,
+      showDemoB2cSurvey,
       staticCustomerProp1: staticCustomer,
       staticDistributorProp1: staticDistributor,
       logoChoice,
@@ -631,6 +634,7 @@ export default function DashboardBuilderPage() {
         showDemoNote,
         showDemoQuadrant,
         showDemoB2bSurvey,
+        showDemoB2cSurvey,
         staticCustomerProp1: staticCustomer,
         staticDistributorProp1: staticDistributor,
         logoChoice,
@@ -1173,7 +1177,8 @@ export default function DashboardBuilderPage() {
    * input it needs.
    */
   const demoOnlyReady =
-    (showDemoQuadrantToggle || showDemoB2bSurveyToggle) && !!dashboardNameInput.trim()
+    (showDemoQuadrantToggle || showDemoB2bSurveyToggle || showDemoB2cSurveyToggle) &&
+    !!dashboardNameInput.trim()
 
   // Navigate to dashboard
   const handleViewDashboard = () => {
@@ -2129,9 +2134,31 @@ export default function DashboardBuilderPage() {
                 </p>
               </div>
               <div className="flex items-center gap-5 flex-shrink-0">
+                  {/* Demo Voice of Customer (B2C) toggle */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-slate-400 font-medium">Demo Voice of Customer — B2C</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const next = !showDemoB2cSurveyToggle
+                        setShowDemoB2cSurveyToggle(next)
+                        setShowDemoB2cSurvey(next)
+                      }}
+                      className={`builder-toggle focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 focus:ring-offset-slate-900 ${
+                        showDemoB2cSurveyToggle ? 'builder-toggle-on' : 'builder-toggle-off'
+                      }`}
+                      aria-pressed={showDemoB2cSurveyToggle}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                          showDemoB2cSurveyToggle ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                  </div>
                   {/* Demo Voice of Customer (B2B) toggle */}
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-slate-400 font-medium">Show Demo Voice of Customer</span>
+                    <span className="text-sm text-slate-400 font-medium">Demo Voice of Customer — B2B</span>
                     <button
                       type="button"
                       onClick={() => {
@@ -2510,7 +2537,8 @@ export default function DashboardBuilderPage() {
                       hadSurveyUploadSuccess && 'Survey',
                       hadQuadrantUploadSuccess && 'Quadrant',
                       !hadQuadrantUploadSuccess && showDemoQuadrantToggle && 'Demo Quadrant',
-                      showDemoB2bSurveyToggle && 'Demo Voice of Customer',
+                      showDemoB2bSurveyToggle && 'Demo Voice of Customer - B2B',
+                      showDemoB2cSurveyToggle && 'Demo Voice of Customer - B2C',
                     ].filter(Boolean).join(', ')} data processed. Open your workspace when you are ready.
                   </p>
                 </div>

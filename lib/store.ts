@@ -48,6 +48,7 @@ interface DashboardStore {
   showDemoNote: boolean // Toggle for demo data disclaimer note
   showDemoQuadrant: boolean // Toggle for the generated demo Coherent Quadrant
   showDemoB2bSurvey: boolean // Toggle for the generated demo Voice of Customer (B2B) report
+  showDemoB2cSurvey: boolean // Same, for the B2C report
   logoChoice: 'coherent' | 'wmr' | 'mi' // Which logo to show in the dashboard header
   staticCustomerProp1: boolean // When true, render static 20-row Proposition 1 template instead of uploaded data
   staticDistributorProp1: boolean // Same for distributor intelligence
@@ -93,6 +94,7 @@ interface DashboardStore {
   setShowDemoNote: (show: boolean) => void
   setShowDemoQuadrant: (show: boolean) => void
   setShowDemoB2bSurvey: (show: boolean) => void
+  setShowDemoB2cSurvey: (show: boolean) => void
   setLogoChoice: (choice: 'coherent' | 'wmr' | 'mi') => void
   setStaticCustomerProp1: (val: boolean) => void
   setStaticDistributorProp1: (val: boolean) => void
@@ -292,6 +294,7 @@ export const useDashboardStore = create<DashboardStore>((set, get) => ({
   showDemoNote: false,
   showDemoQuadrant: false,
   showDemoB2bSurvey: false,
+  showDemoB2cSurvey: false,
   logoChoice: 'coherent' as const,
   staticCustomerProp1: false,
   staticDistributorProp1: false,
@@ -568,6 +571,7 @@ export const useDashboardStore = create<DashboardStore>((set, get) => ({
   setShowDemoNote: (show) => set({ showDemoNote: show }),
   setShowDemoQuadrant: (show) => set({ showDemoQuadrant: show }),
   setShowDemoB2bSurvey: (show) => set({ showDemoB2bSurvey: show }),
+  setShowDemoB2cSurvey: (show) => set({ showDemoB2cSurvey: show }),
   setLogoChoice: (choice) => set({ logoChoice: choice }),
   setStaticCustomerProp1: (val) => set({ staticCustomerProp1: val }),
   setStaticDistributorProp1: (val) => set({ staticDistributorProp1: val }),

@@ -13,6 +13,7 @@ import { Lock } from 'lucide-react'
 import MethodologyPanel from './MethodologyPanel'
 import { buildDemoMethodology } from '@/lib/demo-methodology'
 import { DEMO_SUBSCRIBE_NOTE } from '@/components/DemoDataNote'
+import { distributorNoun } from '@/lib/module-labels'
 import type { MethodologySection } from '@/lib/intelligence-sheet-types'
 
 // ---------------------------------------------------------------------------
@@ -234,6 +235,7 @@ function PropositionTableDashboard({
   data,
   tier,
   bannerTitle,
+  directoryNoun,
   currency,
   intelligenceSource,
   suitePreview,
@@ -243,6 +245,8 @@ function PropositionTableDashboard({
   data: PropositionData
   tier: TierKey
   bannerTitle: string
+  /** What the rows are: "customers", "distributors", "channel partners". */
+  directoryNoun: string
   currency: TableCurrency
   intelligenceSource: 'customer' | 'distributor'
   suitePreview: boolean
@@ -293,7 +297,7 @@ function PropositionTableDashboard({
             {bannerTitle}
           </p>
           <p className="text-xs sm:text-sm text-slate-300 mt-1">
-            Verified directory and insight on customers
+            Verified directory and insight on {directoryNoun}
           </p>
         </div>
         <span
@@ -509,23 +513,22 @@ export function CustomerIntelligenceTable({
     [dashboardName, data, filters]
   )
 
+  /** "Distributor" on a trade market, "Channel Partner" on a technology one. */
+  const typeLabel =
+    intelligenceSource === 'distributor' ? distributorNoun(dashboardName) : 'Customer'
+
   const bannerTitle = useMemo(
-    () =>
-      intelligenceSource === 'distributor'
-        ? `${marketLine} – Distributor Database`
-        : `${marketLine} – Customer Database`,
-    [marketLine, intelligenceSource]
+    () => `${marketLine} – ${typeLabel} Database`,
+    [marketLine, typeLabel]
   )
 
-  const typeLabel =
-    intelligenceSource === 'distributor'
-      ? 'Distributor'
-      : 'Customer'
+  /** Plural, lower case: what the directory lists. */
+  const directoryNoun = `${typeLabel.toLowerCase()}s`
 
   const heading = title?.trim() || `${typeLabel} Intelligence Database`
   const subtitle =
     intelligenceSource === 'distributor'
-      ? `${marketLine} · Verified distributor directory across proposition tiers`
+      ? `${marketLine} · Verified ${typeLabel.toLowerCase()} directory across proposition tiers`
       : intelligenceType === 'both'
         ? `${marketLine} · Intelligence directory across proposition tiers`
         : `${marketLine} · Verified ${typeLabel.toLowerCase()} directory across proposition tiers`
@@ -587,6 +590,7 @@ export function CustomerIntelligenceTable({
           data={staticData}
           tier="standard"
           bannerTitle={bannerTitle}
+          directoryNoun={directoryNoun}
           currency={tableCurrency}
           intelligenceSource={intelligenceSource}
           suitePreview={isSuitePreview}
@@ -700,6 +704,7 @@ export function CustomerIntelligenceTable({
           data={activeData}
           tier={activeTier}
           bannerTitle={bannerTitle}
+          directoryNoun={directoryNoun}
           currency={tableCurrency}
           intelligenceSource={intelligenceSource}
           suitePreview={isSuitePreview}

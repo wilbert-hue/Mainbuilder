@@ -40,8 +40,9 @@ export interface DashboardSnapshot {
   pricingAnalysisData: unknown
   showDemoNote: boolean
   showDemoQuadrant?: boolean
-  /** Generated demo Voice of Customer (B2B) report */
+  /** Generated demo Voice of Customer reports */
   showDemoB2bSurvey?: boolean
+  showDemoB2cSurvey?: boolean
   /** Locked 20-row intelligence templates */
   staticCustomerProp1?: boolean
   staticDistributorProp1?: boolean

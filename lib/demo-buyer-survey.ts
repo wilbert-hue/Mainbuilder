@@ -145,6 +145,81 @@ const DESIGNATIONS = [
   'Technical Evaluation Lead',
 ]
 
+/** Consumer-side job titles do not apply; a B2C panel is profiled instead. */
+const B2C_RESPONDENT_PROFILE = [
+  'Primary household purchase decision maker',
+  'Joint decision maker with a partner',
+  'Buys for personal use only',
+  'Buys on behalf of a dependent or family member',
+  'First-time category buyer in the last 12 months',
+  'Repeat buyer across multiple brands',
+]
+
+/** Who the consumer respondents are, by household rather than by firm. */
+const B2C_HOUSEHOLDS = [
+  'Urban single-person households',
+  'Young families with children at home',
+  'Dual-income households without children',
+  'Multi-generational households',
+  'Retired and empty-nest households',
+]
+
+/**
+ * The B2C questionnaire: one shopper answering for themselves, so it asks
+ * about habit, price sensitivity and where they buy — not contracts, budgets
+ * or approval authority, which no consumer has.
+ */
+function consumerQuestionnaire(subject: string, segmentType: string | null): BuyerSurveySegment[] {
+  const s = subject.toLowerCase()
+  const byType = segmentType ? ` by ${segmentType.toLowerCase()}` : ''
+
+  return buildSections(
+    [
+      {
+        title: 'Brand Choice and Loyalty',
+        focus: `Which ${s} brands shoppers actually buy, and how readily they switch.`,
+        questions: [
+          `Which ${s} brand did you purchase most recently?`,
+          `How long have you been buying your current ${s} brand?`,
+          `How likely are you to switch ${s} brand on your next purchase?`,
+          `What would most often make you try a different ${s} brand?`,
+        ],
+      },
+      {
+        title: 'Purchase Drivers',
+        focus: `What a shopper weighs in the aisle when comparing ${s}${byType}.`,
+        questions: [
+          `Which factor matters most when you choose a ${s} product?`,
+          `How much does price influence your ${s} purchase decision?`,
+          `Which claim on the packaging most influences your ${s} choice?`,
+          `Would you pay more for a premium or improved ${s} product?`,
+        ],
+      },
+      {
+        title: 'Where and How You Buy',
+        focus: `The channels and occasions behind a ${s} purchase.`,
+        questions: [
+          `Where do you most often buy ${s}?`,
+          `How often do you purchase ${s}?`,
+          `Do you research ${s} online before buying in store?`,
+          `Which promotion type most often prompts you to buy ${s}?`,
+        ],
+      },
+      {
+        title: 'Experience and Outlook',
+        focus: `Satisfaction with ${s} today, and intent over the year ahead.`,
+        questions: [
+          `How satisfied are you with the ${s} product you currently use?`,
+          `Would you recommend your current ${s} brand to family or friends?`,
+          `Do you expect to spend more or less on ${s} over the next 12 months?`,
+          `What would most improve your experience of buying ${s}?`,
+        ],
+      },
+    ],
+    'single_select'
+  )
+}
+
 /**
  * The questionnaire, as section → questions. `subject` is the market and
  * `segmentType` the taxonomy the market is cut by, so the wording lands on
@@ -197,6 +272,14 @@ function questionnaire(subject: string, segmentType: string | null): BuyerSurvey
     },
   ]
 
+  return buildSections(sections, 'single_select')
+}
+
+/** Number the questions across the whole report and leave the answers empty. */
+function buildSections(
+  sections: { title: string; focus: string; questions: string[] }[],
+  type: string
+): BuyerSurveySegment[] {
   let counter = 0
   return sections.map((section, sectionIndex) => ({
     id: `demo-section-${sectionIndex + 1}`,
@@ -207,7 +290,7 @@ function questionnaire(subject: string, segmentType: string | null): BuyerSurvey
       return {
         id: `Q${counter}`,
         text,
-        type: 'single_select',
+        type,
         chartType: null,
         // Empty by design: the view locks the chart and the takeaway.
         options: [],
@@ -220,16 +303,32 @@ function questionnaire(subject: string, segmentType: string | null): BuyerSurvey
   }))
 }
 
+/** Who buys, when the buyer is a shopper rather than a firm. */
+function consumerSegments(subject: string): { whoBuys: string; segments: BuyerSegment[] } {
+  return {
+    whoBuys: `Individual shoppers who have bought ${subject.toLowerCase()} for themselves or their household in the last 12 months, screened on category purchase and decision-making role.`,
+    segments: [
+      { name: 'Regular Category Buyers', description: '' },
+      { name: 'Occasional and Seasonal Buyers', description: '' },
+      { name: 'First-Time Buyers', description: '' },
+      { name: 'Premium and Brand-Led Buyers', description: '' },
+    ],
+  }
+}
+
 /**
- * Build the demo B2B survey for a market.
+ * Build the demo buyer survey for a market.
  *
  * A workbook is not required — the market name carries the questionnaire — so
- * a dashboard can be this survey and nothing else. Returns null only when
- * there is no market to name.
+ * a dashboard can be this survey and nothing else. The B2C variant asks a
+ * shopper about habit, price and channel; the B2B one asks a firm about
+ * contracts, budget and approval. Returns null only when there is no market
+ * to name.
  */
 export function buildDemoBuyerSurvey(
   data: ComparisonData | null | undefined,
-  dashboardName?: string | null
+  dashboardName?: string | null,
+  kind: 'b2b' | 'b2c' = 'b2b'
 ): BuyerSurveyReport | null {
   const market = (dashboardName || data?.metadata?.market_name || '').trim()
   if (!market) return null
@@ -239,14 +338,18 @@ export function buildDemoBuyerSurvey(
   const geo = data?.dimensions?.geographies?.all_geographies?.[0] || marketScopeLabel(market)
   const segmentType = Object.keys(data?.dimensions?.segments ?? {})[0] ?? null
 
-  const buyers = buyerSegments(flavour)
-  const segments = questionnaire(subject, segmentType)
+  const isConsumer = kind === 'b2c'
+  const buyers = isConsumer ? consumerSegments(subject) : buyerSegments(flavour)
+  const segments = isConsumer
+    ? consumerQuestionnaire(subject, segmentType)
+    : questionnaire(subject, segmentType)
   const questionCount = segments.reduce((sum, s) => sum + s.questions.length, 0)
+  const module = isConsumer ? 'Voice of Customer (B2C)' : 'Voice of Customer (B2B)'
 
   return {
-    kind: 'b2b',
+    kind,
     industry: market,
-    module: 'Voice of Customer (B2B)',
+    module,
     geo,
     sector: subject,
     sampleSize: DEMO_SAMPLE_SIZE,
@@ -257,19 +360,21 @@ export function buildDemoBuyerSurvey(
       definition: '',
       whoBuys: buyers.whoBuys,
       buyerSegments: buyers.segments,
-      organisationsHeading: 'Organisations We Surveyed',
-      organisations: organisations(flavour),
-      designationsHeading: 'Designations We Spoke To',
-      designations: DESIGNATIONS,
+      organisationsHeading: isConsumer ? 'Households We Surveyed' : 'Organisations We Surveyed',
+      organisations: isConsumer ? B2C_HOUSEHOLDS : organisations(flavour),
+      designationsHeading: isConsumer ? 'Who We Spoke To' : 'Designations We Spoke To',
+      designations: isConsumer ? B2C_RESPONDENT_PROFILE : DESIGNATIONS,
       respondentProfile: '',
     },
     methodology: {
-      approach: `Structured interviews with verified ${subject.toLowerCase()} buyers, screened on category ownership and recent purchase activity.`,
+      approach: isConsumer
+        ? `An online panel of verified ${subject.toLowerCase()} shoppers, screened on category purchase in the last 12 months and on their role in the household decision.`
+        : `Structured interviews with verified ${subject.toLowerCase()} buyers, screened on category ownership and recent purchase activity.`,
       sampleSize: DEMO_SAMPLE_SIZE,
       geography: geo,
-      module: 'Voice of Customer (B2B)',
+      module,
       reportCovers: segments.map((s) => s.title),
-      whoQualified: DESIGNATIONS,
+      whoQualified: isConsumer ? B2C_RESPONDENT_PROFILE : DESIGNATIONS,
       reportConfidence: '',
     },
     executiveSummary: null,

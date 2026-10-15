@@ -42,6 +42,7 @@ import { AccoladesSection } from '@/components/AccoladesSection'
 import { WhyCoherentSection } from '@/components/WhyCoherentSection'
 import { CountryGate } from '@/components/CountryGate'
 import { marketScopeLabel } from '@/lib/market-scope'
+import { distributorShortLabel } from '@/lib/module-labels'
 import { DemoDataNote } from '@/components/DemoDataNote'
 import Image from 'next/image'
 
@@ -105,6 +106,7 @@ export function DashboardShell({ readOnly = false }: Props) {
     showDemoNote,
     showDemoQuadrant,
     showDemoB2bSurvey,
+    showDemoB2cSurvey,
     logoChoice,
     b2bSurveyData,
     b2cSurveyData,
@@ -138,7 +140,7 @@ export function DashboardShell({ readOnly = false }: Props) {
    */
   const hasNamedMarket = !!data || !!dashboardName
   const hasB2bSurvey = hasUploadedB2bSurvey || (showDemoB2bSurvey && hasNamedMarket)
-  const hasB2cSurvey = !!b2cSurveyData?.segments?.length
+  const hasB2cSurvey = !!b2cSurveyData?.segments?.length || (showDemoB2cSurvey && hasNamedMarket)
   const hasQuadrant =
     !!(quadrantData?.charted?.length || quadrantData?.others?.length) ||
     (showDemoQuadrant && hasNamedMarket)
@@ -254,17 +256,19 @@ export function DashboardShell({ readOnly = false }: Props) {
   // below has no KPIs or filters to render, so standalone datasets get their own
   // lightweight shell with a tab per available dataset.
   if (!hasMarketData && (hasCustomerWorkbook || hasDistributorWorkbook || hasAnySurvey)) {
-    const typeLabel =
+    // "Channel Partners" on a technology market, "Distributors" elsewhere.
+    const distributorLabel = distributorShortLabel(dashboardName)
+    const intelligenceLabel =
       intelligenceType === 'distributor'
-        ? 'Distributor'
+        ? distributorLabel
         : intelligenceType === 'both'
-        ? 'Customer & Distributor'
-        : 'Customer'
+        ? `Customer Intelligence & ${distributorLabel}`
+        : 'Customer Intelligence'
 
     const hasWorkbook = hasCustomerWorkbook || hasDistributorWorkbook
     // Panels available in this cut-down shell, in display order.
     const standalonePanels: { key: string; label: string }[] = [
-      ...(hasWorkbook ? [{ key: 'intelligence', label: `${typeLabel} Intelligence` }] : []),
+      ...(hasWorkbook ? [{ key: 'intelligence', label: intelligenceLabel }] : []),
       ...(hasB2bSurvey ? [{ key: 'b2b-survey', label: 'Voice of Customer - B2B' }] : []),
       ...(hasB2cSurvey ? [{ key: 'b2c-survey', label: 'Voice of Customer - B2C' }] : []),
       ...(hasQuadrant ? [{ key: 'coherent-quadrant', label: 'Vendor Intelligence (Coherent Quadrant)' }] : []),
@@ -273,7 +277,7 @@ export function DashboardShell({ readOnly = false }: Props) {
       ? standaloneTab
       : standalonePanels[0]?.key
     const headingLabel = hasWorkbook
-      ? `${typeLabel} Intelligence`
+      ? intelligenceLabel
       : hasB2bSurvey && hasB2cSurvey
       ? 'Voice of Customer'
       : hasB2bSurvey
@@ -465,7 +469,7 @@ export function DashboardShell({ readOnly = false }: Props) {
                         {isChartVisible('waterfall') && <button onClick={() => setActiveTab('waterfall')} className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'waterfall' ? 'border-blue-500 text-blue-600' : 'border-transparent text-black hover:text-black hover:border-gray-300'}`}>Waterfall</button>}
                         {isChartVisible('bubble') && <button onClick={() => setActiveTab('bubble')} className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'bubble' ? 'border-blue-500 text-blue-600' : 'border-transparent text-black hover:text-black hover:border-gray-300'}`}>Bubble Chart</button>}
                         {isChartVisible('customer-intelligence') && <button onClick={() => setActiveTab('customer-intelligence')} className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'customer-intelligence' ? 'border-blue-500 text-blue-600' : 'border-transparent text-black hover:text-black hover:border-gray-300'}`}>Customer Intelligence</button>}
-                        {isChartVisible('distributor-intelligence') && <button onClick={() => setActiveTab('distributor-intelligence')} className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'distributor-intelligence' ? 'border-blue-500 text-blue-600' : 'border-transparent text-black hover:text-black hover:border-gray-300'}`}>Distributor Intelligence</button>}
+                        {isChartVisible('distributor-intelligence') && <button onClick={() => setActiveTab('distributor-intelligence')} className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'distributor-intelligence' ? 'border-blue-500 text-blue-600' : 'border-transparent text-black hover:text-black hover:border-gray-300'}`}>{distributorShortLabel(dashboardName)}</button>}
                         {isChartVisible('pricing-grouped-bar') && <button onClick={() => setActiveTab('pricing-bar')} className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'pricing-bar' ? 'border-blue-500 text-blue-600' : 'border-transparent text-black hover:text-black hover:border-gray-300'}`}>Pricing Bar</button>}
                         {isChartVisible('pricing-multi-line') && <button onClick={() => setActiveTab('pricing-line')} className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'pricing-line' ? 'border-blue-500 text-blue-600' : 'border-transparent text-black hover:text-black hover:border-gray-300'}`}>Pricing Line</button>}
                         {isChartVisible('pricing-heatmap') && <button onClick={() => setActiveTab('pricing-heatmap')} className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'pricing-heatmap' ? 'border-blue-500 text-blue-600' : 'border-transparent text-black hover:text-black hover:border-gray-300'}`}>Pricing Heatmap</button>}

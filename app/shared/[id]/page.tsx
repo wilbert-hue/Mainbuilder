@@ -36,6 +36,7 @@ export default function SharedDashboardPage() {
     setShowDemoNote,
     setShowDemoQuadrant,
     setShowDemoB2bSurvey,
+    setShowDemoB2cSurvey,
     setStaticCustomerProp1,
     setStaticDistributorProp1,
     setLogoChoice,
@@ -90,6 +91,7 @@ export default function SharedDashboardPage() {
       setShowDemoNote(snapshot.showDemoNote || false)
       setShowDemoQuadrant(snapshot.showDemoQuadrant || false)
       setShowDemoB2bSurvey(snapshot.showDemoB2bSurvey || false)
+      setShowDemoB2cSurvey(snapshot.showDemoB2cSurvey || false)
       setStaticCustomerProp1(snapshot.staticCustomerProp1 || false)
       setStaticDistributorProp1(snapshot.staticDistributorProp1 || false)
       setLogoChoice((snapshot.logoChoice === 'wmr' || snapshot.logoChoice === 'mi') ? snapshot.logoChoice : 'coherent')

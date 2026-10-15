@@ -32,6 +32,7 @@ export function DashboardBuilderDownload() {
     showDemoNote,
     showDemoQuadrant,
     showDemoB2bSurvey,
+    showDemoB2cSurvey,
     staticCustomerProp1,
     staticDistributorProp1,
     dashboardId,
@@ -82,6 +83,7 @@ export function DashboardBuilderDownload() {
         showDemoNote: showDemoNote ?? false,
         showDemoQuadrant: showDemoQuadrant ?? false,
         showDemoB2bSurvey: showDemoB2bSurvey ?? false,
+        showDemoB2cSurvey: showDemoB2cSurvey ?? false,
         staticCustomerProp1: staticCustomerProp1 ?? false,
         staticDistributorProp1: staticDistributorProp1 ?? false,
       }

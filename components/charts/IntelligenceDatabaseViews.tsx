@@ -1,8 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Users, Building2 } from 'lucide-react'
 import { useDashboardStore } from '@/lib/store'
+import { distributorDatabaseTitle } from '@/lib/module-labels'
 import { CustomerIntelligenceTable } from '@/components/charts/CustomerIntelligenceTable'
 import DistributorsIntelligence from '@/components/charts/DistributorsIntelligenceTable'
 
@@ -22,6 +22,7 @@ export function IntelligenceDatabaseViews({ preferredSource }: IntelligenceDatab
     distributorProposition2Data,
     distributorProposition3Data,
     intelligenceType,
+    dashboardName,
   } = useDashboardStore()
 
   const hasCustomerWorkbook = !!(
@@ -39,8 +40,6 @@ export function IntelligenceDatabaseViews({ preferredSource }: IntelligenceDatab
     (intelligenceType === 'customer' || intelligenceType === 'both') && hasCustomerWorkbook
   const showDistributor =
     (intelligenceType === 'distributor' || intelligenceType === 'both') && hasDistributorWorkbook
-  const showSourceTabs = showCustomer && showDistributor
-
   const [activeSource, setActiveSource] = useState<IntelligenceSource>('customer')
 
   useEffect(() => {
@@ -49,46 +48,20 @@ export function IntelligenceDatabaseViews({ preferredSource }: IntelligenceDatab
     if (preferredSource === 'distributor' && showDistributor) setActiveSource('distributor')
   }, [preferredSource, showCustomer, showDistributor])
 
-  const effectiveSource: IntelligenceSource = showSourceTabs
-    ? activeSource
-    : showDistributor
-      ? 'distributor'
-      : 'customer'
-
-  const tabClass = (source: IntelligenceSource) =>
-    [
-      'inline-flex items-center gap-2 px-5 py-3 text-sm font-medium border-b-2 transition-colors',
-      effectiveSource === source
-        ? 'border-blue-600 text-blue-600'
-        : 'border-transparent text-slate-600 hover:text-slate-900 hover:border-slate-300',
-    ].join(' ')
+  /**
+    * The dashboard's own navigation already switches between the two
+    * directories, so this view renders whichever one it was asked for and
+    * carries no tab strip of its own.
+    */
+  const effectiveSource: IntelligenceSource =
+    showCustomer && showDistributor
+      ? activeSource
+      : showDistributor
+        ? 'distributor'
+        : 'customer'
 
   return (
     <div className="w-full">
-      {showSourceTabs && (
-        <nav
-          className="flex border-b border-slate-200 mb-6 -mt-1"
-          aria-label="Customer and distributor intelligence"
-        >
-          <button
-            type="button"
-            onClick={() => setActiveSource('customer')}
-            className={tabClass('customer')}
-          >
-            <Users className="h-4 w-4" aria-hidden />
-            Customer Intelligence
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveSource('distributor')}
-            className={tabClass('distributor')}
-          >
-            <Building2 className="h-4 w-4" aria-hidden />
-            Distributor Intelligence
-          </button>
-        </nav>
-      )}
-
       {effectiveSource === 'customer' && showCustomer && (
         <CustomerIntelligenceTable title="B2B - Customer Intelligence Database - Existing customers and Potential customers" />
       )}
@@ -97,7 +70,7 @@ export function IntelligenceDatabaseViews({ preferredSource }: IntelligenceDatab
         (hasDistributorWorkbook ? (
           <CustomerIntelligenceTable
             intelligenceSource="distributor"
-            title="Distributor Intelligence Database - Existing distributors and Potential distributors"
+            title={distributorDatabaseTitle(dashboardName)}
           />
         ) : (
           <DistributorsIntelligence title="Distributors Intelligence Database" height={500} />

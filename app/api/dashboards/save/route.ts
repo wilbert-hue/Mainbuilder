@@ -64,7 +64,10 @@ export async function POST(request: NextRequest) {
   } = body
 
   // A demo dashboard carries no upload: its market name and toggle are the input.
-  const hasDemoReport = body.showDemoQuadrant === true || body.showDemoB2bSurvey === true
+  const hasDemoReport =
+    body.showDemoQuadrant === true ||
+    body.showDemoB2bSurvey === true ||
+    body.showDemoB2cSurvey === true
 
   if (!data && !rawIntelligenceData && !pricingAnalysisData && !b2bSurveyData && !b2cSurveyData && !quadrantData && !hasDemoReport) {
     return NextResponse.json(
@@ -136,6 +139,7 @@ export async function POST(request: NextRequest) {
       showDemoNote: body.showDemoNote === true,
       showDemoQuadrant: body.showDemoQuadrant === true,
       showDemoB2bSurvey: body.showDemoB2bSurvey === true,
+      showDemoB2cSurvey: body.showDemoB2cSurvey === true,
       staticCustomerProp1: body.staticCustomerProp1 === true,
       staticDistributorProp1: body.staticDistributorProp1 === true,
       logoChoice: (['wmr', 'mi'].includes(body.logoChoice as string) ? body.logoChoice : 'coherent') as 'coherent' | 'wmr' | 'mi',

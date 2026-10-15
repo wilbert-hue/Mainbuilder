@@ -306,13 +306,15 @@ function MethodologyPanel({ report }: { report: BuyerSurveyReport }) {
 // ── Main view ───────────────────────────────────────────────────────────────
 
 export function BuyerSurveyView({ kind }: Props) {
-  const { b2bSurveyData, b2cSurveyData, showDemoB2bSurvey, data, dashboardName } = useDashboardStore()
+  const { b2bSurveyData, b2cSurveyData, showDemoB2bSurvey, showDemoB2cSurvey, data, dashboardName } =
+    useDashboardStore()
   const uploaded = kind === 'b2c' ? b2cSurveyData : b2bSurveyData
+  const demoEnabled = kind === 'b2c' ? showDemoB2cSurvey : showDemoB2bSurvey
 
   /** No analyst export, demo toggled on — write the questionnaire from the market. */
   const demo = useMemo(
-    () => (!uploaded && kind === 'b2b' && showDemoB2bSurvey ? buildDemoBuyerSurvey(data, dashboardName) : null),
-    [uploaded, kind, showDemoB2bSurvey, data, dashboardName]
+    () => (!uploaded && demoEnabled ? buildDemoBuyerSurvey(data, dashboardName, kind) : null),
+    [uploaded, demoEnabled, kind, data, dashboardName]
   )
   /** In demo mode the questions are real; the answers behind them are withheld. */
   const isDemo = !uploaded && !!demo
