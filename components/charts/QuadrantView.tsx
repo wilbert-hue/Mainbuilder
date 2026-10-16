@@ -24,6 +24,7 @@ import { Lock } from 'lucide-react'
 import { useDashboardStore } from '@/lib/store'
 import { buildDemoQuadrant } from '@/lib/demo-quadrant'
 import { titleCaseGeography } from '@/lib/market-scope'
+import { DEMO_SUBSCRIBE_NOTE } from '@/components/DemoDataNote'
 import { buildDemoMethodology } from '@/lib/demo-methodology'
 import MethodologyPanel from './MethodologyPanel'
 import {
@@ -56,6 +57,16 @@ function clientFacing(text: string | null | undefined): string {
 }
 
 const OTHERS_PREVIEW_ROWS = 4
+
+/** Stands in for a section whose contents a demo dashboard withholds. */
+function LockedSectionBody() {
+  return (
+    <div className="flex items-center gap-2 rounded-lg border border-dashed border-amber-300 bg-amber-50/60 px-4 py-6 text-sm font-semibold text-amber-900">
+      <Lock className="h-4 w-4 shrink-0 text-amber-600" />
+      {DEMO_SUBSCRIBE_NOTE}
+    </div>
+  )
+}
 
 // ── Small pieces ────────────────────────────────────────────────────────────
 
@@ -519,7 +530,8 @@ export function QuadrantView() {
       {(report.marketDefinition || report.providerCategories.length > 0) && (
         <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <h2 className="mb-3 text-lg font-bold text-slate-900">Market Classification</h2>
-          <div className="grid gap-4 md:grid-cols-2">
+          {isDemo && <LockedSectionBody />}
+          <div className={`grid gap-4 md:grid-cols-2 ${isDemo ? 'hidden' : ''}`}>
             <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-4">
               <div className="mb-1 font-bold text-slate-900">Market</div>
               <div className="mb-3 text-[0.92rem] text-slate-700">{report.market}</div>
@@ -553,12 +565,15 @@ export function QuadrantView() {
       {(xNames.length > 0 || yNames.length > 0) && (
         <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <h2 className="mb-2 text-lg font-bold text-slate-900">Market Scoring Parameters</h2>
-          <p className="mb-4 text-[0.92rem] leading-relaxed text-slate-500">
-            The X and Y axes and these {xNames.length + yNames.length} parameters were defined for{' '}
-            <strong className="text-slate-700">{report.market}</strong> and form the basis of the
-            company scores below.
-          </p>
-          <div className="grid gap-4 md:grid-cols-2">
+          {isDemo && <LockedSectionBody />}
+          {!isDemo && (
+            <p className="mb-4 text-[0.92rem] leading-relaxed text-slate-500">
+              The X and Y axes and these {xNames.length + yNames.length} parameters were defined for{' '}
+              <strong className="text-slate-700">{report.market}</strong> and form the basis of the
+              company scores below.
+            </p>
+          )}
+          <div className={`grid gap-4 md:grid-cols-2 ${isDemo ? 'hidden' : ''}`}>
             {[
               { label: `X — ${report.xAxis.name}`, names: xNames },
               { label: `Y — ${report.yAxis.name}`, names: yNames },
