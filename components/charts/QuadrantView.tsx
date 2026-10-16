@@ -975,7 +975,7 @@ export function QuadrantView() {
       <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
         {primaryResearch.length > 0 && (
           <div className="mb-5 overflow-hidden rounded-lg border border-slate-200">
-            <MethodologyPanel sections={primaryResearch} />
+            <MethodologyPanel sections={primaryResearch} locked />
           </div>
         )}
         <h2 className="mb-3 text-lg font-bold text-slate-900">Research Methodology</h2>

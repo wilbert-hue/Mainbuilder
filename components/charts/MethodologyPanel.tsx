@@ -9,7 +9,8 @@
  */
 
 import { useState } from 'react'
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown, Lock } from 'lucide-react'
+import { DEMO_SUBSCRIBE_NOTE } from '@/components/DemoDataNote'
 import type { MethodologySection } from '@/lib/intelligence-sheet-types'
 
 /** Section tints, in the order the workbook uses them. */
@@ -19,7 +20,18 @@ const TONES = [
   { header: 'bg-orange-50 hover:bg-orange-100 border-orange-200', marker: 'text-orange-700' },
 ]
 
-export default function MethodologyPanel({ sections }: { sections: MethodologySection[] }) {
+export default function MethodologyPanel({
+  sections,
+  locked = false,
+}: {
+  sections: MethodologySection[]
+  /**
+   * Withhold the section bodies. A generated methodology lists organisations,
+   * job titles and trigger signals that were written from the market name, not
+   * researched, so a demo dashboard shows the shape and locks the content.
+   */
+  locked?: boolean
+}) {
   // Collapsed by default: the table is what the reader came for.
   const [openIndex, setOpenIndex] = useState<number | null>(null)
 
@@ -53,7 +65,12 @@ export default function MethodologyPanel({ sections }: { sections: MethodologySe
                 />
               </button>
 
-              {isOpen && (
+              {isOpen && (locked && section.groups.length > 0 ? (
+                <div className="flex items-center gap-2 bg-white px-4 py-4 text-xs font-semibold text-slate-400">
+                  <Lock className="h-3.5 w-3.5 shrink-0" />
+                  {DEMO_SUBSCRIBE_NOTE}
+                </div>
+              ) : (
                 <div className="px-4 py-3 space-y-3 bg-white">
                   {section.groups.map((group, g) => (
                     <div key={g} className="space-y-1.5">
@@ -79,7 +96,7 @@ export default function MethodologyPanel({ sections }: { sections: MethodologySe
                     </p>
                   ))}
                 </div>
-              )}
+              ))}
             </div>
           )
         })}

@@ -310,7 +310,7 @@ function PropositionTableDashboard({
       {/* Methodology — how the directory below was assembled. Collapsible, as
           the source workbook's outline groups are. */}
       {data.methodology && data.methodology.length > 0 && (
-        <MethodologyPanel sections={data.methodology} />
+        <MethodologyPanel sections={data.methodology} locked={templateMode} />
       )}
 
       {/* Sheet preamble — the title/definition lines that sit above the table in
