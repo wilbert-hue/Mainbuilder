@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { dashboardIdFromParam } from '@/lib/dashboard-slug'
 import { useParams } from 'next/navigation'
 import { useDashboardStore } from '@/lib/store'
 import { DashboardShell } from '@/components/DashboardShell'
@@ -15,7 +16,7 @@ export default function SharedDashboardPage() {
   // Support both formats:
   //   new: "global-market-of-asp--cdabd5ce93d5f120ffddd3ee"  → extract after last "--"
   //   old: "cdabd5ce93d5f120ffddd3ee"                        → use as-is
-  const id = rawParam?.includes('--') ? rawParam.split('--').pop()! : rawParam
+  const id = dashboardIdFromParam(rawParam)
 
   const {
     setData,

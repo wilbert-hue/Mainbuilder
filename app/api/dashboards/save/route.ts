@@ -17,10 +17,9 @@ import {
   persistJsonField,
 } from '@/lib/dashboard-snapshot-persist'
 import { getCurrentUser } from '@/lib/auth/current-user'
+import { slugifyDashboardName } from '@/lib/dashboard-slug'
 
-function slugify(name: string): string {
-  return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) || 'dashboard'
-}
+
 import type { ComparisonData } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
@@ -180,7 +179,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const shareUrl = `${origin}/shared/${slugify(payload.name)}--${id}`
+    const shareUrl = `${origin}/shared/${slugifyDashboardName(payload.name)}--${id}`
     return NextResponse.json(
       { id, shareUrl },
       { status: 201 }
