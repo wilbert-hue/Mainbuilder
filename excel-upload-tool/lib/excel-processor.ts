@@ -517,13 +517,19 @@ export function convertExcelToJson(excelBuffer: Buffer, isCsv: boolean = false):
   const firstSheetName = workbook.SheetNames[0]
   const worksheet = workbook.Sheets[firstSheetName]
   
-  // Convert to JSON array
-  // For CSV, we want to parse values properly, so use raw: false
-  // For Excel, raw: false also helps with number parsing
-  const jsonData = XLSX.utils.sheet_to_json(worksheet, { 
-    header: 1, 
+  // Convert to JSON array.
+  //
+  // Excel is read raw, so a cell carries the number it stores rather than the
+  // number it displays. Reading formatted values rounded 1344.53 to "1345"
+  // because the column was formatted to zero decimals, and the segment totals
+  // we derive were then sums of rounded parts — 8863 where the file says 8861.
+  //
+  // CSV has no stored/displayed distinction: every cell is text, and cleanValue
+  // parses it.
+  const jsonData = XLSX.utils.sheet_to_json(worksheet, {
+    header: 1,
     defval: '',
-    raw: false, // Always parse values (convert strings to numbers where possible)
+    raw: !isCsv,
     blankrows: false // Skip blank rows
   }) as any[][]
   

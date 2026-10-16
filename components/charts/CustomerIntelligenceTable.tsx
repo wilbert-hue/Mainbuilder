@@ -205,6 +205,24 @@ const HIDDEN_COLUMNS: Record<'customer' | 'distributor', string[]> = {
 const isRowNumberColumn = (header: string): boolean =>
   /^(#|s\.?\s*no\.?|sr\.?\s*no\.?|serial\s*no\.?)$/i.test(header.trim())
 
+/**
+ * Brand palette for the Procurement Intelligence band at the end of a customer
+ * directory. Columns cycle through it left to right, greens deepening into
+ * blues; each column's header sits over a tint of its own colour.
+ */
+const PROCUREMENT_PALETTE = [
+  { head: '#D9ED92', cell: '#F5FAE3', border: '#C7E27A', text: '#33400F' },
+  { head: '#B5E48C', cell: '#EAF7DD', border: '#9FD873', text: '#2C4214' },
+  { head: '#99D98C', cell: '#E4F4DE', border: '#83CC77', text: '#223B1B' },
+  { head: '#76C893', cell: '#DEF1E5', border: '#5FB881', text: '#17352A' },
+  { head: '#52B69A', cell: '#D8EEE8', border: '#3FA287', text: '#10312A' },
+  { head: '#34A0A4', cell: '#D4EAEB', border: '#2A8C90', text: '#0C2D2E' },
+  { head: '#168AAD', cell: '#D2E6EF', border: '#137693', text: '#082831' },
+  { head: '#1A759F', cell: '#D4E2EA', border: '#15617F', text: '#07222D' },
+  { head: '#1E6091', cell: '#D5DFEA', border: '#184F77', text: '#061D2B' },
+  { head: '#184E77', cell: '#D4DCE5', border: '#123D5E', text: '#051825' },
+]
+
 const LOCKED_CELL_NOTE = 'Kindly subscribe to access these details'
 
 /**
@@ -268,13 +286,11 @@ function PropositionTableDashboard({
     !!accentBand && accentBand.colSpan > 0 && index >= accentBand.startCol
   /** Each procurement column gets its own tint so they read as separate facets. */
   const accentTone = (index: number) => {
-    const tones = [
-      { head: 'bg-amber-100 text-amber-900 border-amber-200', cell: 'bg-amber-50/70 border-amber-100' },
-      { head: 'bg-emerald-100 text-emerald-900 border-emerald-200', cell: 'bg-emerald-50/70 border-emerald-100' },
-      { head: 'bg-violet-100 text-violet-900 border-violet-200', cell: 'bg-violet-50/70 border-violet-100' },
-      { head: 'bg-rose-100 text-rose-900 border-rose-200', cell: 'bg-rose-50/70 border-rose-100' },
-    ]
-    return tones[(index - (accentBand?.startCol ?? 0)) % tones.length]
+    const tone = PROCUREMENT_PALETTE[(index - (accentBand?.startCol ?? 0)) % PROCUREMENT_PALETTE.length]
+    return {
+      head: { backgroundColor: tone.head, color: tone.text, borderColor: tone.border },
+      cell: { backgroundColor: tone.cell, borderColor: tone.border },
+    }
   }
   const hidden = HIDDEN_COLUMNS[intelligenceSource]
   // Banded headers carry colSpans tied to the full column list, so dropping a
@@ -373,9 +389,8 @@ function PropositionTableDashboard({
               {headers.map((header, index) => (
                 <th
                   key={index}
-                  className={`px-3 py-2.5 text-left text-xs font-semibold border-r last:border-r-0 min-w-[11rem] max-w-[16rem] ${
-                    isAccentColumn(index) ? accentTone(index).head : 'border-sky-200/80'
-                  }`}
+                  className="px-3 py-2.5 text-left text-xs font-semibold border-r last:border-r-0 min-w-[11rem] max-w-[16rem] border-sky-200/80"
+                  style={isAccentColumn(index) ? accentTone(index).head : undefined}
                   title={transformHeader(header, currency)}
                 >
                   {transformHeader(header, currency)}
@@ -392,9 +407,8 @@ function PropositionTableDashboard({
                 {headers.map((header, colIndex) => (
                   <td
                     key={colIndex}
-                    className={`px-3 py-2.5 text-sm text-slate-800 border-b border-slate-100 border-r last:border-r-0 align-top min-w-[11rem] max-w-[18rem] ${
-                      isAccentColumn(colIndex) ? accentTone(colIndex).cell : 'border-slate-100/80'
-                    }`}
+                    className="px-3 py-2.5 text-sm text-slate-800 border-b border-slate-100 border-r last:border-r-0 align-top min-w-[11rem] max-w-[18rem] border-slate-100/80"
+                    style={isAccentColumn(colIndex) ? accentTone(colIndex).cell : undefined}
                   >
                     {isRowNumberColumn(String(header)) ? (
                       <span>{rowIndex + 1}</span>
