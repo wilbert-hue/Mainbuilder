@@ -20,6 +20,9 @@ import {
   organisationsFor,
   type MarketFlavour,
 } from '@/lib/market-flavour'
+import { buildB2bQuestionnaire } from '@/lib/demo-b2b-questions'
+import { buildB2cQuestionnaire } from '@/lib/demo-b2c-questions'
+import { consumerOfferingOf, offeringTypeOf } from '@/lib/demo-survey-offering'
 import type {
   BuyerSegment,
   BuyerSurveyQuestion,
@@ -106,155 +109,44 @@ function buyerSegments(flavour: MarketFlavour): { whoBuys: string; segments: Buy
 
 /** Consumer-side job titles do not apply; a B2C panel is profiled instead. */
 const B2C_RESPONDENT_PROFILE = [
-  'Primary household purchase decision maker',
+  'Primary household decision maker',
   'Joint decision maker with a partner',
   'Buys for personal use only',
   'Buys on behalf of a dependent or family member',
-  'First-time category buyer in the last 12 months',
-  'Repeat buyer across multiple brands',
+  'First time category buyer',
+  'Repeat buyer across several brands',
 ]
 
 /** Who the consumer respondents are, by household rather than by firm. */
 const B2C_HOUSEHOLDS = [
-  'Urban single-person households',
+  'Urban single person households',
   'Young families with children at home',
-  'Dual-income households without children',
-  'Multi-generational households',
-  'Retired and empty-nest households',
+  'Dual income households without children',
+  'Multi generational households',
+  'Retired and empty nest households',
 ]
 
-/**
- * The B2C questionnaire: one shopper answering for themselves, so it asks
- * about habit, price sensitivity and where they buy — not contracts, budgets
- * or approval authority, which no consumer has.
- */
-function consumerQuestionnaire(subject: string, segmentType: string | null): BuyerSurveySegment[] {
-  const s = subject.toLowerCase()
-  const byType = segmentType ? ` by ${segmentType.toLowerCase()}` : ''
-
-  return buildSections(
-    [
-      {
-        title: 'Brand Choice and Loyalty',
-        focus: `Which ${s} brands shoppers actually buy, and how readily they switch.`,
-        questions: [
-          `Which ${s} brand did you purchase most recently?`,
-          `How long have you been buying your current ${s} brand?`,
-          `How likely are you to switch ${s} brand on your next purchase?`,
-          `What would most often make you try a different ${s} brand?`,
-        ],
-      },
-      {
-        title: 'Purchase Drivers',
-        focus: `What a shopper weighs in the aisle when comparing ${s}${byType}.`,
-        questions: [
-          `Which factor matters most when you choose a ${s} product?`,
-          `How much does price influence your ${s} purchase decision?`,
-          `Which claim on the packaging most influences your ${s} choice?`,
-          `Would you pay more for a premium or improved ${s} product?`,
-        ],
-      },
-      {
-        title: 'Where and How You Buy',
-        focus: `The channels and occasions behind a ${s} purchase.`,
-        questions: [
-          `Where do you most often buy ${s}?`,
-          `How often do you purchase ${s}?`,
-          `Do you research ${s} online before buying in store?`,
-          `Which promotion type most often prompts you to buy ${s}?`,
-        ],
-      },
-      {
-        title: 'Experience and Outlook',
-        focus: `Satisfaction with ${s} today, and intent over the year ahead.`,
-        questions: [
-          `How satisfied are you with the ${s} product you currently use?`,
-          `Would you recommend your current ${s} brand to family or friends?`,
-          `Do you expect to spend more or less on ${s} over the next 12 months?`,
-          `What would most improve your experience of buying ${s}?`,
-        ],
-      },
-    ],
-    'single_select'
-  )
-}
-
-/**
- * The questionnaire, as section → questions. `subject` is the market and
- * `segmentType` the taxonomy the market is cut by, so the wording lands on
- * this market rather than reading as boilerplate.
- */
-function questionnaire(subject: string, segmentType: string | null): BuyerSurveySegment[] {
-  const s = subject.toLowerCase()
-  const byType = segmentType ? ` by ${segmentType.toLowerCase()}` : ''
-
-  const sections: { title: string; focus: string; questions: string[] }[] = [
-    {
-      title: 'Brand and Supplier Choice',
-      focus: `Which suppliers buyers of ${s} actually procure from, and how settled those relationships are.`,
-      questions: [
-        `Which primary brand did your organisation procure most frequently for ${s} over the past year?`,
-        `How many suppliers does your organisation currently hold active ${s} contracts with?`,
-        `Has your organisation switched its primary ${s} supplier in the last 24 months?`,
-        `Which factor most often triggers a review of your current ${s} supplier?`,
-      ],
-    },
-    {
-      title: 'Purchase Criteria',
-      focus: `What buyers weigh when they compare ${s} offerings${byType}.`,
-      questions: [
-        `Which criterion carries the most weight when selecting a ${s} supplier?`,
-        `How important is total cost of ownership relative to upfront price for ${s}?`,
-        `Which product or service attribute most often rules a ${s} vendor out of consideration?`,
-        `What level of technical support does your organisation expect bundled with ${s}?`,
-      ],
-    },
-    {
-      title: 'Procurement Process',
-      focus: `How a ${s} purchase moves from need to signed contract.`,
-      questions: [
-        `Who holds final approval authority for ${s} purchases in your organisation?`,
-        `How long does a typical ${s} procurement cycle take from requirement to contract?`,
-        `Which procurement route does your organisation most often use for ${s}?`,
-        `How frequently are ${s} contracts renegotiated or re-tendered?`,
-      ],
-    },
-    {
-      title: 'Spend and Outlook',
-      focus: `Where ${s} budgets are heading over the next twelve months.`,
-      questions: [
-        `How is your organisation's ${s} budget expected to change over the next 12 months?`,
-        `What share of your category spend currently goes to ${s}?`,
-        `Which development would most increase your organisation's ${s} spend?`,
-        `What is the single biggest barrier to expanding your ${s} procurement?`,
-      ],
-    },
-  ]
-
-  return buildSections(sections, 'single_select')
-}
-
-/** Number the questions across the whole report and leave the answers empty. */
-function buildSections(
-  sections: { title: string; focus: string; questions: string[] }[],
-  type: string
+/** Turn generated text into the shape the view renders, answers withheld. */
+function toSurveySegments(
+  sections: { title: string; focus: string; questions: { text: string; type: string }[] }[],
+  sampleSize: number
 ): BuyerSurveySegment[] {
   let counter = 0
-  return sections.map((section, sectionIndex) => ({
-    id: `demo-section-${sectionIndex + 1}`,
+  return sections.map((section, i) => ({
+    id: `demo-section-${i + 1}`,
     title: section.title,
     focus: section.focus,
-    questions: section.questions.map<BuyerSurveyQuestion>((text) => {
+    questions: section.questions.map<BuyerSurveyQuestion>((q) => {
       counter += 1
       return {
         id: `Q${counter}`,
-        text,
-        type,
+        text: q.text,
+        type: q.type,
         chartType: null,
         // Empty by design: the view locks the chart and the takeaway.
         options: [],
         keyInsight: '',
-        n: DEMO_SAMPLE_SIZE,
+        n: sampleSize,
         confidence: null,
         sources: [],
       }
@@ -284,6 +176,29 @@ function consumerSegments(subject: string): { whoBuys: string; segments: BuyerSe
  * contracts, budget and approval. Returns null only when there is no market
  * to name.
  */
+/**
+ * Sample sizes the framework asks for: a B2B study of one country runs 30 to
+ * 35 buyers, a global one 100 to 150; a consumer panel runs into the hundreds.
+ * Derived from the market name so a dashboard always quotes the same number.
+ */
+function sampleSizeFor(market: string, geo: string, kind: 'b2b' | 'b2c'): number {
+  let hash = 0
+  for (let i = 0; i < market.length; i++) hash = (hash * 31 + market.charCodeAt(i)) >>> 0
+  const isGlobal = /^global$/i.test(geo.trim())
+  if (kind === 'b2c') return 300 + (hash % 400)
+  if (isGlobal) return 100 + (hash % 50)
+  return 30 + (hash % 6)
+}
+
+/**
+ * Build the demo buyer survey for a market.
+ *
+ * A workbook is not required — the market name carries the questionnaire — so
+ * a dashboard can be this survey and nothing else. The B2C variant asks a
+ * shopper about what they bought, where and what they paid; the B2B one asks
+ * an organisation about buying, use, performance and future investment.
+ * Returns null only when there is no market to name.
+ */
 export function buildDemoBuyerSurvey(
   data: ComparisonData | null | undefined,
   dashboardName?: string | null,
@@ -295,15 +210,18 @@ export function buildDemoBuyerSurvey(
   const subject = marketSubject(market)
   const flavour = marketFlavour(subject)
   const geo = data?.dimensions?.geographies?.all_geographies?.[0] || marketScopeLabel(market)
-  const segmentType = Object.keys(data?.dimensions?.segments ?? {})[0] ?? null
-
   const isConsumer = kind === 'b2c'
+  const sampleSize = sampleSizeFor(market, geo, kind)
+  const module = isConsumer ? 'Voice of Customer (B2C)' : 'Voice of Customer (B2B)'
+
   const buyers = isConsumer ? consumerSegments(subject) : buyerSegments(flavour)
   const segments = isConsumer
-    ? consumerQuestionnaire(subject, segmentType)
-    : questionnaire(subject, segmentType)
+    ? toSurveySegments(buildB2cQuestionnaire(subject, consumerOfferingOf(market)), sampleSize)
+    : toSurveySegments(buildB2bQuestionnaire(subject, geo, offeringTypeOf(market)), sampleSize)
   const questionCount = segments.reduce((sum, s) => sum + s.questions.length, 0)
-  const module = isConsumer ? 'Voice of Customer (B2C)' : 'Voice of Customer (B2B)'
+
+  const lower = subject.toLowerCase()
+  const where = /^global$/i.test(geo.trim()) ? 'worldwide' : `in ${geo}`
 
   return {
     kind,
@@ -311,12 +229,14 @@ export function buildDemoBuyerSurvey(
     module,
     geo,
     sector: subject,
-    sampleSize: DEMO_SAMPLE_SIZE,
+    sampleSize,
     analystName: '',
     analystTitle: '',
     sampleBreakdown: {},
     landscape: {
-      definition: '',
+      definition: isConsumer
+        ? `People who buy ${lower} for themselves or their home ${where}.`
+        : `Organisations that buy ${lower} ${where} for their own operations.`,
       whoBuys: buyers.whoBuys,
       buyerSegments: buyers.segments,
       organisationsHeading: isConsumer ? 'Households We Surveyed' : 'Organisations We Surveyed',
@@ -326,14 +246,21 @@ export function buildDemoBuyerSurvey(
       respondentProfile: '',
     },
     methodology: {
+      // The framework's wording, so the demo reads like the delivered report.
       approach: isConsumer
-        ? `An online panel of verified ${subject.toLowerCase()} shoppers, screened on category purchase in the last 12 months and on their role in the household decision.`
-        : `Structured interviews with verified ${subject.toLowerCase()} buyers, screened on category ownership and recent purchase activity.`,
-      sampleSize: DEMO_SAMPLE_SIZE,
+        ? `We surveyed ${sampleSize} verified buyers of ${lower} ${where} — each answering for themselves or their own household, not the market at large.`
+        : `We surveyed ${sampleSize} verified buyers with direct purchasing responsibility for ${lower} ${where} — each answering for their own organisation, not the market at large. Every response was cross checked against published trade and market data for accuracy.`,
+      sampleSize,
       geography: geo,
       module,
       reportCovers: segments.map((s) => s.title),
-      whoQualified: isConsumer ? B2C_RESPONDENT_PROFILE : designationsFor(flavour),
+      whoQualified: isConsumer
+        ? B2C_RESPONDENT_PROFILE.slice(0, 4)
+        : [
+            `Direct purchasing authority for ${lower}`,
+            'Involved in specifying or approving suppliers',
+            'Bought within the current purchase cycle',
+          ],
       reportConfidence: '',
     },
     executiveSummary: null,
