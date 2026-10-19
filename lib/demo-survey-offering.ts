@@ -15,6 +15,10 @@ export type OfferingType =
   | 'System'
   | 'Solution'
 
+/** A lifting platform is machinery; it must not match the software rule. */
+const MECHANICAL_PLATFORM =
+  /\b(aerial|work|elevating|access|lifting|scissor|boom|mast|loading|drilling|offshore)\s+platforms?\b/i
+
 /** Ordered: the first pattern that matches wins, so the narrow tests come first. */
 const RULES: { type: OfferingType; test: RegExp }[] = [
   {
@@ -50,6 +54,7 @@ const RULES: { type: OfferingType; test: RegExp }[] = [
 /** The offering type for a market, read off its name. Defaults to Product. */
 export function offeringTypeOf(marketName: string | null | undefined): OfferingType {
   const name = marketName ?? ''
+  if (MECHANICAL_PLATFORM.test(name)) return 'Equipment'
   for (const rule of RULES) if (rule.test.test(name)) return rule.type
   return 'Product'
 }

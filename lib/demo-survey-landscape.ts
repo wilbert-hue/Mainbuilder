@@ -85,9 +85,9 @@ const ORGANISATIONS: Record<MarketFlavour, string[]> = {
     'Contract manufacturing organisations',
   ],
   technology: [
-    'Multinational colocation operators',
-    'Regional colocation and edge operators',
-    'Large enterprises running their own estates',
+    'Large multinational enterprises',
+    'Mid market shared service centres',
+    'Regional managed service providers',
     'State owned telecom operators',
     'Government technology agencies',
   ],

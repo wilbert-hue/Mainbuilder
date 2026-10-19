@@ -20,6 +20,13 @@ const HEALTHCARE =
 const TECHNOLOGY =
   /\b(software|saas|platform|cloud|cyber\w*|analytics|digital|ai|artificial intelligence|machine learning|information technology|tech|technology|semiconductor|electronics|computing|network|networking|iot|telecom\w*|5g|blockchain|fintech|automation|robotic\w*|sensors?|devops|erp|crm|data ?cent(er|re)s?|colocation|hyperscale|servers?|storage)\b/i
 
+/**
+ * "Aerial work platform", "scissor platform" — machinery, not software. Caught
+ * before the technology test, which would otherwise match on "platform".
+ */
+const MECHANICAL_PLATFORM =
+  /\b(aerial|work|elevating|access|lifting|scissor|boom|mast|loading|drilling|offshore)\s+platforms?\b/i
+
 const ENERGY =
   /\b(energy|power|oil|gas|solar|wind|battery|batteries|grid|utility|utilities|renewable|fuel|hydrogen|nuclear|petrochemical|refin\w*|transmission|substations?|power ?lines?|vegetation management|grid infrastructure)\b/i
 
@@ -32,7 +39,7 @@ export function marketFlavour(marketName: string | null | undefined): MarketFlav
   const name = marketName ?? ''
   if (HEALTHCARE.test(name)) return 'healthcare'
   if (CONSUMER.test(name)) return 'consumer'
-  if (TECHNOLOGY.test(name)) return 'technology'
+  if (!MECHANICAL_PLATFORM.test(name) && TECHNOLOGY.test(name)) return 'technology'
   if (ENERGY.test(name)) return 'energy'
   return 'industrial'
 }
