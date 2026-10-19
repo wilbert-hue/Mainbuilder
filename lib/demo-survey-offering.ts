@@ -19,11 +19,11 @@ export type OfferingType =
 const RULES: { type: OfferingType; test: RegExp }[] = [
   {
     type: 'Service',
-    test: /\b(services?|servicing|inspection|testing|maintenance|consult\w*|training|logistics|outsourc\w*|repair|surveying|monitoring|trials?|audit\w*|certification)\b/i,
+    test: /\b(services?|servicing|inspection|testing|maintenance|consult\w*|training|logistics|outsourc\w*|repair|surveying|monitoring|trials?|audit\w*|certification|vegetation management|asset management|facility management|fleet management)\b/i,
   },
   {
     type: 'Platform',
-    test: /\b(platform|saas|software|app|apps|subscription|marketplace|portal|gis|erp|crm|analytics suite)\b/i,
+    test: /\b(platform|saas|software|apps?|subscription|marketplace|portal|gis|erp|crm|analytics suite|payable|receivable|invoice|workflow|rpa|accounting|billing)\b/i,
   },
   {
     type: 'Material / Ingredient',
@@ -31,15 +31,15 @@ const RULES: { type: OfferingType; test: RegExp }[] = [
   },
   {
     type: 'Equipment',
-    test: /\b(equipment|machine\w*|device|devices|instrument|pump|valve|electroly[sz]er|robot|robotics|drone|drones|vehicle|hardware|tool|tools|apparatus|systems? integrator|turbine|generator|compressor|battery|batteries|cell|cells)\b/i,
-  },
-  {
-    type: 'System',
-    test: /\b(system|systems|infrastructure|network|grid|automation|control|installation)\b/i,
+    test: /\b(equipment|machine\w*|device|devices|instrument|pump|valve|electroly[sz]ers?|robots?|robotics|drones?|vehicles?|hardware|tools?|apparatus|systems? integrator|turbines?|generators?|compressors?|battery|batteries|cells?|pumps?|valves?)\b/i,
   },
   {
     type: 'Solution',
     test: /\b(solution|solutions|digital twin|data cent(er|re)|smart city|end to end|managed)\b/i,
+  },
+  {
+    type: 'System',
+    test: /\b(system|systems|infrastructure|network|grid|automation|control|installation)\b/i,
   },
   {
     type: 'Technology',

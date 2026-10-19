@@ -14,15 +14,16 @@
 
 import type { ComparisonData } from '@/lib/types'
 import { marketScopeLabel, stripScopePrefix } from '@/lib/market-scope'
-import {
-  designationsFor,
-  marketFlavour,
-  organisationsFor,
-  type MarketFlavour,
-} from '@/lib/market-flavour'
+import { marketFlavour } from '@/lib/market-flavour'
 import { buildB2bQuestionnaire } from '@/lib/demo-b2b-questions'
 import { buildB2cQuestionnaire } from '@/lib/demo-b2c-questions'
 import { consumerOfferingOf, offeringTypeOf } from '@/lib/demo-survey-offering'
+import {
+  buildLandscape,
+  consumerProfiles,
+  consumerRespondents,
+  reportConfidence,
+} from '@/lib/demo-survey-landscape'
 import type {
   BuyerSegment,
   BuyerSurveyQuestion,
@@ -44,87 +45,6 @@ function marketSubject(market: string): string {
   return subject || market.trim()
 }
 
-/** Who buys, and how each buyer type buys. */
-function buyerSegments(flavour: MarketFlavour): { whoBuys: string; segments: BuyerSegment[] } {
-  if (flavour === 'consumer') {
-    return {
-      whoBuys:
-        'Category buyers, merchandising managers, and supply chain professionals within retail chains, wholesale distributors, and hospitality groups that stock and resell the category.',
-      segments: [
-        { name: 'Supermarket and Grocery Chains', description: '' },
-        { name: 'Specialty and Convenience Retailers', description: '' },
-        { name: 'Hotels, Restaurants and Bars', description: '' },
-        { name: 'Wholesalers and Online Retailers', description: '' },
-      ],
-    }
-  }
-  if (flavour === 'healthcare') {
-    return {
-      whoBuys:
-        'Procurement officers, materials managers, and clinical supply chain professionals within healthcare institutions, long term care systems, and medical distribution networks.',
-      segments: [
-        { name: 'Hospitals and Acute Care Facilities', description: '' },
-        { name: 'Specialty Clinics', description: '' },
-        { name: 'Long Term Care and Nursing Facilities', description: '' },
-        { name: 'Home Healthcare Agencies', description: '' },
-      ],
-    }
-  }
-  if (flavour === 'technology') {
-    return {
-      whoBuys:
-        'IT procurement leads, platform owners, and digital transformation managers within enterprise, public sector, and high growth technology organisations.',
-      segments: [
-        { name: 'Large Enterprise IT Organisations', description: '' },
-        { name: 'Managed Service Providers', description: '' },
-        { name: 'Public Sector Technology Departments', description: '' },
-        { name: 'Mid Market Shared Service Centres', description: '' },
-      ],
-    }
-  }
-  if (flavour === 'energy') {
-    return {
-      whoBuys:
-        'Procurement heads, asset managers, and engineering leads within utilities, independent power producers, and heavy industrial energy consumers.',
-      segments: [
-        { name: 'Utility Operators', description: '' },
-        { name: 'Independent Power Producers', description: '' },
-        { name: 'Industrial Energy Consumers', description: '' },
-        { name: 'Engineering and EPC Contractors', description: '' },
-      ],
-    }
-  }
-  return {
-    whoBuys:
-      'Procurement managers, category leads, and operations heads within manufacturing groups, distribution networks, and public sector buying bodies.',
-    segments: [
-      { name: 'Manufacturing Groups', description: '' },
-      { name: 'Regional Industrial Operators', description: '' },
-      { name: 'Distribution and Trading Networks', description: '' },
-      { name: 'Public Sector Procurement Bodies', description: '' },
-    ],
-  }
-}
-
-
-/** Consumer-side job titles do not apply; a B2C panel is profiled instead. */
-const B2C_RESPONDENT_PROFILE = [
-  'Primary household decision maker',
-  'Joint decision maker with a partner',
-  'Buys for personal use only',
-  'Buys on behalf of a dependent or family member',
-  'First time category buyer',
-  'Repeat buyer across several brands',
-]
-
-/** Who the consumer respondents are, by household rather than by firm. */
-const B2C_HOUSEHOLDS = [
-  'Urban single person households',
-  'Young families with children at home',
-  'Dual income households without children',
-  'Multi generational households',
-  'Retired and empty nest households',
-]
 
 /** Turn generated text into the shape the view renders, answers withheld. */
 function toSurveySegments(
@@ -154,18 +74,6 @@ function toSurveySegments(
   }))
 }
 
-/** Who buys, when the buyer is a shopper rather than a firm. */
-function consumerSegments(subject: string): { whoBuys: string; segments: BuyerSegment[] } {
-  return {
-    whoBuys: `Individual shoppers who have bought ${subject.toLowerCase()} for themselves or their household in the last 12 months, screened on category purchase and decision-making role.`,
-    segments: [
-      { name: 'Regular Category Buyers', description: '' },
-      { name: 'Occasional and Seasonal Buyers', description: '' },
-      { name: 'First-Time Buyers', description: '' },
-      { name: 'Premium and Brand-Led Buyers', description: '' },
-    ],
-  }
-}
 
 /**
  * Build the demo buyer survey for a market.
@@ -214,10 +122,11 @@ export function buildDemoBuyerSurvey(
   const sampleSize = sampleSizeFor(market, geo, kind)
   const module = isConsumer ? 'Voice of Customer (B2C)' : 'Voice of Customer (B2B)'
 
-  const buyers = isConsumer ? consumerSegments(subject) : buyerSegments(flavour)
+  const offering = offeringTypeOf(market)
+  const landscape = buildLandscape(subject, geo, flavour, offering)
   const segments = isConsumer
     ? toSurveySegments(buildB2cQuestionnaire(subject, consumerOfferingOf(market)), sampleSize)
-    : toSurveySegments(buildB2bQuestionnaire(subject, geo, offeringTypeOf(market)), sampleSize)
+    : toSurveySegments(buildB2bQuestionnaire(subject, geo, offering), sampleSize)
   const questionCount = segments.reduce((sum, s) => sum + s.questions.length, 0)
 
   const lower = subject.toLowerCase()
@@ -236,13 +145,17 @@ export function buildDemoBuyerSurvey(
     landscape: {
       definition: isConsumer
         ? `People who buy ${lower} for themselves or their home ${where}.`
-        : `Organisations that buy ${lower} ${where} for their own operations.`,
-      whoBuys: buyers.whoBuys,
-      buyerSegments: buyers.segments,
-      organisationsHeading: isConsumer ? 'Households We Surveyed' : 'Organisations We Surveyed',
-      organisations: isConsumer ? B2C_HOUSEHOLDS : organisationsFor(flavour),
-      designationsHeading: isConsumer ? 'Who We Spoke To' : 'Designations We Spoke To',
-      designations: isConsumer ? B2C_RESPONDENT_PROFILE : designationsFor(flavour),
+        : landscape.definition,
+      whoBuys: isConsumer
+        ? `Individual buyers of ${lower} ${where}, answering for themselves or their household. Buyers fall into four profiles.`
+        : landscape.whoBuys,
+      // Consumers are described by how they buy; organisations by what they are.
+      buyerSegments: isConsumer ? consumerProfiles(subject) : landscape.segments,
+      organisationsHeading: isConsumer ? 'Customers We Surveyed' : 'Organisations We Surveyed',
+      organisations: isConsumer ? consumerRespondents(subject, geo) : landscape.organisations,
+      designationsHeading: 'Designations We Spoke To',
+      // A consumer study has no job titles to list.
+      designations: isConsumer ? [] : landscape.designations,
       respondentProfile: '',
     },
     methodology: {
@@ -255,13 +168,13 @@ export function buildDemoBuyerSurvey(
       module,
       reportCovers: segments.map((s) => s.title),
       whoQualified: isConsumer
-        ? B2C_RESPONDENT_PROFILE.slice(0, 4)
+        ? consumerRespondents(subject, geo)
         : [
             `Direct purchasing authority for ${lower}`,
             'Involved in specifying or approving suppliers',
             'Bought within the current purchase cycle',
           ],
-      reportConfidence: '',
+      reportConfidence: reportConfidence(subject, geo),
     },
     executiveSummary: null,
     segments,
