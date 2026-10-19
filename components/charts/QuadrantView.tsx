@@ -58,16 +58,6 @@ function clientFacing(text: string | null | undefined): string {
 
 const OTHERS_PREVIEW_ROWS = 4
 
-/** Stands in for a section whose contents a demo dashboard withholds. */
-function LockedSectionBody() {
-  return (
-    <div className="flex items-center gap-2 rounded-lg border border-dashed border-amber-300 bg-amber-50/60 px-4 py-6 text-sm font-semibold text-amber-900">
-      <Lock className="h-4 w-4 shrink-0 text-amber-600" />
-      {DEMO_SUBSCRIBE_NOTE}
-    </div>
-  )
-}
-
 // ── Small pieces ────────────────────────────────────────────────────────────
 
 function ScoreDisc({ score }: { score: number | null }) {
@@ -530,8 +520,7 @@ export function QuadrantView() {
       {(report.marketDefinition || report.providerCategories.length > 0) && (
         <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <h2 className="mb-3 text-lg font-bold text-slate-900">Market Classification</h2>
-          {isDemo && <LockedSectionBody />}
-          <div className={`grid gap-4 md:grid-cols-2 ${isDemo ? 'hidden' : ''}`}>
+          <div className="grid gap-4 md:grid-cols-2">
             <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-4">
               <div className="mb-1 font-bold text-slate-900">Market</div>
               <div className="mb-3 text-[0.92rem] text-slate-700">{report.market}</div>
@@ -565,15 +554,12 @@ export function QuadrantView() {
       {(xNames.length > 0 || yNames.length > 0) && (
         <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <h2 className="mb-2 text-lg font-bold text-slate-900">Market Scoring Parameters</h2>
-          {isDemo && <LockedSectionBody />}
-          {!isDemo && (
-            <p className="mb-4 text-[0.92rem] leading-relaxed text-slate-500">
-              The X and Y axes and these {xNames.length + yNames.length} parameters were defined for{' '}
-              <strong className="text-slate-700">{report.market}</strong> and form the basis of the
-              company scores below.
-            </p>
-          )}
-          <div className={`grid gap-4 md:grid-cols-2 ${isDemo ? 'hidden' : ''}`}>
+          <p className="mb-4 text-[0.92rem] leading-relaxed text-slate-500">
+            The X and Y axes and these {xNames.length + yNames.length} parameters were defined for{' '}
+            <strong className="text-slate-700">{report.market}</strong> and form the basis of the
+            company scores below.
+          </p>
+          <div className="grid gap-4 md:grid-cols-2">
             {[
               { label: `X — ${report.xAxis.name}`, names: xNames },
               { label: `Y — ${report.yAxis.name}`, names: yNames },
@@ -990,7 +976,7 @@ export function QuadrantView() {
       <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
         {primaryResearch.length > 0 && (
           <div className="mb-5 overflow-hidden rounded-lg border border-slate-200">
-            <MethodologyPanel sections={primaryResearch} locked />
+            <MethodologyPanel sections={primaryResearch} />
           </div>
         )}
         <h2 className="mb-3 text-lg font-bold text-slate-900">Research Methodology</h2>

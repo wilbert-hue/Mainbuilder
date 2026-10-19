@@ -35,20 +35,8 @@ interface Props {
 
 // ── Sub-components ──────────────────────────────────────────────────────────
 
-/** Stands in for a panel whose contents a demo dashboard withholds. */
-function LockedPanelBody({ className = '' }: { className?: string }) {
-  return (
-    <div
-      className={`flex items-center gap-2 rounded-md border border-dashed border-amber-300 bg-amber-50/60 px-4 py-6 text-sm font-semibold text-amber-900 ${className}`}
-    >
-      <Lock className="h-4 w-4 shrink-0 text-amber-600" />
-      {DEMO_SUBSCRIBE_NOTE}
-    </div>
-  )
-}
-
 /** Buyer types and how each buys — the "Buyers" panel above the landscape. */
-function BuyersPanel({ report, locked = false }: { report: BuyerSurveyReport; locked?: boolean }) {
+function BuyersPanel({ report }: { report: BuyerSurveyReport }) {
   const { landscape } = report
   const segments = landscape.buyerSegments
   if (segments.length === 0 && !landscape.whoBuys) return null
@@ -60,13 +48,11 @@ function BuyersPanel({ report, locked = false }: { report: BuyerSurveyReport; lo
           Buyers
         </h3>
 
-        {locked && <LockedPanelBody />}
-
-        {!locked && landscape.whoBuys && (
+        {landscape.whoBuys && (
           <p className="mb-4 text-sm leading-relaxed text-slate-700">{landscape.whoBuys}</p>
         )}
 
-        {!locked && segments.length > 0 && (
+        {segments.length > 0 && (
           <div className="grid gap-3 md:grid-cols-2">
             {segments.map((s, i) => (
               <div key={i} className="rounded-md border border-slate-200 bg-slate-50 px-4 py-3">
@@ -83,7 +69,7 @@ function BuyersPanel({ report, locked = false }: { report: BuyerSurveyReport; lo
   )
 }
 
-function LandscapePanel({ report, locked = false }: { report: BuyerSurveyReport; locked?: boolean }) {
+function LandscapePanel({ report }: { report: BuyerSurveyReport }) {
   const { landscape } = report
   const hasOrgs = landscape.organisations.length > 0
   const hasDesignations = landscape.designations.length > 0
@@ -97,8 +83,7 @@ function LandscapePanel({ report, locked = false }: { report: BuyerSurveyReport;
             <h4 className="mb-2 inline-block border-b-2 border-[#52B69A] pb-0.5 text-base font-bold text-[#0f3d5c]">
               {landscape.organisationsHeading}
             </h4>
-            {locked && <LockedPanelBody className="mb-5" />}
-            <ul className={`mb-5 space-y-1.5 ${locked ? 'hidden' : ''}`}>
+            <ul className="mb-5 space-y-1.5">
               {landscape.organisations.map((o, i) => (
                 <li key={i} className="flex gap-2 text-sm text-slate-800">
                   <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-[#1A759F]" />
@@ -114,8 +99,7 @@ function LandscapePanel({ report, locked = false }: { report: BuyerSurveyReport;
             <h4 className="mb-2 inline-block border-b-2 border-[#52B69A] pb-0.5 text-base font-bold text-[#0f3d5c]">
               {landscape.designationsHeading}
             </h4>
-            {locked && <LockedPanelBody />}
-            <ul className={`space-y-1.5 ${locked ? 'hidden' : ''}`}>
+            <ul className="space-y-1.5">
               {landscape.designations.map((d, i) => (
                 <li key={i} className="flex gap-2 text-sm text-slate-800">
                   <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-[#1A759F]" />
@@ -197,21 +181,10 @@ function QuestionCard({
         <span className="shrink-0 rounded bg-[#E8833A] px-2 py-1 text-xs font-bold text-white">
           {label}
         </span>
-        {/* The question itself is withheld on a demo dashboard, not just its answer. */}
-        {locked ? (
-          <span
-            className="flex flex-1 items-center gap-2 text-sm font-semibold text-slate-400"
-            title={DEMO_SUBSCRIBE_NOTE}
-          >
-            <Lock className="h-3.5 w-3.5 shrink-0" />
-            {DEMO_SUBSCRIBE_NOTE}
-          </span>
-        ) : (
-          <span className="flex-1 text-sm font-bold leading-snug text-[#0f3d5c]">
-            {question.text}
-          </span>
-        )}
-        {!locked && question.n !== null && (
+        <span className="flex-1 text-sm font-bold leading-snug text-[#0f3d5c]">
+          {question.text}
+        </span>
+        {question.n !== null && (
           <span className="shrink-0 text-xs text-slate-500">Sample Size - {question.n} Respondents</span>
         )}
       </div>
@@ -408,10 +381,10 @@ export function BuyerSurveyView({ kind }: Props) {
       </div>
 
       {/* 2 — Buyers */}
-      <BuyersPanel report={report} locked={isDemo} />
+      <BuyersPanel report={report} />
 
       {/* 3 — Organisations & designations */}
-      <LandscapePanel report={report} locked={isDemo} />
+      <LandscapePanel report={report} />
 
       {/* 4 — Executive summary */}
       <ExecutiveSummaryCard report={report} />
