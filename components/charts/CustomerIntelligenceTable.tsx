@@ -595,11 +595,6 @@ export function CustomerIntelligenceTable({
           <p className="text-sm text-slate-500 mt-1.5">{subtitle}</p>
         </div>
 
-        <div className="flex items-center gap-2 rounded-lg border border-amber-300 bg-amber-50 px-4 py-2.5 text-sm font-medium text-amber-900">
-          <Lock className="h-4 w-4 shrink-0 text-amber-600" />
-          {DEMO_SUBSCRIBE_NOTE}
-        </div>
-
         <PropositionTableDashboard
           data={staticData}
           tier="standard"
