@@ -1,5 +1,5 @@
 /**
- * The B2C demo questionnaire: 4 sections, 19 questions, written to the
+ * The B2C demo questionnaire: 4 sections of 5 questions, written to the
  * consumer survey guide.
  *
  *   1  what was bought, which variant, which claim decided it
@@ -150,6 +150,7 @@ export function buildB2cQuestionnaire(
       one(`Would you buy the same ${s} again next time?`),
       one(`What would make you switch to a different brand of ${s}?`),
       many(`Which improvements would you want in the ${s} you buy? Select all that apply.`),
+      one(`Where would you buy ${s} next time?`),
       one(`What do you plan to spend on ${s} next time?`),
     ],
   ]

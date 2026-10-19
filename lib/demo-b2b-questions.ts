@@ -21,52 +21,55 @@ const THEMES: Record<OfferingType, [string[], string[], string[], string[]]> = {
   Product: [
     ['brand', 'quality', 'price', 'certifications', 'channel', 'supplyReliability'],
     ['brandParameters', 'application', 'usagePattern', 'format', 'repeatPurchase', 'specifications'],
-    ['brandExperience', 'qualityConsistency', 'defects', 'durability', 'warranty', 'roi'],
-    ['futureDemand', 'newApplications', 'upgrades', 'sustainability', 'pricingOutlook', 'purchasePlans'],
+    ['brandExperience', 'qualityConsistency', 'defects', 'durability', 'roi', 'warranty'],
+    ['futureDemand', 'newApplications', 'upgrades', 'pricingOutlook', 'purchasePlans', 'sustainability'],
   ],
   Technology: [
     ['brand', 'technicalMaturity', 'interoperability', 'cybersecurity', 'scalability', 'technicalSupport'],
-    ['brandParameters', 'adoptionStage', 'useCases', 'deploymentEnvironment', 'integration', 'adoptionBarriers'],
-    ['brandExperience', 'reliability', 'accuracy', 'integrationEase', 'upgradePerformance', 'roi'],
-    ['futureTechnology', 'innovationPipeline', 'replacementCycle', 'emergingUseCases', 'rndPriorities', 'investmentIntent'],
+    ['brandParameters', 'adoptionStage', 'useCases', 'deploymentEnvironment', 'adoptionBarriers', 'integration'],
+    ['brandExperience', 'reliability', 'accuracy', 'integrationEase', 'roi', 'upgradePerformance'],
+    ['futureTechnology', 'innovationPipeline', 'replacementCycle', 'emergingUseCases', 'investmentIntent', 'rndPriorities'],
   ],
   'Material / Ingredient': [
-    ['brand', 'purity', 'batchConsistency', 'traceability', 'regulatoryDocuments', 'supplyContinuity'],
-    ['brandParameters', 'formulationRole', 'dosage', 'substitution', 'formulationCompatibility', 'regulatoryUse'],
-    ['brandExperience', 'functionalPerformance', 'stability', 'batchVariation', 'yield', 'costInUse'],
-    ['newFormulations', 'alternativeInputs', 'cleanLabel', 'functionalInnovation', 'capacityExpansion', 'rndInvestment'],
+    ['brand', 'purity', 'batchConsistency', 'supplyContinuity', 'regulatoryDocuments', 'traceability'],
+    ['brandParameters', 'formulationRole', 'dosage', 'substitution', 'regulatoryUse', 'formulationCompatibility'],
+    ['brandExperience', 'functionalPerformance', 'stability', 'batchVariation', 'costInUse', 'yield'],
+    ['newFormulations', 'alternativeInputs', 'cleanLabel', 'capacityExpansion', 'rndInvestment', 'functionalInnovation'],
   ],
   Service: [
-    ['provider', 'expertise', 'credentials', 'coverage', 'contractFlexibility', 'sla'],
+    ['provider', 'expertise', 'credentials', 'sla', 'contractFlexibility', 'coverage'],
     ['providerParameters', 'serviceScope', 'engagementDrivers', 'deliveryModel', 'userJourney', 'dependency'],
-    ['providerExperience', 'serviceQuality', 'responsiveness', 'slaCompliance', 'issueResolution', 'roi'],
-    ['futureRequirements', 'digitisation', 'automation', 'deliveryModels', 'outsourcing', 'capabilityInvestment'],
+    ['providerExperience', 'serviceQuality', 'responsiveness', 'issueResolution', 'roi', 'slaCompliance'],
+    ['futureRequirements', 'digitisation', 'automation', 'outsourcing', 'capabilityInvestment', 'deliveryModels'],
   ],
   Equipment: [
-    ['brand', 'performanceSpecs', 'totalCost', 'installation', 'safetyCertification', 'spareParts'],
+    ['brand', 'performanceSpecs', 'totalCost', 'safetyCertification', 'spareParts', 'installation'],
     ['brandParameters', 'deployment', 'utilisation', 'capacity', 'operatingEnvironment', 'workflowFit'],
-    ['brandExperience', 'availability', 'downtime', 'maintenanceCost', 'assetLife', 'payback'],
-    ['capacityExpansion', 'automation', 'retrofit', 'nextGeneration', 'replacementPlans', 'capex'],
+    ['brandExperience', 'availability', 'downtime', 'maintenanceCost', 'payback', 'assetLife'],
+    ['capacityExpansion', 'automation', 'nextGeneration', 'replacementPlans', 'capex', 'retrofit'],
   ],
   Platform: [
     ['brand', 'security', 'functionality', 'interoperability', 'vendorReputation', 'implementation'],
     ['brandParameters', 'userGroups', 'modulesUsed', 'accessPattern', 'integration', 'engagement'],
-    ['brandExperience', 'uptime', 'usability', 'integrationPerformance', 'customerSupport', 'businessValue'],
-    ['newModules', 'analytics', 'ecosystem', 'integrationNeeds', 'subscriptionEvolution', 'investmentIntent'],
+    ['brandExperience', 'uptime', 'usability', 'customerSupport', 'businessValue', 'integrationPerformance'],
+    ['newModules', 'analytics', 'ecosystem', 'subscriptionEvolution', 'investmentIntent', 'integrationNeeds'],
   ],
   System: [
-    ['brand', 'architecture', 'reliability', 'compatibility', 'compliance', 'lifecycleSupport'],
+    ['brand', 'architecture', 'reliability', 'compliance', 'lifecycleSupport', 'compatibility'],
     ['brandParameters', 'deployment', 'functionalUse', 'infrastructure', 'interoperability', 'dependency'],
-    ['brandExperience', 'systemAvailability', 'throughput', 'maintainability', 'lifecycleCost', 'roi'],
-    ['capacityExpansion', 'modernisation', 'nextGeneration', 'integrationNeeds', 'replacementPlans', 'capex'],
+    ['brandExperience', 'systemAvailability', 'throughput', 'lifecycleCost', 'roi', 'maintainability'],
+    ['capacityExpansion', 'modernisation', 'nextGeneration', 'replacementPlans', 'capex', 'integrationNeeds'],
   ],
   Solution: [
     ['brand', 'outcomeCapability', 'customisation', 'implementationExpertise', 'supportModel', 'commercialFlexibility'],
-    ['brandParameters', 'useCase', 'businessProcess', 'implementationScope', 'workflowIntegration', 'problemAddressed'],
-    ['brandExperience', 'outcomesAchieved', 'implementationSuccess', 'measurableBenefits', 'scaledInService', 'totalValue'],
-    ['futureDemand', 'innovationPipeline', 'expansionScope', 'integrationNeeds', 'replacementPlans', 'investmentIntent'],
+    ['brandParameters', 'useCase', 'businessProcess', 'problemAddressed', 'workflowIntegration', 'implementationScope'],
+    ['brandExperience', 'outcomesAchieved', 'implementationSuccess', 'measurableBenefits', 'totalValue', 'scaledInService'],
+    ['futureDemand', 'innovationPipeline', 'expansionScope', 'replacementPlans', 'investmentIntent', 'integrationNeeds'],
   ],
 }
+
+/** Questions asked in each section. */
+const QUESTIONS_PER_SECTION = 5
 
 type Phrase = (subject: string, geo: string) => string
 
@@ -281,7 +284,7 @@ function askableSubject(subject: string): string {
   return words.slice(-3).join(' ').toLowerCase()
 }
 
-/** Build the 24 questions for a market, as 4 sections of 6. */
+/** Build the questionnaire for a market: 4 sections of 5 questions. */
 export function buildB2bQuestionnaire(
   subject: string,
   geo: string,
@@ -294,7 +297,7 @@ export function buildB2bQuestionnaire(
   return themes.map((sectionThemes, i) => ({
     title: titles[i],
     focus: FOCUS[i].replace('{s}', subject.toLowerCase()),
-    questions: sectionThemes.map((theme) => {
+    questions: sectionThemes.slice(0, QUESTIONS_PER_SECTION).map((theme) => {
       const phrase = PHRASING[theme]
       const text = phrase
         ? phrase(askable, geo)
