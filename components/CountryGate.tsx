@@ -31,12 +31,19 @@ interface CountryGateProps {
   children: React.ReactNode
   /** Geographies to offer; defaults to the static fallback strip. */
   countries?: string[]
+  /** The one the dashboard actually reports on; the rest are paywalled. */
+  covered?: string
 }
 
-export function CountryGate({ children, countries }: CountryGateProps) {
+export function CountryGate({ children, countries, covered: coveredProp }: CountryGateProps) {
   const list = countries?.length ? countries : FALLBACK_COUNTRIES
-  const [country, setCountry] = useState(list[0] ?? COVERED_COUNTRY)
-  const covered = list.includes(COVERED_COUNTRY) ? COVERED_COUNTRY : list[0]
+  const covered =
+    coveredProp && list.includes(coveredProp)
+      ? coveredProp
+      : list.includes(COVERED_COUNTRY)
+        ? COVERED_COUNTRY
+        : list[0]
+  const [country, setCountry] = useState(covered ?? COVERED_COUNTRY)
 
   return (
     <div className="space-y-4">

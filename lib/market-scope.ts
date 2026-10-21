@@ -27,6 +27,9 @@ const KNOWN_SCOPES = [
   'LATAM',
   'United States',
   'United Kingdom',
+  // Reports write these with stops as often as not.
+  'U.S.',
+  'U.K.',
   'USA',
   'US',
   'UK',
@@ -98,6 +101,48 @@ export function stripScopePrefix(marketName: string | null | undefined): string 
     if (match.test(name)) return name.replace(match, '').trim() || name
   }
   return name
+}
+
+/**
+ * Every geography a market name mentions, in the order it mentions them:
+ * "U.S., Japan, Europe, and China Electric Toothbrush Market" covers four, and
+ * the country strip should offer all four rather than picking one.
+ *
+ * Returns ["Global"] when the name claims no geography.
+ */
+export function marketScopeLabels(
+  marketName: string | null | undefined,
+  geographies: string[] = []
+): string[] {
+  const name = (marketName ?? '').trim()
+  if (!name) return [DEFAULT_MARKET_SCOPE]
+
+  // Longest first, so "North America" is read before a bare "America", and a
+  // scope already matched is not matched again inside a longer one.
+  const candidates = [...geographies, ...KNOWN_SCOPES]
+    .map((g) => g.trim())
+    .filter(Boolean)
+    .sort((a, b) => b.length - a.length)
+
+  const found: { scope: string; at: number }[] = []
+  let remaining = name
+  for (const scope of candidates) {
+    const re = new RegExp(`(^|\\s)${escapeRegExp(scope)}($|\\s|,)`, 'i')
+    const match = re.exec(remaining)
+    if (!match) continue
+    const label = /^worldwide$/i.test(scope) ? DEFAULT_MARKET_SCOPE : scope
+    if (!found.some((f) => f.scope.toLowerCase() === label.toLowerCase())) {
+      found.push({ scope: label, at: match.index })
+    }
+    // Blank out what matched so a longer name does not match again inside it.
+    remaining = remaining.slice(0, match.index) + ' '.repeat(match[0].length) + remaining.slice(match.index + match[0].length)
+  }
+
+  if (found.length === 0) return [DEFAULT_MARKET_SCOPE]
+  // "Global" alongside named regions means the whole study; the regions win.
+  const named = found.filter((f) => f.scope !== DEFAULT_MARKET_SCOPE)
+  const ordered = (named.length > 0 ? named : found).sort((a, b) => a.at - b.at)
+  return ordered.map((f) => f.scope)
 }
 
 /**

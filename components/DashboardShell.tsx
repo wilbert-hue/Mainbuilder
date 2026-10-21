@@ -41,7 +41,7 @@ import { CredibilitySection } from '@/components/CredibilitySection'
 import { AccoladesSection } from '@/components/AccoladesSection'
 import { WhyCoherentSection } from '@/components/WhyCoherentSection'
 import { CountryGate } from '@/components/CountryGate'
-import { reportScopeLabel } from '@/lib/market-scope'
+import { marketScopeLabels, reportScopeLabel } from '@/lib/market-scope'
 import { distributorShortLabel } from '@/lib/module-labels'
 import { DemoDataNote } from '@/components/DemoDataNote'
 import Image from 'next/image'
@@ -74,13 +74,21 @@ interface Props {
 function MaybeCountryGate({
   enabled,
   countries,
+  covered,
   children,
 }: {
   enabled: boolean
   countries: string[]
+  covered: string
   children: React.ReactNode
 }) {
-  return enabled ? <CountryGate countries={countries}>{children}</CountryGate> : <>{children}</>
+  return enabled ? (
+    <CountryGate countries={countries} covered={covered}>
+      {children}
+    </CountryGate>
+  ) : (
+    <>{children}</>
+  )
 }
 
 /** In-chart dummy-data alert. Market-analysis charts only. */
@@ -168,27 +176,40 @@ export function DashboardShell({ readOnly = false }: Props) {
    */
   const showSidebar = isMarketAnalysis
 
-  /** Views reported per country — suite mode only; taxonomy and market analysis never. */
-  const isCountryScoped =
-    isSuitePreview && !isMarketAnalysis && !isTaxonomy
+  /**
+   * Every view but market analysis and taxonomy is reported for a geography,
+   * so each carries the country strip. It used to depend on an uploaded B2B
+   * survey, which left a dashboard with only a quadrant or a B2C survey
+   * showing no geography at all.
+   */
+  const isCountryScoped = !isMarketAnalysis && !isTaxonomy
 
   /**
     * The strip names the geography the market itself reports on — "Global" for
     * a global study, "Brazil" for a Brazilian one — never a country the report
     * does not cover.
     */
-  const countryOptions = useMemo(
-    () => [
+  /** The geography these views report on; the one the reports themselves state. */
+  const coveredScope = useMemo(
+    () =>
       reportScopeLabel(
-        // These views state their own coverage; an India quadrant is India
-        // even when the market family is titled "Global".
         [quadrantData?.geo, b2bSurveyData?.geo, b2cSurveyData?.geo],
         dashboardName ?? data?.metadata?.market_name,
         data?.dimensions?.geographies?.all_geographies ?? []
       ),
-    ],
     [quadrantData, b2bSurveyData, b2cSurveyData, dashboardName, data]
   )
+
+  /** Every geography the market name covers, so a four country study lists four. */
+  const countryOptions = useMemo(() => {
+    const named = marketScopeLabels(
+      dashboardName ?? data?.metadata?.market_name,
+      data?.dimensions?.geographies?.all_geographies ?? []
+    )
+    return named.some((g) => g.toLowerCase() === coveredScope.toLowerCase())
+      ? named
+      : [coveredScope, ...named.filter((g) => g !== 'Global')]
+  }, [dashboardName, data, coveredScope])
 
   /** Market name on top; a loaded survey adds the module list beneath it. */
   const headingTitle = dashboardName || 'Market Analysis'
@@ -342,7 +363,7 @@ export function DashboardShell({ readOnly = false }: Props) {
               </div>
             )}
             <div className="p-6">
-              <CountryGate countries={countryOptions}>
+              <CountryGate countries={countryOptions} covered={coveredScope}>
                 {activePanel === 'intelligence' && <IntelligenceDatabaseViews />}
                 {activePanel === 'b2b-survey' && <BuyerSurveyView kind="b2b" />}
                 {activePanel === 'b2c-survey' && <BuyerSurveyView kind="b2c" />}
@@ -451,7 +472,7 @@ export function DashboardShell({ readOnly = false }: Props) {
           } space-y-6`}>
 
             {/* Every view except Market Analysis is country-scoped. */}
-            <MaybeCountryGate key={selectedChartGroup} enabled={isCountryScoped} countries={countryOptions}>
+            <MaybeCountryGate key={selectedChartGroup} enabled={isCountryScoped} countries={countryOptions} covered={coveredScope}>
 
             {/* Tab Navigation */}
             <div className="bg-white rounded-lg shadow">
