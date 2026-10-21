@@ -35,6 +35,16 @@ interface Props {
 
 // ── Sub-components ──────────────────────────────────────────────────────────
 
+/** Stands in for a list a client has not subscribed to. */
+function LockedList() {
+  return (
+    <div className="flex items-center gap-2 rounded-md border border-dashed border-amber-300 bg-amber-50/60 px-4 py-4 text-sm font-semibold text-amber-900">
+      <Lock className="h-4 w-4 shrink-0 text-amber-600" />
+      {DEMO_SUBSCRIBE_NOTE}
+    </div>
+  )
+}
+
 /** Buyer types and how each buys — the "Buyers" panel above the landscape. */
 function BuyersPanel({ report }: { report: BuyerSurveyReport }) {
   const { landscape } = report
@@ -48,22 +58,8 @@ function BuyersPanel({ report }: { report: BuyerSurveyReport }) {
           Buyers
         </h3>
 
-        {landscape.whoBuys && (
-          <p className="mb-4 text-sm leading-relaxed text-slate-700">{landscape.whoBuys}</p>
-        )}
+        <LockedList />
 
-        {segments.length > 0 && (
-          <div className="grid gap-3 md:grid-cols-2">
-            {segments.map((s, i) => (
-              <div key={i} className="rounded-md border border-slate-200 bg-slate-50 px-4 py-3">
-                <div className="mb-1 text-sm font-bold text-[#0f3d5c]">{s.name}</div>
-                {s.description && (
-                  <p className="text-[0.85rem] leading-relaxed text-slate-600">{s.description}</p>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
       </div>
     </div>
   )
@@ -83,14 +79,7 @@ function LandscapePanel({ report }: { report: BuyerSurveyReport }) {
             <h4 className="mb-2 inline-block border-b-2 border-[#52B69A] pb-0.5 text-base font-bold text-[#0f3d5c]">
               {landscape.organisationsHeading}
             </h4>
-            <ul className="mb-5 space-y-1.5">
-              {landscape.organisations.map((o, i) => (
-                <li key={i} className="flex gap-2 text-sm text-slate-800">
-                  <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-[#1A759F]" />
-                  <span>{o}</span>
-                </li>
-              ))}
-            </ul>
+            <LockedList />
           </>
         )}
 
@@ -99,14 +88,7 @@ function LandscapePanel({ report }: { report: BuyerSurveyReport }) {
             <h4 className="mb-2 inline-block border-b-2 border-[#52B69A] pb-0.5 text-base font-bold text-[#0f3d5c]">
               {landscape.designationsHeading}
             </h4>
-            <ul className="space-y-1.5">
-              {landscape.designations.map((d, i) => (
-                <li key={i} className="flex gap-2 text-sm text-slate-800">
-                  <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-[#1A759F]" />
-                  <span>{d}</span>
-                </li>
-              ))}
-            </ul>
+            <LockedList />
           </>
         )}
 
@@ -165,10 +147,14 @@ function QuestionCard({
   question,
   index,
   locked = false,
+  lockText = false,
 }: {
   question: BuyerSurveyQuestion
   index: number
+  /** No answers behind the chart. */
   locked?: boolean
+  /** The question wording itself is withheld. */
+  lockText?: boolean
 }) {
   // Exports label questions inconsistently ("q1", "Q1", "1") — normalise to "Q.1".
   const raw = question.id || String(index + 1)
@@ -181,10 +167,20 @@ function QuestionCard({
         <span className="shrink-0 rounded bg-[#E8833A] px-2 py-1 text-xs font-bold text-white">
           {label}
         </span>
-        <span className="flex-1 text-sm font-bold leading-snug text-[#0f3d5c]">
-          {question.text}
-        </span>
-        {question.n !== null && (
+        {lockText ? (
+          <span
+            className="flex flex-1 items-center gap-2 text-sm font-semibold text-slate-400"
+            title={DEMO_SUBSCRIBE_NOTE}
+          >
+            <Lock className="h-3.5 w-3.5 shrink-0" />
+            {DEMO_SUBSCRIBE_NOTE}
+          </span>
+        ) : (
+          <span className="flex-1 text-sm font-bold leading-snug text-[#0f3d5c]">
+            {question.text}
+          </span>
+        )}
+        {!lockText && question.n !== null && (
           <span className="shrink-0 text-xs text-slate-500">Sample Size - {question.n} Respondents</span>
         )}
       </div>
@@ -403,7 +399,6 @@ export function BuyerSurveyView({ kind }: Props) {
                     ? 'bg-[#0f3d5c] font-semibold text-white'
                     : 'text-slate-700 hover:bg-slate-50'
                 }`}
-                title={s.focus}
               >
                 <span
                   className={`text-xs font-bold ${
@@ -412,7 +407,10 @@ export function BuyerSurveyView({ kind }: Props) {
                 >
                   {String(i + 1).padStart(2, '0')}
                 </span>
-                <span className={isActive ? 'text-[#D9ED92]' : ''}>{s.title}</span>
+                <span className={`inline-flex items-center gap-1.5 ${isActive ? 'text-[#D9ED92]' : ''}`}>
+                  Module {i + 1}
+                  <Lock className="h-3 w-3 shrink-0 opacity-70" aria-hidden />
+                </span>
               </button>
             )
           })}
@@ -423,9 +421,7 @@ export function BuyerSurveyView({ kind }: Props) {
 
         {/* 5 — Filters */}
         <div className="space-y-3 border-b border-slate-200 p-4">
-          {segment?.focus && (
-            <p className="text-xs leading-relaxed text-slate-600">{segment.focus}</p>
-          )}
+
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="block">
               <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-slate-500">
@@ -475,7 +471,7 @@ export function BuyerSurveyView({ kind }: Props) {
             </div>
           ) : (
             visibleQuestions.map((q, i) => (
-              <QuestionCard key={q.id + i} question={q} index={i} locked={isDemo} />
+              <QuestionCard key={q.id + i} question={q} index={i} locked={isDemo} lockText />
             ))
           )}
         </div>

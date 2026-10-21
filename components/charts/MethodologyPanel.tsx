@@ -26,9 +26,8 @@ export default function MethodologyPanel({
 }: {
   sections: MethodologySection[]
   /**
-   * Withhold the section bodies. A generated methodology lists organisations,
-   * job titles and trigger signals that were written from the market name, not
-   * researched, so a demo dashboard shows the shape and locks the content.
+   * Withhold the section bodies: the reader sees which sections the research
+   * has, not what they found.
    */
   locked?: boolean
 }) {
@@ -65,10 +64,12 @@ export default function MethodologyPanel({
                 />
               </button>
 
-              {isOpen && (locked && section.groups.length > 0 ? (
+              {isOpen && (locked ? (
                 <div className="flex items-center gap-2 bg-white px-4 py-4 text-xs font-semibold text-slate-400">
                   <Lock className="h-3.5 w-3.5 shrink-0" />
-                  {DEMO_SUBSCRIBE_NOTE}
+                  {/^primary research$/i.test(section.title)
+                    ? 'Primary research interviews with the stakeholders across value chain of the industry'
+                    : DEMO_SUBSCRIBE_NOTE}
                 </div>
               ) : (
                 <div className="px-4 py-3 space-y-3 bg-white">
