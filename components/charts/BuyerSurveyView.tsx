@@ -27,6 +27,7 @@ import { BuyerSurveyChart, BuyerSurveyLegend } from './BuyerSurveyChart'
 import { buildDemoBuyerSurvey } from '@/lib/demo-buyer-survey'
 import { Lock } from 'lucide-react'
 import { DEMO_SUBSCRIBE_NOTE } from '@/components/DemoDataNote'
+import { LOCKS_ENABLED } from '@/lib/lock-mode'
 
 interface Props {
   /** Which report to render. */
@@ -354,7 +355,7 @@ export function BuyerSurveyView({ kind }: Props) {
     [uploaded, demoEnabled, kind, data, dashboardName]
   )
   /** In demo mode the questions are real; the answers behind them are withheld. */
-  const isDemo = !uploaded && !!demo
+  const isDemo = (!uploaded && !!demo) && LOCKS_ENABLED
   const report = uploaded ?? demo
 
   const [activeSegment, setActiveSegment] = useState(0)

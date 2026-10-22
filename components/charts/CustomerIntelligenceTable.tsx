@@ -14,6 +14,7 @@ import MethodologyPanel from './MethodologyPanel'
 import { buildDemoMethodology } from '@/lib/demo-methodology'
 import { DEMO_SUBSCRIBE_NOTE } from '@/components/DemoDataNote'
 import { isPlaceholderValue } from '@/lib/intelligence-demo-generator'
+import { LOCKS_ENABLED } from '@/lib/lock-mode'
 import { distributorNoun } from '@/lib/module-labels'
 import type { MethodologySection } from '@/lib/intelligence-sheet-types'
 
@@ -258,8 +259,8 @@ function PropositionTableDashboard({
   currency,
   intelligenceSource,
   suitePreview,
-  templateMode = false,
-  lockBlankColumns = false,
+  templateMode: templateModeProp = false,
+  lockBlankColumns: lockBlankColumnsProp = false,
 }: {
   data: PropositionData
   tier: TierKey
@@ -274,6 +275,8 @@ function PropositionTableDashboard({
   /** Blank revenue/intent cells read as withheld rather than missing. */
   lockBlankColumns?: boolean
 }) {
+  const templateMode = templateModeProp && LOCKS_ENABLED
+  const lockBlankColumns = lockBlankColumnsProp && LOCKS_ENABLED
   const rawHeaders = data.headers?.length ? data.headers : Object.keys(data.rows[0] || {})
   const parentHeaders = data.parentHeaders
   // Columns under the last band are the procurement group; they get their own
@@ -327,7 +330,7 @@ function PropositionTableDashboard({
       {/* Methodology — how the directory below was assembled. Collapsible, as
           the source workbook's outline groups are. */}
       {data.methodology && data.methodology.length > 0 && (
-        <MethodologyPanel sections={data.methodology} locked={templateMode} />
+        <MethodologyPanel sections={data.methodology} locked={templateMode && LOCKS_ENABLED} />
       )}
 
       {/* Sheet preamble — the title/definition lines that sit above the table in
@@ -413,13 +416,13 @@ function PropositionTableDashboard({
                   >
                     {isRowNumberColumn(String(header)) ? (
                       <span>{rowIndex + 1}</span>
-                    ) : !isPlaceholderValue(String(row[header] ?? '')) &&
+                    ) : !(LOCKS_ENABLED && isPlaceholderValue(String(row[header] ?? ''))) &&
                       !isEmptyCell(row[header], lockBlankColumns && isLockedColumn(String(header))) ? (
                       <span className="line-clamp-3" title={renderCellValue(header, row[header], currency)}>
                         {renderCellValue(header, row[header], currency)}
                       </span>
                     ) : templateMode ||
-                      isPlaceholderValue(String(row[header] ?? '')) ||
+                      (LOCKS_ENABLED && isPlaceholderValue(String(row[header] ?? ''))) ||
                       (lockBlankColumns && isLockedColumn(String(header))) ? (
                       <span className="text-slate-400" title={DEMO_SUBSCRIBE_NOTE}>
                         <Lock className="h-3.5 w-3.5" />

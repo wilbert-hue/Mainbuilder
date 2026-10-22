@@ -25,6 +25,7 @@ import { useDashboardStore } from '@/lib/store'
 import { buildDemoQuadrant } from '@/lib/demo-quadrant'
 import { titleCaseGeography } from '@/lib/market-scope'
 import { DEMO_SUBSCRIBE_NOTE } from '@/components/DemoDataNote'
+import { LOCKS_ENABLED } from '@/lib/lock-mode'
 import { buildDemoMethodology } from '@/lib/demo-methodology'
 import MethodologyPanel from './MethodologyPanel'
 import {
@@ -455,10 +456,10 @@ export function QuadrantView() {
     [hasUploaded, showDemoQuadrant, data, dashboardName]
   )
   /** In demo mode every identifying field is withheld, not just the evidence. */
-  const isDemo = !hasUploaded && !!demo
+  const isDemo = (!hasUploaded && !!demo) && LOCKS_ENABLED
   const report = hasUploaded ? uploaded : demo
   /** A real upload is never paywalled; the preview blur belongs to demo data only. */
-  const evidencePaywalled = isSuitePreview && !hasUploaded
+  const evidencePaywalled = isSuitePreview && !hasUploaded && LOCKS_ENABLED
 
   const [search, setSearch] = useState('')
   const [quadrantFilter, setQuadrantFilter] = useState('all')
@@ -1040,7 +1041,7 @@ export function QuadrantView() {
       <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
         {primaryResearch.length > 0 && (
           <div className="mb-5 overflow-hidden rounded-lg border border-slate-200">
-            <MethodologyPanel sections={primaryResearch} locked />
+            <MethodologyPanel sections={primaryResearch} locked={LOCKS_ENABLED} />
           </div>
         )}
         <h2 className="mb-3 text-lg font-bold text-slate-900">Research Methodology</h2>
