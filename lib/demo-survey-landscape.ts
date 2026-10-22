@@ -16,6 +16,7 @@
 
 import type { MarketFlavour } from '@/lib/market-flavour'
 import type { OfferingType } from '@/lib/demo-survey-offering'
+import { industryProfile } from '@/lib/industry-profiles'
 
 export interface LandscapeCopy {
   definition: string
@@ -159,12 +160,16 @@ export function buildLandscape(
   const lower = subject.toLowerCase()
   const where = /^global$/i.test(geo.trim()) ? 'worldwide' : `across ${geo}`
 
+  // The industry profile knows who buys in this trade; the offering type only
+  // shapes how they are described.
+  const profile = industryProfile(subject)
+
   return {
     definition: `Organisations that buy ${lower} ${NOUN[offering]} ${where} for their own operations.`,
     whoBuys: `${capitalise(DECISION_MAKERS[offering])} that specify, approve and contract ${lower} for their organisation.`,
-    segments: SEGMENTS[flavour].slice(0, 6).map((name) => ({ name, description: '' })),
-    organisations: ORGANISATIONS[flavour],
-    designations: DESIGNATIONS[offering],
+    segments: profile.buyerSegments.map((name) => ({ name, description: '' })),
+    organisations: profile.organisations,
+    designations: profile.designations,
   }
 }
 

@@ -15,6 +15,7 @@
  */
 
 import type { OfferingType } from '@/lib/demo-survey-offering'
+import { industryProfile } from '@/lib/industry-profiles'
 
 /** Themes each offering type must cover, in section order. */
 const THEMES: Record<OfferingType, [string[], string[], string[], string[]]> = {
@@ -293,16 +294,64 @@ export function buildB2bQuestionnaire(
   const themes = THEMES[offering]
   const titles = SECTION_TITLES[offering]
   const askable = askableSubject(subject)
+  const profile = industryProfile(subject)
+
+  /** The industry's scoring parameters, phrased as something a buyer answers. */
+  const buyingQuestion = (index: number): string | null => {
+    const parameter = profile.xParameters[index]
+    if (!parameter) return null
+    const it = lowerFirst(parameter.name)
+    const forms = [
+      `How much weight did ${it} carry in your ${askable} supplier decision?`,
+      `What standard did your organisation set for ${it}?`,
+      `How far did suppliers differ on ${it} during your evaluation?`,
+      `Which evidence of ${it} did your organisation ask a supplier to provide?`,
+    ]
+    return forms[index % forms.length]
+  }
+  const performanceQuestion = (index: number): string | null => {
+    const parameter = profile.xParameters[index]
+    if (!parameter) return null
+    const it = lowerFirst(parameter.name)
+    const forms = [
+      `How has your chosen supplier performed on ${it}?`,
+      `Where has ${it} fallen short of what was agreed?`,
+      `How does ${it} compare with the supplier used before?`,
+      `How consistently has ${it} held up across the contract?`,
+    ]
+    return forms[index % forms.length]
+  }
 
   return themes.map((sectionThemes, i) => ({
     title: titles[i],
     focus: FOCUS[i].replace('{s}', subject.toLowerCase()),
-    questions: sectionThemes.slice(0, QUESTIONS_PER_SECTION).map((theme) => {
+    questions: sectionThemes.slice(0, QUESTIONS_PER_SECTION).map((theme, position) => {
+      // The brand chain keeps its place at the top of each section.
+      const industryText =
+        position === 0
+          ? null
+          : i === 0
+            ? buyingQuestion(position - 1)
+            : i === 2
+              ? performanceQuestion(position + 1)
+              : null
+
       const phrase = PHRASING[theme]
-      const text = phrase
-        ? phrase(askable, geo)
-        : `Which ${theme} requirement shaped your organisation's approach to ${askable}?`
+      const text =
+        industryText ??
+        (phrase
+          ? phrase(askable, geo)
+          : `Which ${theme} requirement shaped your organisation's approach to ${askable}?`)
       return { text, type: 'single_choice' as const }
     }),
   }))
+}
+
+/** "Food Safety & Residue Compliance" → "food safety and residue compliance". */
+function lowerFirst(name: string): string {
+  return name
+    .replace(/&/g, 'and')
+    .split(' ')
+    .map((word) => (/^[A-Z]{2,}$/.test(word) ? word : word.toLowerCase()))
+    .join(' ')
 }

@@ -15,6 +15,7 @@ import type { ComparisonData } from '@/lib/types'
 import { marketScopeLabel, stripScopePrefix } from '@/lib/market-scope'
 import { isTechnologyMarket } from '@/lib/module-labels'
 import { isConsumerMarket } from '@/lib/market-flavour'
+import { commonBusinessParameters, industryProfile } from '@/lib/industry-profiles'
 import type {
   QuadrantAxis,
   QuadrantCompany,
@@ -104,59 +105,18 @@ function marketSubject(market: string): string {
   return subject || market
 }
 
-function axisParameters(market: string, geo: string, xName: string): {
+function axisParameters(market: string, geo: string, _xName: string): {
   x: QuadrantParameterDefinition[]
   y: QuadrantParameterDefinition[]
 } {
-  const subject = marketSubject(market)
-  const where = geo && geo.toLowerCase() !== 'global' ? geo : 'the covered markets'
-  const offering = xName === 'Service Capability' ? 'service' : xName === 'Technology Capability' ? 'technology' : 'product'
+  const where = geo && geo.toLowerCase() !== 'global' ? geo : ''
+  const profile = industryProfile(market)
 
+  // The product axis is the industry's own scoring sheet; the business axis is
+  // four measures every market shares, plus the customers that matter here.
   return {
-    x: [
-      {
-        name: `${subject} Portfolio Breadth`,
-        definition: `Range and depth of the ${offering} portfolio across the ${subject.toLowerCase()} segments covered by this dashboard. Evidence includes published catalogues, specification sheets and segment coverage.`,
-      },
-      {
-        name: `Innovation and R&D in ${subject}`,
-        definition: `Investment in research and development, and the pace at which new ${offering} capability reaches the market. Evidence includes patents, product launches and dedicated R&D facilities.`,
-      },
-      {
-        name: 'Quality, Standards and Certification',
-        definition: `Conformance with the standards and certifications that apply to ${subject.toLowerCase()} in ${where}. Evidence includes certificate numbers, audit outcomes and approval dates.`,
-      },
-      {
-        name: 'Performance in Deployment',
-        definition: `Demonstrated performance of the ${offering} in live deployments, including reliability, test outcomes and published case studies.`,
-      },
-      {
-        name: 'Integration and Interoperability',
-        definition: `How readily the ${offering} fits alongside adjacent systems and existing customer infrastructure. Evidence includes documented integrations and partner ecosystems.`,
-      },
-    ],
-    y: [
-      {
-        name: `Revenue and Growth in ${where}`,
-        definition: `Revenue scale and growth rate attributable to ${subject.toLowerCase()} in ${where}. Evidence includes financial statements, investor material and market share reporting.`,
-      },
-      {
-        name: 'Customer Base and Key Accounts',
-        definition: `Breadth and quality of the customer base, including named reference accounts and the duration of those relationships.`,
-      },
-      {
-        name: 'Distribution and Channel Reach',
-        definition: `Strength of the route to market across ${where} — direct sales, distributors, systems integrators and online channels.`,
-      },
-      {
-        name: 'Delivery and Support Network',
-        definition: `Capacity to deliver and support at scale: service points, technical support, warranty terms and response times.`,
-      },
-      {
-        name: 'Regulatory Approvals and Market Access',
-        definition: `Approvals, licences and registrations required to trade in ${where}, and the breadth of geographies they unlock.`,
-      },
-    ],
+    x: profile.xParameters.map((parameter) => ({ ...parameter })),
+    y: [...commonBusinessParameters(where), { ...profile.customerBase }],
   }
 }
 

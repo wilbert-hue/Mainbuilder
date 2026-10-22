@@ -16,7 +16,7 @@ import { stripScopePrefix } from '@/lib/market-scope'
 import { marketFlavour } from '@/lib/market-flavour'
 import { offeringTypeOf } from '@/lib/demo-survey-offering'
 import { buildLandscape } from '@/lib/demo-survey-landscape'
-import { triggerSignalsFor } from '@/lib/demo-trigger-signals'
+import { industryProfile } from '@/lib/industry-profiles'
 
 /** "Brazil Advance Wound Care Market" → "Advance Wound Care". */
 function marketSubject(market: string): string {
@@ -62,7 +62,7 @@ export function buildDemoMethodology(
     },
     {
       title: 'Real-time Trigger Signals',
-      groups: [{ items: triggerSignalsFor(subject, flavour, offering) }],
+      groups: [{ items: industryProfile(name).triggerSignals }],
       paragraphs: ['…and 50+ other trigger signals'],
     },
     {
