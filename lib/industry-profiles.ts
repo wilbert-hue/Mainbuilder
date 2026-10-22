@@ -164,7 +164,7 @@ export const INDUSTRY_PROFILES = {
       p('Regulatory & Discharge Compliance Record', 'Record of meeting discharge consents and reuse standards, evidenced by monitoring data and regulator findings.'),
       p('Engineering, Commissioning & Service Network', 'Capability to design, build and commission on site, and the response time of the service network afterwards.'),
     ],
-    customerBase: p('Municipal & Industrial Customer Base', 'Spread of municipal utilities, industrial plants and commercial sites served, and the length of the operating contracts held.'),
+    customerBase: p('Municipal & Industrial Customer Base', 'Spread of municipal utilities and industrial plants served, and the length of the operating and maintenance contracts held.'),
     triggerSignals: [
       'New discharge consent or reuse rule tightening at an existing site',
       'Industrial plant expansion that raises effluent volume',
@@ -175,13 +175,13 @@ export const INDUSTRY_PROFILES = {
     ],
     organisations: [
       'Municipal water and wastewater utilities',
-      'Large industrial manufacturing sites',
+      'Large chemical and pharmaceutical manufacturing sites',
       'Private water concession operators',
       'Engineering procurement and construction contractors',
-      'Commercial property and estate operators',
+      'Textile and food processing plants under discharge limits',
     ],
     designations: ['Plant Manager', 'Environmental Engineer', 'Procurement Manager', 'Operations Lead', 'Project Engineer', 'Maintenance Manager'],
-    buyerSegments: ['Municipal Utilities', 'Industrial Manufacturing', 'Food and Beverage Processing', 'Power Generation', 'Commercial Real Estate', 'Engineering Contractors'],
+    buyerSegments: ['Municipal Water Utilities', 'Chemical and Pharmaceutical Plants', 'Food and Beverage Processing', 'Textile and Leather Processing', 'Thermal Power and Refineries', 'Engineering and EPC Contractors'],
   },
 
   power_grid: {

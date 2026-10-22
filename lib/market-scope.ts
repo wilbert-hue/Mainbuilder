@@ -93,14 +93,30 @@ function mentions(name: string, scope: string): boolean {
  * separately and repeating it would read as a stutter.
  */
 export function stripScopePrefix(marketName: string | null | undefined): string {
-  const name = (marketName ?? '').trim()
+  let name = (marketName ?? '').trim()
   if (!name) return ''
   const prefixes = [...KNOWN_SCOPES].sort((a, b) => b.length - a.length)
-  for (const scope of prefixes) {
-    const match = new RegExp(`^${escapeRegExp(scope)}\\s+`, 'i')
-    if (match.test(name)) return name.replace(match, '').trim() || name
+
+  // A market can open with several geographies — "India Japan Europe Water
+  // Recycling", "India and U.S. Lithium Battery Cells" — so strip until the
+  // name starts with the subject itself. Joining words go with them.
+  for (let pass = 0; pass < KNOWN_SCOPES.length; pass++) {
+    const before = name
+    for (const scope of prefixes) {
+      const match = new RegExp(`^${escapeRegExp(scope)}(?:\\s*,)?\\s+(?:and\\s+|&\\s+)?`, 'i')
+      if (match.test(name)) {
+        const stripped = name.replace(match, '').trim()
+        // "India Market" is about India: stripping leaves no subject behind.
+        const subjectLeft = stripped.replace(/\b(market|industry|analysis|report)\b/gi, '').trim()
+        if (!subjectLeft) break
+        name = stripped
+        break
+      }
+    }
+    if (name === before) break
   }
-  return name
+
+  return name || (marketName ?? '').trim()
 }
 
 /**

@@ -279,9 +279,17 @@ const FOCUS: [string, string, string, string] = [
  * is shortened to the words that carry it, the way an analyst would say it.
  */
 function askableSubject(subject: string): string {
-  const cleaned = subject.replace(/,/g, ' ').replace(/\s+/g, ' ').trim()
+  let cleaned = subject.replace(/,/g, ' ').replace(/\s+/g, ' ').trim()
+
+  // "Lithium Battery Cells for Drone Application" is about the cells, so the
+  // trailing phrase goes before any shortening: keeping it would leave the
+  // question asking about "for drone application".
+  const withoutTail = cleaned.replace(/\s+\b(for|in|across|used in|within)\b\s+.*$/i, '').trim()
+  if (withoutTail.split(' ').length >= 2) cleaned = withoutTail
+
   const words = cleaned.split(' ')
   if (words.length <= 4) return cleaned.toLowerCase()
+  // Otherwise keep the words that carry the name, as an analyst would say it.
   return words.slice(-3).join(' ').toLowerCase()
 }
 
