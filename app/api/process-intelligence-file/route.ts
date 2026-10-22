@@ -7,6 +7,7 @@ import {
   type DemoGenerationContext,
 } from '@/lib/intelligence-demo-generator'
 import { hasMethodologyBlock, parseMethodologyBlock } from '@/lib/methodology-parser'
+import { chooseDataSheet } from '@/lib/intelligence-sheet-select'
 import type { MethodologySection } from '@/lib/intelligence-sheet-types'
 
 /** How deep to look for the table when the sheet opens with a METHODOLOGY block. */
@@ -803,10 +804,19 @@ export async function POST(request: NextRequest) {
     }
 
     // Process first sheet only (CSV, or Excel without Proposition N sheet names)
-    const firstSheetName = workbook.SheetNames[0]
+    // The directory is not always the first sheet: workbooks open with a Home
+    // or parameter definition sheet and put the table behind it.
+    const sheetRows = workbook.SheetNames.map((name) => ({
+      name,
+      rows: XLSX.utils.sheet_to_json(workbook.Sheets[name], {
+        header: 1,
+        raw: true,
+      }) as unknown[][],
+    }))
+    const firstSheetName = chooseDataSheet(sheetRows) ?? workbook.SheetNames[0]
     const worksheet = workbook.Sheets[firstSheetName]
 
-    console.log(`Processing sheet: ${firstSheetName}`)
+    console.log(`Processing sheet: ${firstSheetName} (of ${workbook.SheetNames.join(', ')})`)
 
     // Convert to JSON array (preserving structure)
     const jsonData = XLSX.utils.sheet_to_json(worksheet, {

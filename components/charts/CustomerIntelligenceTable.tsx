@@ -13,6 +13,7 @@ import { Lock } from 'lucide-react'
 import MethodologyPanel from './MethodologyPanel'
 import { buildDemoMethodology } from '@/lib/demo-methodology'
 import { DEMO_SUBSCRIBE_NOTE } from '@/components/DemoDataNote'
+import { isPlaceholderValue } from '@/lib/intelligence-demo-generator'
 import { distributorNoun } from '@/lib/module-labels'
 import type { MethodologySection } from '@/lib/intelligence-sheet-types'
 
@@ -412,11 +413,14 @@ function PropositionTableDashboard({
                   >
                     {isRowNumberColumn(String(header)) ? (
                       <span>{rowIndex + 1}</span>
-                    ) : !isEmptyCell(row[header], lockBlankColumns && isLockedColumn(String(header))) ? (
+                    ) : !isPlaceholderValue(String(row[header] ?? '')) &&
+                      !isEmptyCell(row[header], lockBlankColumns && isLockedColumn(String(header))) ? (
                       <span className="line-clamp-3" title={renderCellValue(header, row[header], currency)}>
                         {renderCellValue(header, row[header], currency)}
                       </span>
-                    ) : templateMode || (lockBlankColumns && isLockedColumn(String(header))) ? (
+                    ) : templateMode ||
+                      isPlaceholderValue(String(row[header] ?? '')) ||
+                      (lockBlankColumns && isLockedColumn(String(header))) ? (
                       <span className="text-slate-400" title={DEMO_SUBSCRIBE_NOTE}>
                         <Lock className="h-3.5 w-3.5" />
                       </span>
