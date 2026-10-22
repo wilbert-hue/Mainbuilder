@@ -92,8 +92,25 @@ function mentions(name: string, scope: string): boolean {
  * reads as "Wound Care Market". Used where copy already states the geography
  * separately and repeating it would read as a stutter.
  */
+/**
+ * Adjective forms of the geographies above. A market written "Japanese
+ * Headphone Market" names a country just as plainly as "Japan Headphone
+ * Market", and neither belongs in a question about the product.
+ */
+const DEMONYMS =
+  /\b(indian|japanese|chinese|american|european|british|german|french|italian|spanish|brazilian|mexican|canadian|australian|korean|russian|turkish|polish|dutch|swiss|swedish|norwegian|danish|belgian|austrian|nigerian|egyptian|argentine|argentinian|chilean|colombian|filipino|indonesian|malaysian|singaporean|thai|vietnamese|saudi|emirati|israeli|african|asian|latin american|north american|middle eastern)\b/gi
+
+/** The market name with any geography adjective removed. */
+export function stripDemonyms(marketName: string | null | undefined): string {
+  return (marketName ?? '')
+    .replace(DEMONYMS, ' ')
+    .replace(/\s{2,}/g, ' ')
+    .replace(/\s+,/g, ',')
+    .trim()
+}
+
 export function stripScopePrefix(marketName: string | null | undefined): string {
-  let name = (marketName ?? '').trim()
+  let name = stripDemonyms(marketName).trim()
   if (!name) return ''
   const prefixes = [...KNOWN_SCOPES].sort((a, b) => b.length - a.length)
 

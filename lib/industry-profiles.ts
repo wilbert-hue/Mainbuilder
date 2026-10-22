@@ -14,6 +14,11 @@
  * recognise falls back to a general industrial profile.
  */
 
+import { composeProfile } from '@/lib/profile-composer'
+import { offeringTypeOf } from '@/lib/demo-survey-offering'
+import { isConsumerMarket } from '@/lib/market-flavour'
+import { stripScopePrefix } from '@/lib/market-scope'
+
 export interface ScoringParameter {
   name: string
   definition: string
@@ -735,6 +740,35 @@ export const INDUSTRY_PROFILES = {
     buyerSegments: ['Supermarket and Grocery Retail', 'Convenience and Specialty Retail', 'Ecommerce Platforms', 'Wholesale and Distribution', 'Hotels Restaurants and Catering', 'Institutional Buyers'],
   },
 
+  consumer_electronics: {
+    label: 'consumer electronics',
+    xParameters: [
+      p('Audio & Device Performance', 'Measured performance against the claims made: sound quality, display, battery life or sensor accuracy as the category requires.'),
+      p('Build Quality & Durability', 'Materials, assembly and the failure rate seen in the field over normal use.'),
+      p('Feature Set & Connectivity', 'Features and connectivity offered against competing models at the same price.'),
+      p('Design, Comfort & User Experience', 'Industrial design, fit and the ease of living with the product day to day.'),
+      p('Certification & Safety Compliance', 'Electrical, radio and battery safety certification for the markets sold into.'),
+    ],
+    customerBase: p('Retail & Channel Customer Base', 'Coverage across electronics retail, ecommerce platforms, telecom channels and institutional buyers, and the shelf space held.'),
+    triggerSignals: [
+      'Category range review opened at an electronics retail chain',
+      'New model launch cycle opening supplier discussions',
+      'Ecommerce platform expanding its own label range',
+      'Telecom operator bundling devices with a new plan',
+      'Hiring category buyers or product managers for the category',
+      'Entry into a new country requiring local certification',
+    ],
+    organisations: [
+      'National electronics and appliance retail chains',
+      'Ecommerce and quick commerce platforms',
+      'Telecom operator retail channels',
+      'Regional distributors and importers',
+      'Corporate and institutional bulk buyers',
+    ],
+    designations: ['Category Buyer', 'Procurement Manager', 'Product Manager', 'Merchandising Manager', 'Supply Chain Lead', 'Quality Manager'],
+    buyerSegments: ['Electronics and Specialty Retail', 'Ecommerce Platforms', 'Telecom Retail Channels', 'Distribution and Wholesale', 'Corporate and Institutional Buyers', 'Brand and Private Label Owners'],
+  },
+
   industrial: {
     label: 'industrial goods',
     xParameters: [
@@ -776,6 +810,7 @@ const RULES: { key: IndustryKey; test: RegExp }[] = [
   { key: 'industrial_equipment', test: /\b(aerial|work|elevating|access|lifting|scissor|boom|mast)\s+platforms?\b/i },
   // A cell or module is a component even when the name says what it powers.
   { key: 'electronics', test: /\b(battery cells?|lithium[\s-]?ion|cells? for|modules?|semiconductors?|microcontrollers?)\b/i },
+  { key: 'consumer_electronics', test: /\b(headphones?|earphones?|earbuds?|speakers?|soundbars?|smart ?watch\w*|wearables?|fitness trackers?|television|\btv\b|laptops?|tablets?|smartphones?|mobile phones?|cameras?|gaming consoles?|printers?|monitors?|home appliances?|air purifiers?|vacuum cleaners?|electric (?:tooth)?brush\w*|shavers?|trimmers?|hearing aids?)\b/i },
   { key: 'spices', test: /\b(spices?|seasonings?|masala|herbs?|condiments?|oleoresins?)\b/i },
   { key: 'water_treatment', test: /\b(water|wastewater|effluent|desalination|sewage|reuse|recycling and reuse)\b/i },
   { key: 'diagnostics', test: /\b(diagnostics?|assays?|ivd|pathology|laborator\w+|testing kits?|reagents?)\b/i },
@@ -801,14 +836,53 @@ const RULES: { key: IndustryKey; test: RegExp }[] = [
   { key: 'industrial_equipment', test: /\b(equipment|machine\w*|pump|pumps|valve|valves|compressor|turbine|robot|robotics|aerial work platform|forklift|crane|conveyor|hvac)\b/i },
 ]
 
-export function classifyIndustry(marketName: string | null | undefined): IndustryKey {
+/**
+ * Who ends up with the thing, when the industry is not one we name.
+ *
+ * The business test runs first: an office chair and a yoga mat are both
+ * furniture to a keyword, but one is bought by a facilities manager and the
+ * other off a shelf, and the word that settles it is "office".
+ */
+const BUSINESS_SIGNALS =
+  /\b(industrial|commercial|enterprise|professional|institutional|medical|clinical|laboratory|aerospace|military|defence|defense|marine|offshore|mining|agricultural|construction|office|warehouse|factory|plant|machinery|machine tools?|cnc|hydraulic|pneumatic|bearings?|gearbox|compressors?|generators?|turbines?|valves?|pumps?|fleet|b2b|wholesale|bulk)\b/i
+
+/** Things a shopper buys, where no business word applies. */
+const CONSUMER_SIGNALS =
+  /\b(consumer|retail|household|personal|home|kitchen|baby|infant|pet|fashion|lifestyle|leisure|sports?|outdoor|wearable|handheld|portable|mats?|bicycles?|bikes?|instruments?|guitars?|pianos?|toys?|games?|luggage|backpacks?|watch(?:es)?|jewell?ery|cookware|bedding|mattress(?:es)?|sofas?|furniture|apparel|clothing|shoes?|footwear|cosmetics?|skin ?care|hair ?care|snacks?|beverages?|coffee|tea|strollers?|diapers?|books?|stationery|fitness|yoga|camping|gifts?|candles?|perfumes?|grooming|hobby|craft)\b/i
+
+/** The named industry for a market, or null when the list does not know it. */
+export function classifyIndustry(marketName: string | null | undefined): IndustryKey | null {
   const name = marketName ?? ''
   for (const rule of RULES) if (rule.test.test(name)) return rule.key
-  return 'industrial'
+  return null
 }
 
+/**
+ * The profile for a market: a named industry where one is recognised, and
+ * otherwise one composed from who buys it and what kind of thing it is.
+ *
+ * Never heavy industry by default — that is how a headphone study ended up
+ * surveying engineering contractors and public infrastructure agencies.
+ */
 export function industryProfile(marketName: string | null | undefined): IndustryProfile {
-  return INDUSTRY_PROFILES[classifyIndustry(marketName)]
+  const key = classifyIndustry(marketName)
+  // "Office furniture" is furniture to a keyword and a facilities purchase in
+  // life, so a business word overrides a consumer category.
+  const consumerKey = key === 'consumer_goods' || key === 'consumer_electronics'
+  if (key && !(consumerKey && BUSINESS_SIGNALS.test(marketName ?? ''))) {
+    return INDUSTRY_PROFILES[key]
+  }
+
+  const name = marketName ?? ''
+  const subject =
+    stripScopePrefix(name).replace(/\b(market|industry|analysis|report)\b/gi, '').trim() || name
+  const audience = BUSINESS_SIGNALS.test(name)
+    ? 'business'
+    : CONSUMER_SIGNALS.test(name) || isConsumerMarket(name)
+      ? 'consumer'
+      : 'business'
+
+  return composeProfile(subject, audience, offeringTypeOf(name))
 }
 
 /** The four scoring parameters every market shares on the business axis. */
