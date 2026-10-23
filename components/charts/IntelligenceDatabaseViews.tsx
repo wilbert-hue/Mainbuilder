@@ -40,7 +40,11 @@ export function IntelligenceDatabaseViews({ preferredSource }: IntelligenceDatab
     (intelligenceType === 'customer' || intelligenceType === 'both') && hasCustomerWorkbook
   const showDistributor =
     (intelligenceType === 'distributor' || intelligenceType === 'both') && hasDistributorWorkbook
-  const [activeSource, setActiveSource] = useState<IntelligenceSource>('customer')
+  // Seeded from the caller so a distributor panel opens on the distributor
+  // table, rather than rendering the customer one for a frame first.
+  const [activeSource, setActiveSource] = useState<IntelligenceSource>(
+    preferredSource ?? 'customer'
+  )
 
   useEffect(() => {
     if (!preferredSource) return

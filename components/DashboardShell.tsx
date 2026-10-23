@@ -123,7 +123,8 @@ export function DashboardShell({ readOnly = false }: Props) {
 
   const [activeTab, setActiveTab] = useState<ActiveTab>('bar')
   /** Selected panel in the no-market-data shell (intelligence / b2b / b2c). */
-  const [standaloneTab, setStandaloneTab] = useState<string>('intelligence')
+  // Empty until a tab is clicked; the first available panel is used meanwhile.
+  const [standaloneTab, setStandaloneTab] = useState<string>('')
   const [showInsights, setShowInsights] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [viewMode, setViewMode] = useState<'tabs' | 'vertical'>('tabs')
@@ -293,8 +294,18 @@ export function DashboardShell({ readOnly = false }: Props) {
 
     const hasWorkbook = hasCustomerWorkbook || hasDistributorWorkbook
     // Panels available in this cut-down shell, in display order.
+    //
+    // The two directories get a tab each. This strip is the only navigation on
+    // an intelligence-only dashboard, and IntelligenceDatabaseViews carries no
+    // tab strip of its own, so collapsing both into a single entry left the
+    // distributor table unreachable behind a heading that named it.
     const standalonePanels: { key: string; label: string }[] = [
-      ...(hasWorkbook ? [{ key: 'intelligence', label: intelligenceLabel }] : []),
+      ...(hasCustomerWorkbook
+        ? [{ key: 'intelligence-customer', label: 'Customer Intelligence' }]
+        : []),
+      ...(hasDistributorWorkbook
+        ? [{ key: 'intelligence-distributor', label: distributorLabel }]
+        : []),
       ...(hasB2bSurvey ? [{ key: 'b2b-survey', label: 'Voice of Customer - B2B' }] : []),
       ...(hasB2cSurvey ? [{ key: 'b2c-survey', label: 'Voice of Customer - B2C' }] : []),
       ...(hasQuadrant ? [{ key: 'coherent-quadrant', label: 'Vendor Intelligence (Coherent Quadrant)' }] : []),
@@ -361,7 +372,12 @@ export function DashboardShell({ readOnly = false }: Props) {
             )}
             <div className="p-6">
               <CountryGate countries={countryOptions} covered={coveredScope}>
-                {activePanel === 'intelligence' && <IntelligenceDatabaseViews />}
+                {activePanel === 'intelligence-customer' && (
+                  <IntelligenceDatabaseViews preferredSource="customer" />
+                )}
+                {activePanel === 'intelligence-distributor' && (
+                  <IntelligenceDatabaseViews preferredSource="distributor" />
+                )}
                 {activePanel === 'b2b-survey' && <BuyerSurveyView kind="b2b" />}
                 {activePanel === 'b2c-survey' && <BuyerSurveyView kind="b2c" />}
                 {activePanel === 'coherent-quadrant' && <QuadrantView />}
@@ -561,11 +577,17 @@ export function DashboardShell({ readOnly = false }: Props) {
                     {isChartVisible('waterfall') && <div className="border-b pb-8 relative">{showDemoNote && <DemoBadge />}<h3 className="text-lg font-semibold text-black mb-4">Waterfall Chart</h3><WaterfallChart title="Contribution Analysis - Waterfall Chart" height={400} /></div>}
                     {isChartVisible('bubble') && <div className="border-b pb-8 relative"><h3 className="text-lg font-semibold text-black mb-4">Bubble Chart</h3><D3BubbleChartIndependent title="Coherent Opportunity Matrix" height={450} /></div>}
                     {isChartVisible('competitive-intelligence') && <div className="border-b pb-8 relative"><CompetitiveIntelligence height={600} /></div>}
-                    {(isChartVisible('customer-intelligence') ||
-                      isChartVisible('distributor-intelligence')) && (
+                    {/* One block each: this layout stacks every chart rather
+                        than tabbing between them, so a single view would show
+                        whichever directory it defaulted to and drop the other. */}
+                    {isChartVisible('customer-intelligence') && (
                       <div className="border-b pb-8 relative">
-                        
-                        <IntelligenceDatabaseViews />
+                        <IntelligenceDatabaseViews preferredSource="customer" />
+                      </div>
+                    )}
+                    {isChartVisible('distributor-intelligence') && (
+                      <div className="border-b pb-8 relative">
+                        <IntelligenceDatabaseViews preferredSource="distributor" />
                       </div>
                     )}
                     {isChartVisible('pricing-grouped-bar') && <div className="border-b pb-8 relative"><PricingAnalysisView activeTab="bar" /></div>}
