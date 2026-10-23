@@ -303,6 +303,18 @@ export function buildB2bQuestionnaire(
   const titles = SECTION_TITLES[offering]
   const askable = askableSubject(subject)
   const profile = industryProfile(subject)
+  // Retail and wholesale buyers buy from a supplier; a plant buys a brand.
+  const tradeBuyer = /\b(retail|ecommerce|supermarket|grocery|convenience|wholesal\w+|store|channel|catering|restaurant)\b/i.test(
+    profile.organisations.join(' ')
+  )
+  const supplierChain: Record<string, string> = {
+    brand: `Which supplier does your organisation buy its ${askable} from?`,
+    provider: `Which supplier does your organisation buy its ${askable} from?`,
+    brandParameters: `Based on price, availability and promotional support, which supplier does your organisation buy ${askable} from?`,
+    providerParameters: `Based on price, availability and promotional support, which supplier does your organisation buy ${askable} from?`,
+    brandExperience: `How would you rate your overall experience with the supplier you buy ${askable} from?`,
+    providerExperience: `How would you rate your overall experience with the supplier you buy ${askable} from?`,
+  }
 
   /** The industry's scoring parameters, phrased as something a buyer answers. */
   const buyingQuestion = (index: number): string | null => {
@@ -346,6 +358,7 @@ export function buildB2bQuestionnaire(
 
       const phrase = PHRASING[theme]
       const text =
+        (tradeBuyer ? supplierChain[theme] : undefined) ??
         industryText ??
         (phrase
           ? phrase(askable, geo)

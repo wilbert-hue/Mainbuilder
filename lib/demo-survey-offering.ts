@@ -23,7 +23,7 @@ const MECHANICAL_PLATFORM =
 const RULES: { type: OfferingType; test: RegExp }[] = [
   {
     type: 'Service',
-    test: /\b(services?|servicing|inspection|testing|maintenance|consult\w*|training|logistics|outsourc\w*|repair|surveying|monitoring|trials?|audit\w*|certification|vegetation management|asset management|facility management|fleet management)\b/i,
+    test: /\b(services?|servicing|inspection|testing|maintenance|consult\w*|training|logistics|outsourc\w*|repair|surveying|monitoring|trials?|audit\w*|certification|insurance|brokerage|banking|advisory|rental|leasing|hire|vegetation management|asset management|facility management|fleet management)\b/i,
   },
   {
     type: 'Platform',

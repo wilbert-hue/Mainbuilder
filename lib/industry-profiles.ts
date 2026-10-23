@@ -711,6 +711,35 @@ export const INDUSTRY_PROFILES = {
     buyerSegments: ['Diagnostic Laboratory Chains', 'Hospital Laboratories', 'Public Health Agencies', 'Research Institutions', 'Collection Networks', 'Distribution Partners'],
   },
 
+  beverages: {
+    label: 'beverages',
+    xParameters: [
+      p('Taste Profile & Product Consistency', 'Consistency of taste and carbonation from batch to batch and across bottling sites.'),
+      p('Pack Format & Size Range', 'Range across cans, bottles and multipacks covering the occasions the category sells into.'),
+      p('Shelf Life & Cold Chain Handling', 'Shelf life delivered and the handling the product needs through distribution.'),
+      p('Food Safety & Ingredient Compliance', 'Ingredient approval, labelling and food safety certification in each market sold into.'),
+      p('Bottling Capacity & Fill Rate', 'Bottling and distribution capacity behind the range, and the ability to keep stock on shelf.'),
+    ],
+    customerBase: p('Retail & Foodservice Customer Base', 'Coverage across grocery retail, convenience, quick service restaurants, vending and institutional channels.'),
+    triggerSignals: [
+      'Category range review opened at a grocery or convenience chain',
+      'New outlet format or store cluster rolling out',
+      'Quick service restaurant renegotiating its pouring agreement',
+      'Vending or institutional contract approaching renewal',
+      'Hiring category buyers or beverage merchandisers',
+      'Sugar tax or labelling rule changing the approved range',
+    ],
+    organisations: [
+      'National supermarket and grocery chains',
+      'Convenience and forecourt retail groups',
+      'Quick service restaurant and cafe chains',
+      'Beverage wholesalers and cash and carry operators',
+      'Vending and institutional catering operators',
+    ],
+    designations: ['Category Buyer', 'Procurement Manager', 'Beverage Merchandiser', 'Supply Chain Lead', 'Store Operations Manager', 'Quality Manager'],
+    buyerSegments: ['Grocery and Supermarket Retail', 'Convenience and Forecourt', 'Quick Service Restaurants and Cafes', 'Hotels Restaurants and Catering', 'Vending and Institutional', 'Wholesale and Distribution'],
+  },
+
   consumer_goods: {
     label: 'consumer goods',
     xParameters: [
@@ -809,29 +838,31 @@ const RULES: { key: IndustryKey; test: RegExp }[] = [
   // Machinery that happens to be called a platform, read before the software rule.
   { key: 'industrial_equipment', test: /\b(aerial|work|elevating|access|lifting|scissor|boom|mast)\s+platforms?\b/i },
   // A cell or module is a component even when the name says what it powers.
-  { key: 'electronics', test: /\b(battery cells?|lithium[\s-]?ion|cells? for|modules?|semiconductors?|microcontrollers?)\b/i },
-  { key: 'consumer_electronics', test: /\b(headphones?|earphones?|earbuds?|speakers?|soundbars?|smart ?watch\w*|wearables?|fitness trackers?|television|\btv\b|laptops?|tablets?|smartphones?|mobile phones?|cameras?|gaming consoles?|printers?|monitors?|home appliances?|air purifiers?|vacuum cleaners?|electric (?:tooth)?brush\w*|shavers?|trimmers?|hearing aids?)\b/i },
+  { key: 'electronics', test: /\b(battery cells?|lithium[\s-]?ion|semiconductors?|microcontrollers?|chipsets?|wafers?|printed circuits?)\b/i },
+  { key: 'consumer_electronics', test: /\b(headphones?|earphones?|earbuds?|speakers?|soundbars?|smart ?watch\w*|wearables?|fitness trackers?|television|\btv\b|laptops?|tablets?|smartphones?|mobile phones?|cameras?|gaming consoles?|printers?|monitors?|home appliances?|air purifiers?|vacuum cleaners?|electric (?:tooth)?brush\w*|shavers?|trimmers?|hearing aids?|air conditioners?|refrigerators?|washing machines?|microwaves?|smart home|streaming devices?|gaming|video games?)\b/i },
+  { key: 'beverages', test: /\b(beverages?|drinks?|soft drinks?|carbonated|cola|coke|pepsi|soda|sparkling water|bottled water|energy drinks?|sports drinks?|juices?|iced tea|coffee|tea|dairy drinks?|smoothies?|squash|syrups?|tonic|mixers?)\b/i },
   { key: 'spices', test: /\b(spices?|seasonings?|masala|herbs?|condiments?|oleoresins?)\b/i },
   { key: 'water_treatment', test: /\b(water|wastewater|effluent|desalination|sewage|reuse|recycling and reuse)\b/i },
   { key: 'diagnostics', test: /\b(diagnostics?|assays?|ivd|pathology|laborator\w+|testing kits?|reagents?)\b/i },
-  { key: 'medical_devices', test: /\b(medical devices?|wound|surgical|catheters?|implants?|orthop\w+|dental|npwt|patient|hospital equipment|therapy devices?|stents?|prosthe\w+)\b/i },
+  { key: 'medical_devices', test: /\b(medical devices?|wound|surgical|catheters?|implants?|orthop\w+|dental|npwt|patient|hospital equipment|hospital furniture|hospital beds?|medical furniture|therapy devices?|stents?|prosthe\w+)\b/i },
   { key: 'pharma', test: /\b(pharmaceuticals?|pharma|drugs?|biosimilars?|biologics?|vaccines?|generics?|api\b|medicines?|injectables?)\b/i },
   { key: 'cosmetics', test: /\b(cosmetic|cosmetics|skin ?care|hair ?care|personal care|beauty|fragrance|perfume|toiletr\w+)\b/i },
   { key: 'food_ingredients', test: /\b(ingredients?|lactoferrin|antioxidants?|emulsifiers?|enzymes?|proteins?|extracts?|additives?|nutraceuticals?|supplements?|flavou?rs?|sweeteners?|starch|probiotics?|whey|casein)\b/i },
-  { key: 'consumer_goods', test: /\b(edible oils?|cooking oils?|beverages?|snacks?|confectioner\w+|dairy|biscuits?|noodles?|packaged foods?|apparel|footwear|furniture|toys?|pet food|whisk(?:y|ey)|spirits?|wine|beer|household|detergents?|tobacco|consumer|grocer\w+|brush|brushes|toothbrush\w*|razors?|oral care|diapers?|tissue)\b/i },
+  { key: 'consumer_goods', test: /\b(edible oils?|cooking oils?|snacks?|chips|crisps|baby (?:food|formula)|infant formula|cereals?|frozen foods?|ready meals?|sauces?|ice ?creams?|chocolates?|confectioner\w+|dairy|biscuits?|noodles?|packaged foods?|apparel|footwear|furniture|toys?|pet food|whisk(?:y|ey)|spirits?|wine|beer|household|detergents?|tobacco|consumer|grocer\w+|brush|brushes|toothbrush\w*|razors?|oral care|diapers?|tissue|mattress(?:es)?|luggage|watch(?:es)?|jewell?ery)\b/i },
   { key: 'agriculture', test: /\b(agricultur\w+|agri|crops?|fertili[sz]ers?|pesticides?|herbicides?|insecticides?|seeds?|farms?|farming|irrigation|agrochemicals?)\b/i },
   { key: 'drones_geospatial', test: /\b(drone|drones|uav|geospatial|lidar|remote sensing|aerial (survey|imaging|inspection)|photogrammetry|gis)\b/i },
   { key: 'datacenter', test: /\b(data ?cent(er|re)|colocation|hyperscale|server|rack|cooling infrastructure)\b/i },
   { key: 'software_platform', test: /\b(software|saas|platform|cloud|cyber\w*|analytics|digital twin|automation software|erp|crm|payable|invoice|workflow|application)\b/i },
   { key: 'telecom', test: /\b(telecom\w*|5g|mobile network|broadband|fibre|fiber|tower|spectrum|base station)\b/i },
-  { key: 'electronics', test: /\b(semiconductor|electronics|chip|chips|pcb|sensor|sensors|display|battery cell|microcontroller)\b/i },
+  { key: 'electronics', test: /\b(semiconductors?|electronics|chipsets?|pcb|sensors?|displays?|battery cells?|microcontrollers?|integrated circuits?)\b/i },
   { key: 'renewables_hydrogen', test: /\b(renewable|solar|wind|hydrogen|electroly[sz]er|biofuel|green energy|energy storage|battery storage)\b/i },
   { key: 'power_grid', test: /\b(transmission|substation|power ?line|grid|utility asset|switchgear|transformer|distribution network|electricity)\b/i },
   { key: 'oil_gas', test: /\b(oil|gas|petroleum|refinery|refining|petrochemical|upstream|downstream|pipeline|lng)\b/i },
+  { key: 'construction', test: /\b(construction|cement|concrete|building materials?|infrastructure|flooring|roofing|insulation|aggregates?|rebars?|tmt bars?|steel bars?|bricks?|tiles?)\b/i },
   { key: 'mining', test: /\b(mining|minerals?|ores?|smelting|metallurg\w+|steel|aluminium|aluminum|coal)\b/i },
-  { key: 'automotive', test: /\b(automotive|vehicle|vehicles|car|cars|electric vehicle|\bev\b|truck|two wheeler|tyre|tire|auto component)\b/i },
-  { key: 'packaging', test: /\b(packaging|packag\w+|cartons?|bottles?|closures?|pouches?|label stock|container board|films? for packaging)\b/i },
-  { key: 'construction', test: /\b(construction|cement|concrete|building materials?|infrastructure|flooring|roofing|insulation|aggregates?)\b/i },
+  { key: 'automotive', test: /^(?!.*\b(rental|leasing|hire|sharing|subscription)\b).*\b(automotive|vehicles?|cars?|electric vehicles?|\bev\b|trucks?|two wheelers?|tyres?|tires?|auto components?)\b/i },
+  { key: 'chemicals', test: /\b(lubricants?|greases?|solvents?|chemicals?|polymers?|resins?|adhesives?|coatings?|paints?|pigments?|surfactants?|catalysts?)\b/i },
+  { key: 'packaging', test: /\b(packaging|packag\w+|cartons?|bottles?|closures?|pouches?|label stock|container board|corrugated|boxes|crates?|wrapping)\b/i },
   { key: 'logistics', test: /\b(logistics|freight|warehous\w+|supply chain|shipping|courier|cold chain|transport)\b/i },
   { key: 'industrial_equipment', test: /\b(equipment|machine\w*|pump|pumps|valve|valves|compressor|turbine|robot|robotics|aerial work platform|forklift|crane|conveyor|hvac)\b/i },
 ]
@@ -844,7 +875,7 @@ const RULES: { key: IndustryKey; test: RegExp }[] = [
  * other off a shelf, and the word that settles it is "office".
  */
 const BUSINESS_SIGNALS =
-  /\b(industrial|commercial|enterprise|professional|institutional|medical|clinical|laboratory|aerospace|military|defence|defense|marine|offshore|mining|agricultural|construction|office|warehouse|factory|plant|machinery|machine tools?|cnc|hydraulic|pneumatic|bearings?|gearbox|compressors?|generators?|turbines?|valves?|pumps?|fleet|b2b|wholesale|bulk)\b/i
+  /\b(industrial|commercial|enterprise|professional|institutional|medical|clinical|hospital|surgical|patient|laboratory|aerospace|military|defence|defense|marine|offshore|mining|agricultural|construction|office|warehouse|factory|plant|machinery|machine tools?|cnc|hydraulic|pneumatic|bearings?|gearbox|compressors?|generators?|turbines?|valves?|pumps?|fleet|b2b|wholesale|bulk)\b/i
 
 /** Things a shopper buys, where no business word applies. */
 const CONSUMER_SIGNALS =
