@@ -96,7 +96,7 @@ export function ChartGroupSelector({ orientation = 'vertical' }: ChartGroupSelec
   useEffect(() => {
     const isCurrentGroupInvalid =
       (selectedChartGroup === 'taxonomy' && !hasMarketData) ||
-      (selectedChartGroup === 'coherent-opportunity' && (hasB2bSurveyData || hasB2cSurveyData)) ||
+      (selectedChartGroup === 'coherent-opportunity' && !hasMarketData) ||
       (selectedChartGroup === 'customer-intelligence' && !hasCustomerIntelligenceData) ||
       (selectedChartGroup === 'distributor-intelligence' && !hasDistributorIntelligenceData) ||
       (selectedChartGroup === 'competitive-intelligence' && !hasCompetitiveIntelligenceData) ||
@@ -129,10 +129,11 @@ export function ChartGroupSelector({ orientation = 'vertical' }: ChartGroupSelec
     if (group.id === 'taxonomy') return hasMarketData
     // Market views need the value/volume workbook behind them.
     if (group.id === 'market-analysis') return hasMarketData
-    // B2B findings supersede the Opportunity Matrix: when that survey is
-    // loaded, hide the matrix rather than presenting two competing reads of
-    // the same opportunity question.
-    if (group.id === 'coherent-opportunity') return hasMarketData && !hasB2bSurveyData
+    // The matrix reads the value/volume workbook, so market data is all it
+    // needs. A buyer survey used to hide it, on the grounds that the two
+    // answered the same question twice; they are now shown side by side so a
+    // reader can weigh the survey's findings against the modelled opportunity.
+    if (group.id === 'coherent-opportunity') return hasMarketData
     if (group.id === 'customer-intelligence') return hasCustomerIntelligenceData
     if (group.id === 'distributor-intelligence') return hasDistributorIntelligenceData
     if (group.id === 'competitive-intelligence') return hasCompetitiveIntelligenceData
