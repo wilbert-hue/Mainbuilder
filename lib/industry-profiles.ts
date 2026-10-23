@@ -842,27 +842,33 @@ const RULES: { key: IndustryKey; test: RegExp }[] = [
   { key: 'consumer_electronics', test: /\b(headphones?|earphones?|earbuds?|speakers?|soundbars?|smart ?watch\w*|wearables?|fitness trackers?|television|\btv\b|laptops?|tablets?|smartphones?|mobile phones?|cameras?|gaming consoles?|printers?|monitors?|home appliances?|air purifiers?|vacuum cleaners?|electric (?:tooth)?brush\w*|shavers?|trimmers?|hearing aids?|air conditioners?|refrigerators?|washing machines?|microwaves?|smart home|streaming devices?|gaming|video games?)\b/i },
   { key: 'beverages', test: /\b(beverages?|drinks?|soft drinks?|carbonated|cola|coke|pepsi|soda|sparkling water|bottled water|energy drinks?|sports drinks?|juices?|iced tea|coffee|tea|dairy drinks?|smoothies?|squash|syrups?|tonic|mixers?)\b/i },
   { key: 'spices', test: /\b(spices?|seasonings?|masala|herbs?|condiments?|oleoresins?)\b/i },
-  { key: 'water_treatment', test: /\b(water|wastewater|effluent|desalination|sewage|reuse|recycling and reuse)\b/i },
+  // The phrases carry this rule: bare "water" is a modifier far more often
+  // than a product ("water bottle", "water heater", "coconut water").
+  { key: 'water_treatment', test: /\b(water treatment|wastewater treatment|water and wastewater|water recycling|water reuse|water utilit\w+|effluent treatment|water|wastewater|effluent|desalination|sewage)\b/i },
   { key: 'diagnostics', test: /\b(diagnostics?|assays?|ivd|pathology|laborator\w+|testing kits?|reagents?)\b/i },
-  { key: 'medical_devices', test: /\b(medical devices?|wound|surgical|catheters?|implants?|orthop\w+|dental|npwt|patient|hospital equipment|hospital furniture|hospital beds?|medical furniture|therapy devices?|stents?|prosthe\w+)\b/i },
+  { key: 'medical_devices', test: /\b(medical devices?|wound care|wound dressings?|wound|surgical|catheters?|implants?|orthop\w+|dental|npwt|patient|hospital equipment|hospital furniture|hospital beds?|medical furniture|therapy devices?|stents?|prosthe\w+)\b/i },
   { key: 'pharma', test: /\b(pharmaceuticals?|pharma|drugs?|biosimilars?|biologics?|vaccines?|generics?|api\b|medicines?|injectables?)\b/i },
-  { key: 'cosmetics', test: /\b(cosmetic|cosmetics|skin ?care|hair ?care|personal care|beauty|fragrance|perfume|toiletr\w+)\b/i },
+  { key: 'cosmetics', test: /\b(essential oils?|cosmetic|cosmetics|skin ?care|hair ?care|personal care|beauty|fragrance|perfume|toiletr\w+)\b/i },
   { key: 'food_ingredients', test: /\b(ingredients?|lactoferrin|antioxidants?|emulsifiers?|enzymes?|proteins?|extracts?|additives?|nutraceuticals?|supplements?|flavou?rs?|sweeteners?|starch|probiotics?|whey|casein)\b/i },
-  { key: 'consumer_goods', test: /\b(edible oils?|cooking oils?|snacks?|chips|crisps|baby (?:food|formula)|infant formula|cereals?|frozen foods?|ready meals?|sauces?|ice ?creams?|chocolates?|confectioner\w+|dairy|biscuits?|noodles?|packaged foods?|apparel|footwear|furniture|toys?|pet food|whisk(?:y|ey)|spirits?|wine|beer|household|detergents?|tobacco|consumer|grocer\w+|brush|brushes|toothbrush\w*|razors?|oral care|diapers?|tissue|mattress(?:es)?|luggage|watch(?:es)?|jewell?ery)\b/i },
+  // Plant and edible oils are groceries; without them "oil" alone sends an
+  // olive oil market to the petroleum profile.
+  { key: 'consumer_goods', test: /\b((?:olive|coconut|sunflower|mustard|palm|groundnut|peanut|sesame|canola|rapeseed|soybean|rice bran|vegetable|edible|cooking)\s+oils?|ghee|snacks?|chips|crisps|baby (?:food|formula)|infant formula|cereals?|frozen foods?|ready meals?|sauces?|ice ?creams?|chocolates?|confectioner\w+|dairy|biscuits?|noodles?|packaged foods?|apparel|footwear|furniture|toys?|pet food|whisk(?:y|ey)|spirits?|wine|beer|household|detergents?|tobacco|consumer|grocer\w+|brush|brushes|toothbrush\w*|razors?|oral care|diapers?|tissue|mattress(?:es)?|luggage|watch(?:es)?|jewell?ery|water bottles?|drinkware|tumblers?|sippers?|vacuum flasks?|cookware|utensils?|crocker\w+|cutlery|tableware)\b/i },
   { key: 'agriculture', test: /\b(agricultur\w+|agri|crops?|fertili[sz]ers?|pesticides?|herbicides?|insecticides?|seeds?|farms?|farming|irrigation|agrochemicals?)\b/i },
   { key: 'drones_geospatial', test: /\b(drone|drones|uav|geospatial|lidar|remote sensing|aerial (survey|imaging|inspection)|photogrammetry|gis)\b/i },
   { key: 'datacenter', test: /\b(data ?cent(er|re)|colocation|hyperscale|server|rack|cooling infrastructure)\b/i },
-  { key: 'software_platform', test: /\b(software|saas|platform|cloud|cyber\w*|analytics|digital twin|automation software|erp|crm|payable|invoice|workflow|application)\b/i },
-  { key: 'telecom', test: /\b(telecom\w*|5g|mobile network|broadband|fibre|fiber|tower|spectrum|base station)\b/i },
+  { key: 'software_platform', test: /\b(artificial intelligence|machine learning|generative ai|causal ai|\bai\b|software|saas|platform|cloud|cyber\w*|analytics|digital twin|automation software|erp|crm|payable|invoice|workflow|application)\b/i },
+  { key: 'telecom', test: /\b(5g infrastructure|5g networks?|telecom infrastructure|network infrastructure|mobile infrastructure|telecom\w*|5g|mobile network|broadband|fibre|fiber|tower|spectrum|base station)\b/i },
   { key: 'electronics', test: /\b(semiconductors?|electronics|chipsets?|pcb|sensors?|displays?|battery cells?|microcontrollers?|integrated circuits?)\b/i },
-  { key: 'renewables_hydrogen', test: /\b(renewable|solar|wind|hydrogen|electroly[sz]er|biofuel|green energy|energy storage|battery storage)\b/i },
+  { key: 'renewables_hydrogen', test: /\b(renewable energy|solar energy|solar power|solar pv|wind energy|wind power|offshore wind|green hydrogen|renewable|solar|wind|hydrogen|electroly[sz]er|biofuel|green energy|energy storage|battery storage)\b/i },
   { key: 'power_grid', test: /\b(transmission|substation|power ?line|grid|utility asset|switchgear|transformer|distribution network|electricity)\b/i },
-  { key: 'oil_gas', test: /\b(oil|gas|petroleum|refinery|refining|petrochemical|upstream|downstream|pipeline|lng)\b/i },
+  // "Oil" on its own is a botanical or culinary word as often as a petroleum
+  // one — tea tree, olive, coconut — so it only counts here in context.
+  { key: 'oil_gas', test: /\b(oil and gas|oil ?field|crude oil|fuel oil|motor oil|engine oil|lubricating oil|heating oil|shale oil|gas|petroleum|refinery|refining|petrochemical|upstream|downstream|pipeline|lng)\b/i },
   { key: 'construction', test: /\b(construction|cement|concrete|building materials?|infrastructure|flooring|roofing|insulation|aggregates?|rebars?|tmt bars?|steel bars?|bricks?|tiles?)\b/i },
   { key: 'mining', test: /\b(mining|minerals?|ores?|smelting|metallurg\w+|steel|aluminium|aluminum|coal)\b/i },
   { key: 'automotive', test: /^(?!.*\b(rental|leasing|hire|sharing|subscription)\b).*\b(automotive|vehicles?|cars?|electric vehicles?|\bev\b|trucks?|two wheelers?|tyres?|tires?|auto components?)\b/i },
   { key: 'chemicals', test: /\b(lubricants?|greases?|solvents?|chemicals?|polymers?|resins?|adhesives?|coatings?|paints?|pigments?|surfactants?|catalysts?)\b/i },
-  { key: 'packaging', test: /\b(packaging|packag\w+|cartons?|bottles?|closures?|pouches?|label stock|container board|corrugated|boxes|crates?|wrapping)\b/i },
+  { key: 'packaging', test: /\b(packaging|packag\w+|cartons?|closures?|pouches?|label stock|container board|corrugated|boxes|crates?|wrapping|paper|paperboard|pet bottles?|glass bottles?|plastic bottles?|bottles?)\b/i },
   { key: 'logistics', test: /\b(logistics|freight|warehous\w+|supply chain|shipping|courier|cold chain|transport)\b/i },
   { key: 'industrial_equipment', test: /\b(equipment|machine\w*|pump|pumps|valve|valves|compressor|turbine|robot|robotics|aerial work platform|forklift|crane|conveyor|hvac)\b/i },
 ]
@@ -879,13 +885,102 @@ const BUSINESS_SIGNALS =
 
 /** Things a shopper buys, where no business word applies. */
 const CONSUMER_SIGNALS =
-  /\b(consumer|retail|household|personal|home|kitchen|baby|infant|pet|fashion|lifestyle|leisure|sports?|outdoor|wearable|handheld|portable|mats?|bicycles?|bikes?|instruments?|guitars?|pianos?|toys?|games?|luggage|backpacks?|watch(?:es)?|jewell?ery|cookware|bedding|mattress(?:es)?|sofas?|furniture|apparel|clothing|shoes?|footwear|cosmetics?|skin ?care|hair ?care|snacks?|beverages?|coffee|tea|strollers?|diapers?|books?|stationery|fitness|yoga|camping|gifts?|candles?|perfumes?|grooming|hobby|craft)\b/i
+  /\b(consumer|retail|household|personal|home|kitchen|baby|infant|pet|fashion|lifestyle|leisure|sports?|outdoor|wearable|handheld|portable|mats?|bicycles?|bikes?|instruments?|guitars?|pianos?|toys?|games?|luggage|backpacks?|watch(?:es)?|jewell?ery|cookware|bedding|mattress(?:es)?|sofas?|furniture|apparel|clothing|shoes?|footwear|cosmetics?|skin ?care|hair ?care|snacks?|beverages?|coffee|tea|strollers?|diapers?|books?|stationery|fitness|yoga|camping|gifts?|candles?|perfumes?|grooming|hobby|craft|water bottles?|drinkware|tumblers?|sippers?|vacuum flasks?|cookware|utensils?|crocker\w*|cutlery|tableware|lunch ?box(?:es)?)\b/i
 
-/** The named industry for a market, or null when the list does not know it. */
+/**
+ * The market's subject: geography and the trailing report words removed, so
+ * "India Water Bottle Market" is weighed as "Water Bottle".
+ */
+function subjectOf(name: string): string {
+  let subject = stripScopePrefix(name)
+  for (;;) {
+    const next = subject
+      .replace(/\s*\b(market|industry|analysis|report|outlook|forecast|size|share|trends?)\b\s*$/i, '')
+      .trim()
+    if (next === subject || !next) break
+    subject = next
+  }
+  return subject || name.trim()
+}
+
+/**
+ * Where a keyword lands decides what it means.
+ *
+ * A market name is a noun phrase: everything before the final noun describes
+ * it. In "Water Bottle" the thing is a bottle and "water" only says which
+ * kind, so a rule matching "water" is reading a modifier, not the product.
+ * Matching anywhere in the name treated the two alike, which is how a water
+ * bottle study came back surveying municipal wastewater utilities, an olive
+ * oil study came back as petroleum, and steel cookware came back as mining.
+ *
+ * So a match is scored rather than taken on sight:
+ *   • a match covering the head — the last word — identifies the product;
+ *   • a multi-word match is specific enough to mean what it says;
+ *   • a lone word anywhere else is a modifier and does not classify.
+ *
+ * Nothing reaching the floor falls through to the composed profile, which is
+ * vaguer but reliably about the right trade. Confidently wrong is the worse
+ * failure: it is the one that puts effluent discharge rules in front of a
+ * client who sells drinkware.
+ */
+const HEAD_SCORE = 100
+const WORD_SCORE = 10
+
+function scoreRule(test: RegExp, subject: string): number {
+  // Scan every match; the one nearest the head wins for this rule.
+  const re = new RegExp(test.source, test.flags.includes('g') ? test.flags : test.flags + 'g')
+  let best = -1
+  for (const m of subject.matchAll(re)) {
+    const matched = (m[0] ?? '').trim()
+    if (!matched) continue
+    const end = (m.index ?? 0) + (m[0]?.length ?? 0)
+    const isHead = subject.slice(end).trim() === ''
+    const words = matched.split(/\s+/).length
+    // Only a head match or a multi-word phrase clears the floor.
+    if (!isHead && words < 2) continue
+    const score = (isHead ? HEAD_SCORE : 0) + words * WORD_SCORE
+    if (score > best) best = score
+  }
+  return best
+}
+
+/**
+ * Trades that sell to plants, grids, fleets and contractors. None of them
+ * ever supplies a shopper, so none may serve a market that reads as one.
+ */
+const B2B_ONLY: ReadonlySet<IndustryKey> = new Set<IndustryKey>([
+  'water_treatment',
+  'power_grid',
+  'renewables_hydrogen',
+  'oil_gas',
+  'mining',
+  'construction',
+  'chemicals',
+  'industrial_equipment',
+  'industrial',
+  'logistics',
+  'datacenter',
+  'telecom',
+  'agriculture',
+  'packaging',
+])
+
+/** The named industry for a market, or null when nothing matches confidently. */
 export function classifyIndustry(marketName: string | null | undefined): IndustryKey | null {
-  const name = marketName ?? ''
-  for (const rule of RULES) if (rule.test.test(name)) return rule.key
-  return null
+  const subject = subjectOf(marketName ?? '')
+  if (!subject) return null
+
+  let bestKey: IndustryKey | null = null
+  let bestScore = -1
+  // Rules stay in narrow-to-broad order, so an equal score keeps the first.
+  for (const rule of RULES) {
+    const score = scoreRule(rule.test, subject)
+    if (score > bestScore) {
+      bestScore = score
+      bestKey = rule.key
+    }
+  }
+  return bestScore < 0 ? null : bestKey
 }
 
 /**
@@ -900,7 +995,14 @@ export function industryProfile(marketName: string | null | undefined): Industry
   // "Office furniture" is furniture to a keyword and a facilities purchase in
   // life, so a business word overrides a consumer category.
   const consumerKey = key === 'consumer_goods' || key === 'consumer_electronics'
-  if (key && !(consumerKey && BUSINESS_SIGNALS.test(marketName ?? ''))) {
+  const businessWord = BUSINESS_SIGNALS.test(marketName ?? '')
+  // ...and the reverse. These trades sell to plants, grids and contractors,
+  // never to a shelf, so a market that reads as a shopper's purchase is
+  // better served by the composed consumer profile than by one of them.
+  const shopperMarket = !businessWord && isConsumerMarket(marketName)
+  const mismatched = key !== null && B2B_ONLY.has(key) && shopperMarket
+
+  if (key && !mismatched && !(consumerKey && businessWord)) {
     return INDUSTRY_PROFILES[key]
   }
 

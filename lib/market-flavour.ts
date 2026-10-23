@@ -12,7 +12,7 @@ export type MarketFlavour = 'healthcare' | 'technology' | 'energy' | 'consumer' 
 
 /** Goods a shopper buys: food, drink, personal care, household, apparel. */
 const CONSUMER =
-  /\b(food|beverages?|drinks?|whisk(?:y|ey)|spirits?|wine|beer|rum|vodka|gin|cider|juice|coffee|tea|dairy|snacks?|confectioner\w*|chocolate|bakery|cereal|sauce|seasoning|nutraceutical|supplements?|infant formula|pet food|cosmetics?|skin\s?care|hair\s?care|personal care|beauty|fragrance|perfume|toiletr\w*|apparel|footwear|clothing|luxury|jewell?ery|watch(?:es)?|furniture|homeware|household|toys?|games?|grocery|retail|fmcg|consumer goods|packaged goods|tobacco|vape|e-?cigarette|edible oils?|cooking oil|ghee|flour|rice|sugar|salt|spices?|noodles|biscuits?|ice ?cream|soap|shampoo|detergent|diapers?|tissue|cleaning)\b/i
+  /\b(food|beverages?|drinks?|whisk(?:y|ey)|spirits?|wine|beer|rum|vodka|gin|cider|juice|coffee|tea|dairy|snacks?|confectioner\w*|chocolate|bakery|cereal|sauce|seasoning|nutraceutical|supplements?|infant formula|pet food|cosmetics?|skin\s?care|hair\s?care|personal care|beauty|fragrance|perfume|toiletr\w*|apparel|footwear|clothing|luxury|jewell?ery|watch(?:es)?|furniture|homeware|household|toys?|games?|grocery|retail|fmcg|consumer goods|packaged goods|tobacco|vape|e-?cigarette|edible oils?|cooking oil|ghee|flour|rice|sugar|salt|spices?|noodles|biscuits?|ice ?cream|soap|shampoo|detergent|diapers?|tissue|cleaning|water bottles?|drinkware|tumblers?|sippers?|vacuum flasks?|cookware|utensils?|crocker\w*|cutlery|tableware|lunch ?box(?:es)?)\b/i
 
 const HEALTHCARE =
   /\b(health\w*|medical|clinic\w*|hospital|wound|surgical|patient|pharma\w*|diagnost\w*|therapy|therapeutics?|device|dental|orthop\w*|vaccine|biotech\w*|drug)\b/i
