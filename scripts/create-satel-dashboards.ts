@@ -55,7 +55,9 @@ function parseSegmentation(text: string) {
     .map((part) => part.trim())
     .filter(Boolean)
     .map((part) => {
-      const [type, rest = ''] = part.split(/:(.*)/s)
+      const colon = part.indexOf(':')
+      const type = part.slice(0, colon)
+      const rest = part.slice(colon + 1)
       const items = rest
         .replace(/\.\s*$/, '')
         .split(';')
@@ -146,8 +148,8 @@ async function main() {
     try {
       const { value, volume } = buildWorkbooks(title, segments)
       const form = new FormData()
-      form.append('valueFile', new Blob([value]), `${title} - Value.xlsx`)
-      form.append('volumeFile', new Blob([volume]), `${title} - Volume.xlsx`)
+      form.append('valueFile', new Blob([new Uint8Array(value)]), `${title} - Value.xlsx`)
+      form.append('volumeFile', new Blob([new Uint8Array(volume)]), `${title} - Volume.xlsx`)
       form.append('volumeUnit', 'th-units')
       const pRes = await fetch(`${BASE}/api/process-excel`, { method: 'POST', body: form, headers: { cookie } })
       const processed = await pRes.json()
