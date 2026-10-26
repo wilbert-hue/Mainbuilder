@@ -8,8 +8,12 @@
  * for a subscribe prompt rather than rendering an empty view.
  */
 
-import { useState } from 'react'
+import { createContext, useContext, useState } from 'react'
 import { Lock, Globe } from 'lucide-react'
+
+/** The geography picked in the strip, for views that hold data per geography. */
+const SelectedCountryContext = createContext<string | null>(null)
+export const useSelectedCountry = () => useContext(SelectedCountryContext)
 
 export const COVERED_COUNTRY = 'India'
 
@@ -33,9 +37,11 @@ interface CountryGateProps {
   countries?: string[]
   /** The one the dashboard actually reports on; the rest are paywalled. */
   covered?: string
+  /** Further geographies that carry data too, so they are not paywalled. */
+  open?: string[]
 }
 
-export function CountryGate({ children, countries, covered: coveredProp }: CountryGateProps) {
+export function CountryGate({ children, countries, covered: coveredProp, open }: CountryGateProps) {
   const list = countries?.length ? countries : FALLBACK_COUNTRIES
   const covered =
     coveredProp && list.includes(coveredProp)
@@ -72,8 +78,8 @@ export function CountryGate({ children, countries, covered: coveredProp }: Count
         </div>
       </div>
 
-      {country === covered ? (
-        children
+      {country === covered || open?.includes(country) ? (
+        <SelectedCountryContext.Provider value={country}>{children}</SelectedCountryContext.Provider>
       ) : (
         <div className="flex flex-col items-center justify-center rounded-lg border border-gray-200 bg-white px-6 py-20 text-center shadow-sm">
           <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-amber-50 text-amber-600">

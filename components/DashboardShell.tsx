@@ -75,15 +75,17 @@ function MaybeCountryGate({
   enabled,
   countries,
   covered,
+  open,
   children,
 }: {
   enabled: boolean
   countries: string[]
   covered: string
+  open?: string[]
   children: React.ReactNode
 }) {
   return enabled ? (
-    <CountryGate countries={countries} covered={covered}>
+    <CountryGate countries={countries} covered={covered} open={open}>
       {children}
     </CountryGate>
   ) : (
@@ -201,8 +203,15 @@ export function DashboardShell({ readOnly = false }: Props) {
     [quadrantData, b2bSurveyData, b2cSurveyData, dashboardName, data]
   )
 
+  /** A survey run region by region names the strip itself; every region has data. */
+  const surveyRegions = useMemo(
+    () => (b2bSurveyData?.regions ?? []).map((r) => r.geo).filter(Boolean),
+    [b2bSurveyData]
+  )
+
   /** Every geography the market name covers, so a four country study lists four. */
   const countryOptions = useMemo(() => {
+    if (surveyRegions.length) return surveyRegions
     const named = marketScopeLabels(
       dashboardName ?? data?.metadata?.market_name,
       data?.dimensions?.geographies?.all_geographies ?? []
@@ -210,7 +219,8 @@ export function DashboardShell({ readOnly = false }: Props) {
     return named.some((g) => g.toLowerCase() === coveredScope.toLowerCase())
       ? named
       : [coveredScope, ...named.filter((g) => g !== 'Global')]
-  }, [dashboardName, data, coveredScope])
+  }, [dashboardName, data, coveredScope, surveyRegions])
+  const gateCovered = surveyRegions[0] ?? coveredScope
 
   /** Market name on top; a loaded survey adds the module list beneath it. */
   const headingTitle = dashboardName || 'Market Analysis'
@@ -371,7 +381,7 @@ export function DashboardShell({ readOnly = false }: Props) {
               </div>
             )}
             <div className="p-6">
-              <CountryGate countries={countryOptions} covered={coveredScope}>
+              <CountryGate countries={countryOptions} covered={gateCovered} open={surveyRegions}>
                 {activePanel === 'intelligence-customer' && (
                   <IntelligenceDatabaseViews preferredSource="customer" />
                 )}
@@ -485,7 +495,7 @@ export function DashboardShell({ readOnly = false }: Props) {
           } space-y-6`}>
 
             {/* Every view except Market Analysis is country-scoped. */}
-            <MaybeCountryGate key={selectedChartGroup} enabled={isCountryScoped} countries={countryOptions} covered={coveredScope}>
+            <MaybeCountryGate key={selectedChartGroup} enabled={isCountryScoped} countries={countryOptions} covered={gateCovered} open={surveyRegions}>
 
             {/* Tab Navigation */}
             <div className="bg-white rounded-lg shadow">

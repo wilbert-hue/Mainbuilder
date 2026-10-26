@@ -103,6 +103,11 @@ export interface BuyerSurveyReport {
   executiveSummary: BuyerSurveyExecutiveSummary | null
   segments: BuyerSurveySegment[]
   questionCount: number
+  /**
+   * One report per geography, for a dashboard surveyed region by region. When
+   * present the country strip lists these geographies, each unlocked.
+   */
+  regions?: BuyerSurveyReport[]
 }
 
 // ── Coercion helpers ────────────────────────────────────────────────────────

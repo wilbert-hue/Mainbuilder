@@ -16,6 +16,7 @@
 
 import { useMemo, useState } from 'react'
 import { useDashboardStore } from '@/lib/store'
+import { useSelectedCountry } from '@/components/CountryGate'
 import {
   confidenceLabel,
   collectConfidenceTiers,
@@ -356,7 +357,9 @@ export function BuyerSurveyView({ kind }: Props) {
   )
   /** In demo mode the questions are real; the answers behind them are withheld. */
   const isDemo = (!uploaded && !!demo) && LOCKS_ENABLED
-  const report = uploaded ?? demo
+  // A survey run region by region shows the report for the geography picked in the strip.
+  const selectedCountry = useSelectedCountry()
+  const report = uploaded?.regions?.find((r) => r.geo === selectedCountry) ?? uploaded ?? demo
 
   const [activeSegment, setActiveSegment] = useState(0)
   const [search, setSearch] = useState('')
