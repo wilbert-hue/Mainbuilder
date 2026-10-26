@@ -113,6 +113,19 @@ function transformHeader(header: string, currency: TableCurrency): string {
     .trim()
 }
 
+/**
+ * In a region column "NA" is North America, not "not available" — spell it out
+ * so the placeholder check doesn't mistake it for a withheld cell.
+ */
+const isRegionHeader = (header: string): boolean => /^\s*regions?\s*$/i.test(header)
+const cellValueOf = (row: Record<string, any>, header: string): any => {
+  const value = row[header]
+  if (isRegionHeader(String(header)) && typeof value === 'string' && /^\s*n\.?a\.?\s*$/i.test(value)) {
+    return 'North America'
+  }
+  return value
+}
+
 function renderCellValue(header: string, rawVal: any, currency: TableCurrency): string {
   if (rawVal === undefined || rawVal === null || rawVal === '') return ''
   const strVal = String(rawVal)
@@ -416,13 +429,13 @@ function PropositionTableDashboard({
                   >
                     {isRowNumberColumn(String(header)) ? (
                       <span>{rowIndex + 1}</span>
-                    ) : !(LOCKS_ENABLED && isPlaceholderValue(String(row[header] ?? ''))) &&
+                    ) : !(LOCKS_ENABLED && isPlaceholderValue(String(cellValueOf(row, header) ?? ''))) &&
                       !isEmptyCell(row[header], lockBlankColumns && isLockedColumn(String(header))) ? (
-                      <span className="line-clamp-3" title={renderCellValue(header, row[header], currency)}>
-                        {renderCellValue(header, row[header], currency)}
+                      <span className="line-clamp-3" title={renderCellValue(header, cellValueOf(row, header), currency)}>
+                        {renderCellValue(header, cellValueOf(row, header), currency)}
                       </span>
                     ) : templateMode ||
-                      (LOCKS_ENABLED && isPlaceholderValue(String(row[header] ?? ''))) ||
+                      (LOCKS_ENABLED && isPlaceholderValue(String(cellValueOf(row, header) ?? ''))) ||
                       (lockBlankColumns && isLockedColumn(String(header))) ? (
                       <span className="text-slate-400" title={DEMO_SUBSCRIBE_NOTE}>
                         <Lock className="h-3.5 w-3.5" />
