@@ -2,12 +2,15 @@
 
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react'
 import { useDashboardStore } from '@/lib/store'
+import { COUNTRY_TO_REGION } from '@/lib/country-regions'
 import { ChevronDown, ChevronRight, Check, Minus } from 'lucide-react'
 
 interface TreeNode {
   name: string
   level: 'global' | 'region' | 'country'
   children: TreeNode[]
+  /** A heading the data has no row for: it stands for its countries, not itself. */
+  grouping?: boolean
 }
 
 export function GeographyMultiSelect() {
@@ -80,6 +83,30 @@ export function GeographyMultiSelect() {
       }
     }
 
+    // No stored hierarchy: group known countries under their region, keeping
+    // the file's order. A region the file names itself becomes that parent.
+    const byRegion = new Map<string, TreeNode>()
+    const roots: TreeNode[] = []
+    for (const geo of allGeos) {
+      const region = COUNTRY_TO_REGION[geo]
+      if (!region || region === geo) {
+        if (!byRegion.has(geo)) {
+          const node: TreeNode = { name: geo, level: 'region', children: [] }
+          byRegion.set(geo, node)
+          roots.push(node)
+        }
+        continue
+      }
+      let parent = byRegion.get(region)
+      if (!parent) {
+        parent = { name: region, level: 'region', children: [], grouping: true }
+        byRegion.set(region, parent)
+        roots.push(parent)
+      }
+      parent.children.push({ name: geo, level: 'country', children: [] })
+    }
+    if (roots.some(n => n.children.length > 0)) return roots
+
     // Fallback: flat list (no hierarchy)
     return allGeos.map(geo => ({
       name: geo,
@@ -119,6 +146,10 @@ export function GeographyMultiSelect() {
     const selfOn = selected.includes(node.name)
     const descendants = getAllDescendants(node).filter(n => n !== node.name)
     const anyDesc = descendants.some(n => selected.includes(n))
+    if (node.grouping) {
+      if (descendants.every(n => selected.includes(n))) return 'checked'
+      return anyDesc ? 'indeterminate' : 'unchecked'
+    }
     if (selfOn) return 'checked'
     if (anyDesc) return 'indeterminate'
     return 'unchecked'
@@ -129,14 +160,17 @@ export function GeographyMultiSelect() {
     const state = getCheckState(node)
     const name = node.name
 
-    if (state === 'checked') {
+    if (node.grouping) {
+      const kids = getAllDescendants(node).filter(n => n !== name)
+      kids.forEach(n => (state === 'checked' ? current.delete(n) : current.add(n)))
+    } else if (state === 'checked') {
       current.delete(name)
     } else {
       current.add(name)
     }
 
     updateFilters({ geographies: Array.from(current) })
-  }, [filters.geographies, getCheckState, updateFilters])
+  }, [filters.geographies, getCheckState, getAllDescendants, updateFilters])
 
   // Toggle expand/collapse
   const toggleExpand = useCallback((nodeName: string, e?: React.MouseEvent) => {
@@ -201,7 +235,7 @@ export function GeographyMultiSelect() {
     const allNames = new Set(filters.geographies)
     const collectAllNames = (nodes: TreeNode[]) => {
       for (const node of nodes) {
-        allNames.add(node.name)
+        if (!node.grouping) allNames.add(node.name)
         collectAllNames(node.children)
       }
     }
