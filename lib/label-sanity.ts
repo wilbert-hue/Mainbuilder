@@ -22,7 +22,7 @@ const MAX_LABEL_WORDS = 10
 
 /** Phrases that only ever appear in a model's narration of its own work. */
 const NARRATION =
-  /\b(i need to|i can|i should|let me|we need to|re-?reading|from the (image|table|chart|screenshot)|piece together|as (shown|listed)|no sub-?items|standalone|appears as|note that|assuming|looks like|it seems)\b/i
+  /\b(i need to|i can|i should|let me|we need to|re-?reading|from the (image|table|chart|screenshot)|piece together|as (shown|listed)|no sub-?items|appears as|note that|assuming|looks like|it seems)\b/i
 
 /** "Level 1: Europe", "L2 - Germany" — an annotation, not a name. */
 const OUTLINE_PREFIX = /^(level|lvl|l|tier|row|col(umn)?)\s*\d+\s*[:.\-–]/i
