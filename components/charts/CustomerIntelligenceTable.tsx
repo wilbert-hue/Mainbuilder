@@ -12,6 +12,7 @@ import {
 import { Lock } from 'lucide-react'
 import MethodologyPanel from './MethodologyPanel'
 import { buildDemoMethodology } from '@/lib/demo-methodology'
+import { useGeneratedMethodology } from '@/lib/use-generated-methodology'
 import { DEMO_SUBSCRIBE_NOTE } from '@/components/DemoDataNote'
 import { isPlaceholderValue } from '@/lib/intelligence-demo-generator'
 import { LOCKS_ENABLED } from '@/lib/lock-mode'
@@ -509,21 +510,30 @@ export function CustomerIntelligenceTable({
   const [activeTab, setActiveTab] = useState<TabType>(getDefaultTab())
   // staticProp1 comes from the store (set via the builder toggle)
   const staticProp1 = intelligenceSource === 'customer' ? staticCustomerProp1 : staticDistributorProp1
+  // A demo market has no workbook, so its methodology is written rather than
+  // parsed. The generated block replaces the table-driven one when it arrives;
+  // until then, and whenever generation is unavailable, the table's block shows.
+  const demoMarket = dashboardName ?? data?.metadata?.market_name ?? null
+  const generatedMethodology = useGeneratedMethodology(
+    demoMarket,
+    'customer',
+    staticProp1 && intelligenceSource === 'customer'
+  )
+
   // The customer template's trailing columns follow this market's segments.
   const staticData = useMemo(() => {
     const template =
       intelligenceSource === 'distributor'
         ? (buildStaticDistributorTemplate() as PropositionData)
         : (buildStaticCustomerTemplate(data, dashboardName ?? undefined) as PropositionData)
-    // No workbook means no METHODOLOGY rows to parse, so the block is written
-    // from the market name instead. Only the customer directory carries one —
-    // a distributor list is not assembled this way.
+    // Only the customer directory carries a methodology block — a distributor
+    // list is not assembled this way.
     if (intelligenceSource === 'distributor') return template
     return {
       ...template,
-      methodology: buildDemoMethodology(dashboardName ?? data?.metadata?.market_name),
+      methodology: generatedMethodology ?? buildDemoMethodology(demoMarket),
     } as PropositionData
-  }, [intelligenceSource, data, dashboardName])
+  }, [intelligenceSource, data, dashboardName, demoMarket, generatedMethodology])
 
   useEffect(() => {
     const currentTabHasData =

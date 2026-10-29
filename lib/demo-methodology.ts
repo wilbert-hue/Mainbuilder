@@ -12,6 +12,7 @@
  */
 
 import type { MethodologySection } from '@/lib/intelligence-sheet-types'
+import type { MethodologyParts } from '@/lib/methodology-parts'
 import { stripScopePrefix } from '@/lib/market-scope'
 import { marketFlavour } from '@/lib/market-flavour'
 import { offeringTypeOf } from '@/lib/demo-survey-offering'
@@ -47,14 +48,39 @@ export function buildDemoMethodology(
   const offering = offeringTypeOf(name)
   // The directory's buyers are the same organisations the survey speaks to.
   const landscape = buildLandscape(subject, '', flavour, offering)
-  const audience = intelligenceSource === 'distributor' ? 'distributors and channel partners' : 'buyers'
+
+  return composeMethodology(name, intelligenceSource, {
+    organisations: landscape.organisations,
+    designations: landscape.designations,
+    triggerSignals: industryProfile(name).triggerSignals,
+  })
+}
+
+/**
+ * Wrap three lists in the section structure the panel renders.
+ *
+ * The surrounding copy is fixed — only the lists vary — so the deterministic
+ * profile and a generated one produce the same block, and swapping the source
+ * cannot change the shape of what the reader sees.
+ */
+export function composeMethodology(
+  market: string,
+  intelligenceSource: 'customer' | 'distributor',
+  parts: MethodologyParts
+): MethodologySection[] {
+  const name = market.trim()
+  if (!name) return []
+
+  const subject = marketSubject(name)
+  const audience =
+    intelligenceSource === 'distributor' ? 'distributors and channel partners' : 'buyers'
 
   return [
     {
       title: 'Primary Research',
       groups: [
-        { title: 'Organizations we surveyed', items: landscape.organisations },
-        { title: 'Designations we spoke to', items: landscape.designations },
+        { title: 'Organizations we surveyed', items: parts.organisations },
+        { title: 'Designations we spoke to', items: parts.designations },
       ],
       paragraphs: [
         `Verified telephone and email interviews with ${audience} active in ${subject}, re-validated every quarter.`,
@@ -62,7 +88,7 @@ export function buildDemoMethodology(
     },
     {
       title: 'Real-time Trigger Signals',
-      groups: [{ items: industryProfile(name).triggerSignals }],
+      groups: [{ items: parts.triggerSignals }],
       paragraphs: ['…and 50+ other trigger signals'],
     },
     {
