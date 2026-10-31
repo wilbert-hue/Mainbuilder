@@ -23,6 +23,7 @@ import { useMemo, useState } from 'react'
 import { Lock } from 'lucide-react'
 import { useDashboardStore } from '@/lib/store'
 import { buildDemoQuadrant } from '@/lib/demo-quadrant'
+import { useDemoGeneration } from '@/lib/use-demo-generation'
 import { titleCaseGeography } from '@/lib/market-scope'
 import { DEMO_SUBSCRIBE_NOTE } from '@/components/DemoDataNote'
 import { LOCKS_ENABLED } from '@/lib/lock-mode'
@@ -450,10 +451,16 @@ export function QuadrantView() {
 
   const uploaded = quadrantData as QuadrantReport | null
   const hasUploaded = !!(uploaded?.charted?.length || uploaded?.others?.length)
+  /** Generated scoring parameters and market definition, when the model wrote some. */
+  const generated = useDemoGeneration(
+    dashboardName ?? data?.metadata?.market_name,
+    'customer',
+    !hasUploaded && showDemoQuadrant
+  )
   /** No analyst export, demo toggled on — generate one from the market itself. */
   const demo = useMemo(
-    () => (!hasUploaded && showDemoQuadrant ? buildDemoQuadrant(data, dashboardName) : null),
-    [hasUploaded, showDemoQuadrant, data, dashboardName]
+    () => (!hasUploaded && showDemoQuadrant ? buildDemoQuadrant(data, dashboardName, generated) : null),
+    [hasUploaded, showDemoQuadrant, data, dashboardName, generated]
   )
   /** In demo mode every identifying field is withheld, not just the evidence. */
   const isDemo = (!hasUploaded && !!demo) && LOCKS_ENABLED

@@ -18,6 +18,7 @@ import { marketFlavour } from '@/lib/market-flavour'
 import { buildB2bQuestionnaire } from '@/lib/demo-b2b-questions'
 import { buildB2cQuestionnaire } from '@/lib/demo-b2c-questions'
 import { consumerOfferingOf, offeringTypeOf } from '@/lib/demo-survey-offering'
+import type { B2bLandscapeParts, QuestionSectionPart } from '@/lib/demo-generation-types'
 import {
   buildLandscape,
   consumerProfiles,
@@ -107,10 +108,50 @@ function sampleSizeFor(market: string, geo: string, kind: 'b2b' | 'b2c'): number
  * an organisation about buying, use, performance and future investment.
  * Returns null only when there is no market to name.
  */
+/**
+ * The generated sections carry a title and questions but no focus line, which
+ * the view prints under each tab. These describe what each section is for, and
+ * are phrased against the market's subject the way the deterministic ones are.
+ */
+const GENERATED_FOCUS: Record<'b2b' | 'b2c', [string, string, string, string]> = {
+  b2b: [
+    'How buyers of {s} choose, qualify and contract their suppliers.',
+    'How, where and why {s} is used inside the buying organisation.',
+    'How {s} has performed in service and what value it returned.',
+    'Where demand, upgrades and investment in {s} are heading.',
+  ],
+  b2c: [
+    'What buyers of {s} chose, and what decided it.',
+    'Where buyers of {s} shop, and what they pay.',
+    'How the {s} they bought has performed, and what it was worth.',
+    'What buyers of {s} will buy next.',
+  ],
+}
+
+function withFocus(
+  sections: QuestionSectionPart[],
+  kind: 'b2b' | 'b2c',
+  subject: string
+): { title: string; focus: string; questions: { text: string; type: string }[] }[] {
+  const lines = GENERATED_FOCUS[kind]
+  const lower = subject.toLowerCase()
+  return sections.map((section, i) => ({
+    title: section.title,
+    focus: (lines[i] ?? lines[lines.length - 1]).replace('{s}', lower),
+    questions: section.questions,
+  }))
+}
+
 export function buildDemoBuyerSurvey(
   data: ComparisonData | null | undefined,
   dashboardName?: string | null,
-  kind: 'b2b' | 'b2c' = 'b2b'
+  kind: 'b2b' | 'b2c' = 'b2b',
+  /** Generated copy for this market, when the model wrote some. */
+  generated?: {
+    b2bLandscape?: B2bLandscapeParts
+    b2bQuestions?: QuestionSectionPart[]
+    b2cQuestions?: QuestionSectionPart[]
+  } | null
 ): BuyerSurveyReport | null {
   const market = (dashboardName || data?.metadata?.market_name || '').trim()
   if (!market) return null
@@ -124,9 +165,20 @@ export function buildDemoBuyerSurvey(
 
   const offering = offeringTypeOf(market)
   const landscape = buildLandscape(subject, geo, flavour, offering)
-  const segments = isConsumer
-    ? toSurveySegments(buildB2cQuestionnaire(subject, consumerOfferingOf(market)), sampleSize)
-    : toSurveySegments(buildB2bQuestionnaire(subject, geo, offering), sampleSize)
+
+  // A generated questionnaire has already passed the framework rules in
+  // `questions-llm.ts`; anything that failed them arrives here as undefined and
+  // the deterministic questionnaire is written instead.
+  const generatedQuestions = isConsumer ? generated?.b2cQuestions : generated?.b2bQuestions
+  const segments = generatedQuestions?.length
+    ? toSurveySegments(withFocus(generatedQuestions, kind, subject), sampleSize)
+    : isConsumer
+      ? toSurveySegments(buildB2cQuestionnaire(subject, consumerOfferingOf(market)), sampleSize)
+      : toSurveySegments(buildB2bQuestionnaire(subject, geo, offering), sampleSize)
+
+  // The B2B header is generated against the methodology's lists so the two
+  // panels stop showing the same organisations and designations twice.
+  const generatedLandscape = isConsumer ? undefined : generated?.b2bLandscape
   const questionCount = segments.reduce((sum, s) => sum + s.questions.length, 0)
 
   const lower = subject.toLowerCase()
@@ -148,14 +200,18 @@ export function buildDemoBuyerSurvey(
         : landscape.definition,
       whoBuys: isConsumer
         ? `Individual buyers of ${lower} ${where}, answering for themselves or their household. Buyers fall into four profiles.`
-        : landscape.whoBuys,
+        : generatedLandscape?.buyersIntro || landscape.whoBuys,
       // Consumers are described by how they buy; organisations by what they are.
-      buyerSegments: isConsumer ? consumerProfiles(subject) : landscape.segments,
+      buyerSegments: isConsumer
+        ? consumerProfiles(subject)
+        : generatedLandscape?.buyerTypes ?? landscape.segments,
       organisationsHeading: isConsumer ? 'Customers We Surveyed' : 'Organisations We Surveyed',
-      organisations: isConsumer ? consumerRespondents(subject, geo) : landscape.organisations,
+      organisations: isConsumer
+        ? consumerRespondents(subject, geo)
+        : generatedLandscape?.organisations ?? landscape.organisations,
       designationsHeading: 'Designations We Spoke To',
       // A consumer study has no job titles to list.
-      designations: isConsumer ? [] : landscape.designations,
+      designations: isConsumer ? [] : generatedLandscape?.designations ?? landscape.designations,
       respondentProfile: '',
     },
     methodology: {

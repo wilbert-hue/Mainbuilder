@@ -23,6 +23,7 @@ import type {
   QuadrantParameterDefinition,
   QuadrantReport,
 } from '@/lib/quadrant-types'
+import type { MarketProfileParts, QuadrantParts } from '@/lib/demo-generation-types'
 
 const CHARTED_COMPANIES = 20
 const OTHER_COMPANIES = 100
@@ -235,7 +236,9 @@ function makeCompany(
  */
 export function buildDemoQuadrant(
   data: ComparisonData | null | undefined,
-  dashboardName?: string | null
+  dashboardName?: string | null,
+  /** Generated copy for this market, when the model wrote some. */
+  generated?: { quadrant?: QuadrantParts; profile?: MarketProfileParts } | null
 ): QuadrantReport | null {
   const market = (dashboardName || data?.metadata?.market_name || '').trim()
   if (!market) return null
@@ -243,11 +246,19 @@ export function buildDemoQuadrant(
   const geographies = data?.dimensions?.geographies?.all_geographies ?? []
   const geo = geographies[0] || marketScopeLabel(market)
   const kind = marketKind(market)
-  const xName = xAxisName(kind)
   const subject = marketSubject(market)
   const provider = providerCategory(kind, subject)
-  const yName = 'Business Capability'
-  const params = axisParameters(market, geo, xName)
+
+  // The generated axes are all-or-nothing: a generated product axis beside a
+  // template business axis would show two voices in one panel.
+  const generatedQuadrant = generated?.quadrant
+  const xName = generatedQuadrant?.xAxisName || xAxisName(kind)
+  const yName = generatedQuadrant?.yAxisName || 'Business Capability'
+  const params = generatedQuadrant
+    ? { x: generatedQuadrant.xParameters.map((p) => ({ ...p })), y: generatedQuadrant.yParameters.map((p) => ({ ...p })) }
+    : axisParameters(market, geo, xName)
+
+  const profile = generated?.profile
 
   const xAxis: QuadrantAxis = { name: xName, parameters: params.x }
   const yAxis: QuadrantAxis = { name: yName, parameters: params.y }
@@ -281,10 +292,16 @@ export function buildDemoQuadrant(
     market,
     geo,
     marketType: '',
-    marketDefinition: `Illustrative competitive positioning for ${marketSubject(market)}, generated from the segmentation in this dashboard.`,
+    marketDefinition:
+      profile?.definition ||
+      `Illustrative competitive positioning for ${marketSubject(market)}, generated from the segmentation in this dashboard.`,
     marketTypeRationale: '',
-    providerCategories: [provider.category],
-    providerRationale: provider.rationale,
+    providerCategories: profile?.providerCategories.length
+      ? profile.providerCategories.map((c) => c.name)
+      : [provider.category],
+    providerRationale: profile?.providerCategories.length
+      ? profile.providerCategories.map((c) => c.description).join(' ')
+      : provider.rationale,
     companyCount: CHARTED_COMPANIES + OTHER_COMPANIES,
     xAxis,
     yAxis,

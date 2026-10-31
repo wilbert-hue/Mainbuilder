@@ -26,6 +26,7 @@ import {
 } from '@/lib/buyer-survey-types'
 import { BuyerSurveyChart, BuyerSurveyLegend } from './BuyerSurveyChart'
 import { buildDemoBuyerSurvey } from '@/lib/demo-buyer-survey'
+import { useDemoGeneration } from '@/lib/use-demo-generation'
 import { Lock } from 'lucide-react'
 import { DEMO_SUBSCRIBE_NOTE } from '@/components/DemoDataNote'
 import { LOCKS_ENABLED } from '@/lib/lock-mode'
@@ -350,10 +351,16 @@ export function BuyerSurveyView({ kind }: Props) {
   const uploaded = kind === 'b2c' ? b2cSurveyData : b2bSurveyData
   const demoEnabled = kind === 'b2c' ? showDemoB2cSurvey : showDemoB2bSurvey
 
+  /** Generated questions and buyer landscape, when the model wrote some. */
+  const generated = useDemoGeneration(
+    dashboardName ?? data?.metadata?.market_name,
+    'customer',
+    !uploaded && demoEnabled
+  )
   /** No analyst export, demo toggled on — write the questionnaire from the market. */
   const demo = useMemo(
-    () => (!uploaded && demoEnabled ? buildDemoBuyerSurvey(data, dashboardName, kind) : null),
-    [uploaded, demoEnabled, kind, data, dashboardName]
+    () => (!uploaded && demoEnabled ? buildDemoBuyerSurvey(data, dashboardName, kind, generated) : null),
+    [uploaded, demoEnabled, kind, data, dashboardName, generated]
   )
   /** In demo mode the questions are real; the answers behind them are withheld. */
   const isDemo = (!uploaded && !!demo) && LOCKS_ENABLED
