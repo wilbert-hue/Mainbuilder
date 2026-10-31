@@ -52,6 +52,21 @@ export function toAscii(value: string): string {
     .replace(/–|—/g, '-')
 }
 
+/**
+ * Say why a piece of model output was thrown out, when asked.
+ *
+ * A generator falls back as a whole, so without this a rejection is a silent
+ * "fell back" and the rule that fired is anyone's guess. Set LLM_DEBUG to see
+ * it; it is off in production because a rejection is routine, not an error.
+ */
+export function reject(reason: string, subject: unknown = ''): null {
+  if (process.env.LLM_DEBUG) {
+    const shown = typeof subject === 'string' ? subject : JSON.stringify(subject)
+    console.error(`  rejected [${reason}]${shown ? `: ${shown}` : ''}`)
+  }
+  return null
+}
+
 /** Normalise one line of model output: ASCII, single spaces, no trailing stop. */
 export function cleanLine(value: unknown): string {
   if (typeof value !== 'string') return ''
