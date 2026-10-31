@@ -79,6 +79,8 @@ export interface DashboardDocument {
   /** Locked 20-row intelligence templates */
   staticCustomerProp1?: boolean
   staticDistributorProp1?: boolean
+  /** Review links only: render what a lock would otherwise withhold. */
+  previewUnlocked?: boolean
   logoChoice?: 'coherent' | 'wmr' | 'mi'
 }
 

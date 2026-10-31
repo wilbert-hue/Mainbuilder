@@ -26,7 +26,7 @@ import { buildDemoQuadrant } from '@/lib/demo-quadrant'
 import { useDemoGeneration } from '@/lib/use-demo-generation'
 import { titleCaseGeography } from '@/lib/market-scope'
 import { DEMO_SUBSCRIBE_NOTE } from '@/components/DemoDataNote'
-import { LOCKS_ENABLED } from '@/lib/lock-mode'
+import { useLocksEnabled } from '@/lib/lock-mode'
 import { buildDemoMethodology } from '@/lib/demo-methodology'
 import MethodologyPanel from './MethodologyPanel'
 import {
@@ -444,6 +444,7 @@ function CompanyParameterBlock({
 // ── Main view ───────────────────────────────────────────────────────────────
 
 export function QuadrantView() {
+  const locksEnabled = useLocksEnabled()
   const { quadrantData, b2bSurveyData, data, dashboardName, showDemoQuadrant } =
     useDashboardStore()
   // Evidence is only paywalled on the survey-backed preview dashboards.
@@ -463,10 +464,10 @@ export function QuadrantView() {
     [hasUploaded, showDemoQuadrant, data, dashboardName, generated]
   )
   /** In demo mode every identifying field is withheld, not just the evidence. */
-  const isDemo = (!hasUploaded && !!demo) && LOCKS_ENABLED
+  const isDemo = (!hasUploaded && !!demo) && locksEnabled
   const report = hasUploaded ? uploaded : demo
   /** A real upload is never paywalled; the preview blur belongs to demo data only. */
-  const evidencePaywalled = isSuitePreview && !hasUploaded && LOCKS_ENABLED
+  const evidencePaywalled = isSuitePreview && !hasUploaded && locksEnabled
 
   const [search, setSearch] = useState('')
   const [quadrantFilter, setQuadrantFilter] = useState('all')
@@ -1048,7 +1049,7 @@ export function QuadrantView() {
       <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
         {primaryResearch.length > 0 && (
           <div className="mb-5 overflow-hidden rounded-lg border border-slate-200">
-            <MethodologyPanel sections={primaryResearch} locked={LOCKS_ENABLED} />
+            <MethodologyPanel sections={primaryResearch} locked={locksEnabled} />
           </div>
         )}
         <h2 className="mb-3 text-lg font-bold text-slate-900">Research Methodology</h2>

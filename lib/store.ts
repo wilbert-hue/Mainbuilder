@@ -52,6 +52,7 @@ interface DashboardStore {
   logoChoice: 'coherent' | 'wmr' | 'mi' // Which logo to show in the dashboard header
   staticCustomerProp1: boolean // When true, render static 20-row Proposition 1 template instead of uploaded data
   staticDistributorProp1: boolean // Same for distributor intelligence
+  previewUnlocked: boolean // Review links only: show what a lock would withhold
   dashboardId: string | null // MongoDB document ID assigned after first save
 
   // Actions
@@ -98,6 +99,7 @@ interface DashboardStore {
   setLogoChoice: (choice: 'coherent' | 'wmr' | 'mi') => void
   setStaticCustomerProp1: (val: boolean) => void
   setStaticDistributorProp1: (val: boolean) => void
+  setPreviewUnlocked: (val: boolean) => void
   setDashboardId: (id: string | null) => void
 }
 
@@ -298,6 +300,7 @@ export const useDashboardStore = create<DashboardStore>((set, get) => ({
   logoChoice: 'coherent' as const,
   staticCustomerProp1: false,
   staticDistributorProp1: false,
+  previewUnlocked: false,
   dashboardId: null,
   
   setData: (rawData) => {
@@ -575,6 +578,7 @@ export const useDashboardStore = create<DashboardStore>((set, get) => ({
   setLogoChoice: (choice) => set({ logoChoice: choice }),
   setStaticCustomerProp1: (val) => set({ staticCustomerProp1: val }),
   setStaticDistributorProp1: (val) => set({ staticDistributorProp1: val }),
+  setPreviewUnlocked: (val) => set({ previewUnlocked: val }),
   setDashboardId: (id) => set({ dashboardId: id }),
   
   setLoading: (loading) => set({ isLoading: loading }),

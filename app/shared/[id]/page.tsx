@@ -40,6 +40,7 @@ export default function SharedDashboardPage() {
     setShowDemoB2cSurvey,
     setStaticCustomerProp1,
     setStaticDistributorProp1,
+    setPreviewUnlocked,
     setLogoChoice,
     loadDefaultFilters,
     clearData,
@@ -95,6 +96,7 @@ export default function SharedDashboardPage() {
       setShowDemoB2cSurvey(snapshot.showDemoB2cSurvey || false)
       setStaticCustomerProp1(snapshot.staticCustomerProp1 || false)
       setStaticDistributorProp1(snapshot.staticDistributorProp1 || false)
+      setPreviewUnlocked(snapshot.previewUnlocked || false)
       setLogoChoice((snapshot.logoChoice === 'wmr' || snapshot.logoChoice === 'mi') ? snapshot.logoChoice : 'coherent')
 
       setStatus('ready')

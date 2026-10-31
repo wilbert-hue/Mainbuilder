@@ -29,7 +29,7 @@ import { buildDemoBuyerSurvey } from '@/lib/demo-buyer-survey'
 import { useDemoGeneration } from '@/lib/use-demo-generation'
 import { Lock } from 'lucide-react'
 import { DEMO_SUBSCRIBE_NOTE } from '@/components/DemoDataNote'
-import { LOCKS_ENABLED } from '@/lib/lock-mode'
+import { useLocksEnabled } from '@/lib/lock-mode'
 
 interface Props {
   /** Which report to render. */
@@ -346,6 +346,7 @@ function MethodologyPanel({ report }: { report: BuyerSurveyReport }) {
 // ── Main view ───────────────────────────────────────────────────────────────
 
 export function BuyerSurveyView({ kind }: Props) {
+  const locksEnabled = useLocksEnabled()
   const { b2bSurveyData, b2cSurveyData, showDemoB2bSurvey, showDemoB2cSurvey, data, dashboardName } =
     useDashboardStore()
   const uploaded = kind === 'b2c' ? b2cSurveyData : b2bSurveyData
@@ -363,7 +364,7 @@ export function BuyerSurveyView({ kind }: Props) {
     [uploaded, demoEnabled, kind, data, dashboardName, generated]
   )
   /** In demo mode the questions are real; the answers behind them are withheld. */
-  const isDemo = (!uploaded && !!demo) && LOCKS_ENABLED
+  const isDemo = (!uploaded && !!demo) && locksEnabled
   // A survey run region by region shows the report for the geography picked in the strip.
   const selectedCountry = useSelectedCountry()
   const report = uploaded?.regions?.find((r) => r.geo === selectedCountry) ?? uploaded ?? demo

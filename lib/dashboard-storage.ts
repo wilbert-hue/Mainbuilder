@@ -46,6 +46,7 @@ export interface DashboardSnapshot {
   /** Locked 20-row intelligence templates */
   staticCustomerProp1?: boolean
   staticDistributorProp1?: boolean
+  previewUnlocked?: boolean
 }
 
 export class StorageError extends Error {
