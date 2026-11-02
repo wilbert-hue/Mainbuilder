@@ -430,10 +430,10 @@ export function BuyerSurveyView({ kind }: Props) {
       </div>
 
       {/* 2 — Buyers */}
-      <BuyersPanel report={report} locked={isDemo} />
+      <BuyersPanel report={report} />
 
       {/* 3 — Organisations & designations */}
-      <LandscapePanel report={report} locked={isDemo} />
+      <LandscapePanel report={report} />
 
       {/* 4 — Executive summary */}
       <ExecutiveSummaryCard report={report} />
@@ -461,8 +461,7 @@ export function BuyerSurveyView({ kind }: Props) {
                   {String(i + 1).padStart(2, '0')}
                 </span>
                 <span className={`inline-flex items-center gap-1.5 ${isActive ? 'text-[#D9ED92]' : ''}`}>
-                  {isDemo ? `Module ${i + 1}` : s.title}
-                  {isDemo && <Lock className="h-3 w-3 shrink-0 opacity-70" aria-hidden />}
+                  {s.title}
                 </span>
               </button>
             )
@@ -474,7 +473,7 @@ export function BuyerSurveyView({ kind }: Props) {
 
         {/* 5 — Filters */}
         <div className="space-y-3 border-b border-slate-200 p-4">
-          {!isDemo && segment?.focus && (
+          {segment?.focus && (
             <p className="text-xs leading-relaxed text-slate-600">{segment.focus}</p>
           )}
           <div className="grid gap-3 sm:grid-cols-2">
@@ -526,7 +525,7 @@ export function BuyerSurveyView({ kind }: Props) {
             </div>
           ) : (
             visibleQuestions.map((q, i) => (
-              <QuestionCard key={q.id + i} question={q} index={i} locked={isDemo} lockText={isDemo} />
+              <QuestionCard key={q.id + i} question={q} index={i} locked={isDemo} lockText={false} />
             ))
           )}
         </div>

@@ -44,23 +44,6 @@ import {
 const NAVY = '#002857'
 const SCORE_BLUE = '#1e3a8a'
 
-/** Withheld content, in a strip the width of the panel it replaces. */
-
-/** The axis label with its name withheld: "X —" followed by a lock. */
-function LockedAxisLabel({ axis }: { axis: 'X' | 'Y' }) {
-  return (
-    <span className="inline-flex items-center gap-2">
-      {axis} —
-      <Lock className="h-4 w-4 text-slate-400" aria-label="Withheld" />
-    </span>
-  )
-}
-
-/** Parameter names are withheld; the count is not. */
-function parameterPlaceholders(count: number): string[] {
-  return Array.from({ length: count }, (_, i) => `Parameter ${i + 1}`)
-}
-
 /** Rows shown before "Other Noticeable Player" is expanded. */
 /**
  * Notes that describe how the export was produced rather than what it found —
@@ -569,9 +552,7 @@ export function QuadrantView() {
             </div>
             <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-4">
               <div className="mb-2 font-bold text-slate-900">Provider Categories in this Market</div>
-              {isDemo ? (
-                <LockedStrip />
-              ) : (
+              {(
                 <>
                   <ol className="list-decimal space-y-1 pl-5 text-slate-700">
                     {report.providerCategories.map((category, i) => (
@@ -609,15 +590,12 @@ export function QuadrantView() {
                 className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-4"
               >
                 <div className="mb-2 font-bold text-slate-900">
-                  {isDemo ? <LockedAxisLabel axis={axis} /> : `${axis} — ${name}`}
+                  {`${axis} — ${name}`}
                 </div>
                 <ol className="list-decimal space-y-1.5 pl-5 text-[0.92rem] font-semibold text-[#0f3d5c]">
-                  {(isDemo ? parameterPlaceholders(names.length) : names).map((label) => (
+                  {names.map((label) => (
                     <li key={label} className="flex items-center gap-2">
                       <span>{label}</span>
-                      {isDemo && (
-                        <Lock className="h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden />
-                      )}
                     </li>
                   ))}
                 </ol>
@@ -750,9 +728,7 @@ export function QuadrantView() {
                     </span>
                     <span className="font-bold text-slate-900">{q.title}</span>
                   </div>
-                  {isDemo ? (
-                    <LockedStrip className="mt-2" />
-                  ) : (
+                  {(
                     <>
                       {q.position && (
                         <div className="mt-1 text-[0.8rem] font-medium text-slate-500">
@@ -994,9 +970,7 @@ export function QuadrantView() {
       {(xNames.length > 0 || yNames.length > 0) && (
         <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <h2 className="mb-2 text-lg font-bold text-slate-900">Parameter Definitions</h2>
-          {isDemo ? (
-            <LockedStrip />
-          ) : (
+          {(
             <>
               <p className="mb-4 text-[0.92rem] leading-relaxed text-slate-500">
                 X and Y axes and these {xNames.length + yNames.length} parameters are defined for{' '}
