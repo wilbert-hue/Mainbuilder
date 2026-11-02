@@ -166,13 +166,13 @@ function AxisParameterPanel({
   axisLabel,
   axisName,
   params,
-  demoLocked = false,
+  evidenceLocked = false,
 }: {
   axisLabel: 'X' | 'Y'
   axisName: string
   params: QuadrantParameterScore[]
   /** Demo mode: the parameters are real, the evidence behind them is withheld. */
-  demoLocked?: boolean
+  evidenceLocked?: boolean
 }) {
   // Default to the first parameter so the detail pane is never empty on open.
   const [selected, setSelected] = useState<string | null>(params[0]?.name ?? null)
@@ -184,11 +184,7 @@ function AxisParameterPanel({
     <div>
       <div className="mb-2 flex items-center gap-2 text-[0.78rem] font-bold uppercase tracking-wider text-[#1A759F]">
         {axisLabel} —
-        {demoLocked ? (
-          <Lock className="h-3.5 w-3.5 text-slate-400" aria-label="Withheld" />
-        ) : (
-          <span>{axisName}</span>
-        )}
+        <span>{axisName}</span>
       </div>
 
       <div className="grid gap-3 md:grid-cols-[minmax(220px,300px)_1fr]">
@@ -218,20 +214,14 @@ function AxisParameterPanel({
                       isActive ? 'font-bold text-[#0f3d5c]' : 'font-medium text-slate-700'
                     }`}
                   >
-                    {demoLocked ? `Parameter ${params.indexOf(p) + 1}` : p.name}
+                    {p.name}
                   </span>
-                  {demoLocked ? (
-                    <span className="shrink-0 text-slate-400" title="Available on subscription">
-                      <Lock className="h-3.5 w-3.5" />
-                    </span>
-                  ) : (
-                    <span
-                      className="shrink-0 rounded-full px-2 py-0.5 text-[0.75rem] font-bold tabular-nums text-white"
-                      style={{ backgroundColor: SCORE_BLUE }}
-                    >
-                      {p.score ?? '—'}
-                    </span>
-                  )}
+                  <span
+                    className="shrink-0 rounded-full px-2 py-0.5 text-[0.75rem] font-bold tabular-nums text-white"
+                    style={{ backgroundColor: SCORE_BLUE }}
+                  >
+                    {p.score ?? '—'}
+                  </span>
                 </button>
               </li>
             )
@@ -240,7 +230,7 @@ function AxisParameterPanel({
 
         {/* Detail for the selected parameter */}
         <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
-          {demoLocked ? (
+          {evidenceLocked ? (
             <div className="flex h-full min-h-[180px] flex-col items-center justify-center gap-3 text-center">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-50 text-amber-600">
                 <Lock className="h-6 w-6" />
@@ -358,13 +348,13 @@ function CompanyParameterBlock({
   xAxisName,
   yAxisName,
   locked = false,
-  demoLocked = false,
+  evidenceLocked = false,
 }: {
   company: QuadrantCompany
   xAxisName: string
   yAxisName: string
   locked?: boolean
-  demoLocked?: boolean
+  evidenceLocked?: boolean
 }) {
   return (
     <div className="rounded-lg border border-slate-200 bg-white">
@@ -394,8 +384,8 @@ function CompanyParameterBlock({
           className={`space-y-5 p-4 ${locked ? 'pointer-events-none select-none blur-[5px]' : ''}`}
           aria-hidden={locked || undefined}
         >
-          <AxisParameterPanel axisLabel="X" axisName={xAxisName} params={company.xParameters} demoLocked={demoLocked} />
-          <AxisParameterPanel axisLabel="Y" axisName={yAxisName} params={company.yParameters} demoLocked={demoLocked} />
+          <AxisParameterPanel axisLabel="X" axisName={xAxisName} params={company.xParameters} evidenceLocked={evidenceLocked} />
+          <AxisParameterPanel axisLabel="Y" axisName={yAxisName} params={company.yParameters} evidenceLocked={evidenceLocked} />
         </div>
 
         {locked && (
@@ -959,7 +949,7 @@ export function QuadrantView() {
                 xAxisName={report.xAxis.name}
                 yAxisName={report.yAxis.name}
                 locked={evidencePaywalled && i > 0}
-                demoLocked={isDemo}
+                evidenceLocked={isDemo}
               />
             ))}
           </div>
@@ -1012,7 +1002,8 @@ export function QuadrantView() {
       <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
         {primaryResearch.length > 0 && (
           <div className="mb-5 overflow-hidden rounded-lg border border-slate-200">
-            <MethodologyPanel sections={primaryResearch} locked={locksEnabled} />
+            {/* Written for this market, so there is nothing to withhold. */}
+            <MethodologyPanel sections={primaryResearch} />
           </div>
         )}
         <h2 className="mb-3 text-lg font-bold text-slate-900">Research Methodology</h2>
