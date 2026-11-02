@@ -106,17 +106,10 @@ Exactly 4 sections of 5 questions each, with these titles and in this order:
 Write a short Title Case title for each section, in the language a shopper of THIS thing would
 recognise. Name the actual activity, not the abstract stage.
 
-A section title MUST NOT contain any of these words: Purchase, Purchased, Purchasing, Buying,
-Performance, Value, Adoption, Usage, Intentions, Assessment, Future, Investment, Decisions.
-Those are the words that make every market's tabs read the same. Describe what the section is
-about in the words of this particular trade instead.
-
-These show the SHAPE only. Never reuse their wording; write your own for this market.
-For a running shoe market:
-  ["What Was Bought and Why", "Where It Was Bought and the Price Paid",
-   "Comfort and Wear Over Time", "The Next Pair"]
-For a bottled water market:
-  ["Choice at the Shelf", "Shop, Pack and Price", "Taste and Everyday Use", "Switching and Budget"]
+Write a short Title Case title for each section. Every title must NAME the market's short subject,
+and must not simply repeat the description of the section given above.
+For an advanced wound care market: ["Choosing Advanced Wound Care",
+"Buying Advanced Wound Care", "Using Advanced Wound Care", "Future Advanced Wound Care Purchases"].
 
 EVERY QUESTION MUST STAND ALONE. A respondent may see it on its own, in any order, with no other
 question in front of it. So each one names the subject in full and never points back at another
@@ -260,14 +253,6 @@ function cleanSections(value: unknown, perSection: number): QuestionSectionPart[
 const allQuestions = (sections: QuestionSectionPart[]): GeneratedQuestionPart[] =>
   sections.flatMap((s) => s.questions)
 
-/**
- * The generic survey arc as a heading.
- *
- * Both questionnaires came back with the same four titles on every market, the
- * subject swapped in front: "X Purchase Decisions", "X Performance and Value".
- */
-const GENERIC_SECTION_TITLE =
-  /(\bbuying\b|\bpurchases?d?\b|\badoption\b|\busage\b|\bperformance\b|\bvalue assessment\b|\brepurchase\b|^future\b|\bintentions?\b|\binvestment\b|\bassessment\b)/i
 
 const SUBJECT_STOPWORDS = new Set(['and', 'for', 'the', 'with', 'based', 'global', 'market'])
 
@@ -349,14 +334,6 @@ export async function generateQuestionnaire(
     if (brandQuestions > 1) return reject(`${brandQuestions} brand questions, want 1`, '')
   }
 
-  // The same four headings with the subject bolted on, market after market.
-  // Three, not two. The prompt's banned-word list does most of the work here,
-  // and a questionnaire that falls back loses the generated questions as well
-  // as the titles — landing on the very headings this is trying to replace.
-  const genericTitles = sections.filter((s) => GENERIC_SECTION_TITLE.test(s.title)).length
-  if (genericTitles >= 3) {
-    return reject('section titles are the generic arc', sections.map((s) => s.title).join(' / '))
-  }
 
   // A questionnaire where most questions never name their own subject reads as
   // one conversation in twenty parts.

@@ -10,7 +10,7 @@
  * Server only — the key must never reach the browser.
  */
 
-import { askForJson, cleanNameList, COMMON_RULES } from '@/lib/llm-client'
+import { askForJson, cleanNameList, sizeLedCount, reject, COMMON_RULES } from '@/lib/llm-client'
 import type { MethodologyParts } from '@/lib/methodology-parts'
 
 const SYSTEM_PROMPT = `You write the research methodology panel shown above a B2B customer directory in a market research report.
@@ -20,8 +20,16 @@ Return ONLY JSON: {"organisations":[string],"designations":[string],"triggerSign
 organisations - 5 kinds of organisation that BUY in this market.
   They must be the people who PAY FOR AND USE it. Never a vendor, a supplier, or anyone who only
   finances or insures the purchase.
-  Qualify each by size, ownership or operating model - never a bare one word category.
-  "Multi Site Private Hospital Groups" is right; "Hospitals" is too thin to print.
+  Name the kinds that actually exist in THIS trade, and tell them apart by what they DO, not by
+  how big they are. A reader should learn something about the market from the list.
+  GOOD for wound care: "Teaching hospitals with specialist burn units", "Nursing home groups",
+    "Community wound clinics", "Homecare nursing providers", "Hospital buying consortia".
+  BAD, and the trap to avoid: starting an entry with a size or scope word. "Multi Site Private
+    Hospital Groups", "Large Integrated Health Systems", "National Railway Freight Operators" -
+    these say nothing about the trade and come out identical on every market.
+  NEVER begin an entry with Multi, Large, Mid, Medium, Small, Major, Leading, Global, National,
+  Regional or Heavy, and use at most one such word across all five entries.
+  A bare one word category like "Hospitals" is still too thin to print.
 designations - 5 job titles that decide or sign off this purchase, from senior to working level.
   Example style: "Chief Medical Officer", "Head of Procurement", "Clinical Supply Manager".
 triggerSignals - 5 observable events that say an organisation is about to buy in this market.
@@ -57,6 +65,11 @@ export async function generateMethodologyParts(
   // Partial answers are not worth showing: a panel with one real list and two
   // fallback ones reads as inconsistent. All three or none.
   if (!organisations || !designations || !triggerSignals) return null
+
+  // Two is tolerable — "Regional burn centres" still names the trade. More than
+  // that and the size ladder has come back in place of the market.
+  const sized = sizeLedCount(organisations)
+  if (sized > 2) return reject(`${sized} organisations qualified by size alone`, organisations.join(' | '))
 
   return { organisations, designations, triggerSignals }
 }

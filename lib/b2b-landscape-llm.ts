@@ -11,7 +11,7 @@
  * Server only.
  */
 
-import { askForJson, cleanLine, cleanProse, cleanNameList, reject, COMMON_RULES } from '@/lib/llm-client'
+import { askForJson, cleanLine, cleanProse, cleanNameList, reject, SIZE_LED, COMMON_RULES } from '@/lib/llm-client'
 import type { B2bLandscapeParts } from '@/lib/demo-generation-types'
 
 const SYSTEM_PROMPT = `You write the header of a B2B buyer survey report: who buys in this market, who answered the survey, and what the four question sections are called.
@@ -41,22 +41,13 @@ organisations - 6 kinds of organisation that answered the survey. Name the kinds
 designations - 5 job titles of the people who answered, at working and middle level - the people who
   actually handle this purchase, not the board. Example style: "Surgical Supply Chain Coordinator",
   "Biomedical Equipment Specialist", "Operating Room Inventory Manager".
-sectionTitles - exactly 4 tab titles. The four sections always cover, in order: how they buy,
-  how they use it, how it performed, what they will do next. Your job is to say that in the
-  language of THIS trade - name the actual activity, not the abstract stage.
-
-  These two show the SHAPE only. Never reuse their wording; write your own for this market.
-  For a commercial coffee machine market:
-    ["Machine Selection and Supplier Approval", "Daily Service Behind the Counter",
-     "Cup Quality and Running Cost", "Fleet Renewal Plans"]
-  For an enterprise payroll software market:
-    ["Vendor Shortlisting and Security Review", "Rollout Across Payroll Teams",
-     "Accuracy and Support Response", "Renewal and Module Expansion"]
-
-  BAD - this template reads the same on every market and must never be produced:
-    ["X Buying", "X Adoption and Usage", "X Performance", "Future X Buying and Investment"]
-  Do not simply put the subject in front of Buying, Adoption, Performance or Investment.
-  A title does not need to repeat the subject at all; the page already names the market.
+sectionTitles - exactly 4 tab titles naming this market's own subject, in this order:
+  buying, adoption and usage, performance, future buying and investment.
+  Example style for a surgical devices market: ["Surgical Device Buying",
+  "Surgical Device Adoption and Usage", "Surgical Device Performance",
+  "Future Surgical Device Buying and Investment"].
+  Use the market's short subject, not its full name: "Gearbox Buying", not
+  "Industrial Gearbox Market Buying".
 
 Rules:
 - Every entry must be a real, specific kind of organisation or a real job title in this trade.
@@ -93,17 +84,8 @@ function cleanBuyerTypes(value: unknown): { name: string; description: string }[
  * time — Large, Mid Sized, Small, Regional, National — so eight unrelated
  * markets came back with the same six shapes and a different noun.
  */
-const SIZE_WORD = /^(large|mid|medium|small|major|leading|global|national|regional|multi)\b/i
+const SIZE_WORD = SIZE_LED
 
-/**
- * The generic survey arc, with the subject bolted on the front.
- *
- * "Gearbox Buying / Gearbox Adoption and Usage / Gearbox Performance / Future
- * Gearbox Buying and Investment" is the shape every market produced, because
- * the earlier prompt gave exactly that as its example.
- */
-const GENERIC_TITLE =
-  /(\bbuying\b|\badoption\b|\busage\b|\bperformance\b|^future\b|\binvestment\b)/i
 
 /** Loose comparison, so "Procurement Manager" and "procurement managers" collide. */
 function overlapKey(value: string): string {
@@ -156,11 +138,6 @@ export async function generateB2bLandscape(
 
   // A tab title that is only a couple of characters leaves a bare-looking tab.
   if (sectionTitles.some((title) => title.length < 6 || title.length > 60)) return null
-
-  // One or two of these words is fair — "Service Life and Downtime" earns its
-  // place. Three or four means the generic arc came back with a noun in front.
-  const generic = sectionTitles.filter((title) => GENERIC_TITLE.test(title)).length
-  if (generic >= 3) return reject('tab titles are the generic survey arc', sectionTitles.join(' / '))
 
   // Two is tolerable — "Regional Burn Treatment Centers" still names the trade.
   // Three or more means the size ladder has come back.

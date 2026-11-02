@@ -33,10 +33,12 @@ audience - who buys it. b2c if households buy it, b2b if organisations do, both 
 offering - what kind of thing it is.
 definition - 2 sentences saying what this market covers: what is made or sold, and the scope.
 providerCategories - EXACTLY ONE entry: the single kind of company this market's vendor comparison
-  is actually about. A quadrant ranks one population against itself, so pick the one that makes
-  the product - usually "Manufacturers", or "Service providers", "Software vendors", "Processors",
-  "Operators" where that fits the trade better. Never list resellers, distributors or integrators
-  alongside it; they buy from the companies being compared rather than competing with them.
+  is actually about. A quadrant ranks one population against itself, so pick the one that supplies
+  the market. Use "Manufacturers" where something is made, and "Service providers" where the thing
+  bought is delivered rather than manufactured - software, logistics, consulting, maintenance and
+  anything sold as a subscription all count as a service. Those two cover almost every market; use
+  "Processors" or "Operators" only where neither fits. Never list resellers, distributors or
+  integrators alongside it; they buy from the companies being compared rather than competing.
   One sentence of description, starting with the plural name and a colon.
 askUnit - the noun a survey question should use when asking what someone bought.
   If isBrand is TRUE this MUST NOT be "brand" - use "pack size", "variant", "retailer" or similar.

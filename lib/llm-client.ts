@@ -121,6 +121,22 @@ export function cleanNameList(value: unknown, min: number, max = 6): string[] | 
   return cleanList(tidied, min, max)
 }
 
+/**
+ * Size and scope words that say nothing about the trade.
+ *
+ * Asked to qualify an organisation, the model reaches for the same ladder every
+ * time — Multi, Large, Mid Sized, National, Regional — so unrelated markets come
+ * back with the same shapes and a different noun. The methodology panel and the
+ * B2B header both print such a list, and they sit on the same dashboard, so the
+ * rule lives here rather than in either one.
+ */
+export const SIZE_LED = /^(multi|large|mid|medium|small|major|leading|global|national|regional|heavy)\b/i
+
+/** How many entries in a list open with one of those words. */
+export function sizeLedCount(lines: string[]): number {
+  return lines.filter((line) => SIZE_LED.test(line)).length
+}
+
 /** Waited when Groq refuses without saying how long to wait for. */
 const DEFAULT_RETRY_MS = 2_500
 
