@@ -24,6 +24,7 @@ import { Lock } from 'lucide-react'
 import { useDashboardStore } from '@/lib/store'
 import { buildDemoQuadrant } from '@/lib/demo-quadrant'
 import { useDemoGeneration } from '@/lib/use-demo-generation'
+import { useSelectedCountry } from '@/components/CountryGate'
 import { titleCaseGeography } from '@/lib/market-scope'
 import { DEMO_SUBSCRIBE_NOTE, LockedStrip } from '@/components/DemoDataNote'
 import { useLocksEnabled } from '@/lib/lock-mode'
@@ -427,7 +428,12 @@ export function QuadrantView() {
   )
   /** In demo mode every identifying field is withheld, not just the evidence. */
   const isDemo = (!hasUploaded && !!demo) && locksEnabled
-  const report = hasUploaded ? uploaded : demo
+  // A study run region by region shows the report for the geography picked in
+  // the strip, the same way the buyer survey does.
+  const selectedCountry = useSelectedCountry()
+  const report = hasUploaded
+    ? uploaded?.regions?.find((r) => r.geo === selectedCountry) ?? uploaded
+    : demo
   /** A real upload is never paywalled; the preview blur belongs to demo data only. */
   const evidencePaywalled = isSuitePreview && !hasUploaded && locksEnabled
 

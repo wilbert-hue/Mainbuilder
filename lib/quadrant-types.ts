@@ -90,9 +90,37 @@ export interface QuadrantReport {
   quadrantDefinitions: QuadrantDefinition[]
   methodology: QuadrantMethodologyStep[]
   methodologyNote: string
+  /**
+   * One report per geography, when the study was run region by region.
+   *
+   * The top-level fields stay populated with the first region so every reader
+   * that knows nothing about regions still works; the country strip picks the
+   * matching entry from here. Shaped to match BuyerSurveyReport.regions, which
+   * solved the same problem for the surveys.
+   */
+  regions?: QuadrantReport[]
 }
 
 // ── Coercion helpers ────────────────────────────────────────────────────────
+
+/**
+ * Title-case a geography written in one case throughout.
+ *
+ * The country strip matches a region to the selected country by string
+ * equality, so one export writing "global" where the survey beside it writes
+ * "Global" shows the same place twice in the strip and matches neither. Only
+ * all-lower or all-upper names are touched, leaving "Asia Pacific" and "EMEA"
+ * as the export wrote them.
+ */
+function normaliseGeo(value: string): string {
+  const trimmed = value.trim()
+  if (!trimmed) return 'Global'
+  const isOneCase = trimmed === trimmed.toLowerCase() || trimmed === trimmed.toUpperCase()
+  if (!isOneCase || trimmed.length <= 4) return trimmed
+  return trimmed
+    .toLowerCase()
+    .replace(/\b[a-z]/g, (c) => c.toUpperCase())
+}
 
 function asString(v: unknown, fallback = ''): string {
   if (typeof v === 'string') return v.trim()
@@ -458,7 +486,7 @@ export function parseQuadrantReport(raw: unknown): ParseQuadrantResult {
   return {
     report: {
       market,
-      geo: asString(pick(rec, 'geo', 'geography', 'region'), 'global'),
+      geo: normaliseGeo(asString(pick(rec, 'geo', 'geography', 'region'), 'Global')),
       marketType: asString(
         pick(rec, 'market_type', 'marketType') ?? pick(classification, 'market_type', 'type')
       ),
@@ -523,7 +551,17 @@ export function reviveQuadrantReport(stored: unknown): QuadrantReport | null {
   // Snapshots saved before quadrant definitions existed have no such field.
   if (looksNormalised) {
     const report = stored as QuadrantReport
-    return { ...report, quadrantDefinitions: report.quadrantDefinitions ?? [] }
+    return {
+      ...report,
+      quadrantDefinitions: report.quadrantDefinitions ?? [],
+      // Each region is a full report and is revived the same way, so a stored
+      // region that predates a field gets the same defaults as the top level.
+      regions: Array.isArray(report.regions)
+        ? (report.regions
+            .map((r) => reviveQuadrantReport(r))
+            .filter(Boolean) as QuadrantReport[])
+        : undefined,
+    }
   }
   return parseQuadrantReport(stored).report
 }

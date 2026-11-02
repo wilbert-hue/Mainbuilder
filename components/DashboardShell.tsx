@@ -12,6 +12,7 @@
  */
 
 import { useEffect, useState, useRef, useMemo } from 'react'
+import type { QuadrantReport } from '@/lib/quadrant-types'
 import { useDashboardStore } from '@/lib/store'
 import { EnhancedFilterPanel } from '@/components/filters/EnhancedFilterPanel'
 import { GroupedBarChart } from '@/components/charts/GroupedBarChart'
@@ -204,10 +205,19 @@ export function DashboardShell({ readOnly = false }: Props) {
   )
 
   /** A survey run region by region names the strip itself; every region has data. */
-  const surveyRegions = useMemo(
-    () => (b2bSurveyData?.regions ?? []).map((r) => r.geo).filter(Boolean),
-    [b2bSurveyData]
-  )
+  const surveyRegions = useMemo(() => {
+    // Any region-split dataset can name the strip. The B2B survey was the only
+    // one that could carry regions when this was written; the quadrant does
+    // too now, and a dashboard may hold a regioned quadrant and no survey.
+    const named = [
+      ...(b2bSurveyData?.regions ?? []),
+      ...(b2cSurveyData?.regions ?? []),
+      ...((quadrantData as QuadrantReport | null)?.regions ?? []),
+    ]
+      .map((r) => r.geo)
+      .filter(Boolean)
+    return [...new Set(named)]
+  }, [b2bSurveyData, b2cSurveyData, quadrantData])
 
   /** Every geography the market name covers, so a four country study lists four. */
   const countryOptions = useMemo(() => {
