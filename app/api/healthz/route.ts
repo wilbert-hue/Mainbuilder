@@ -13,5 +13,20 @@ export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
 export function GET() {
-  return NextResponse.json({ status: 'ok' }, { status: 200 })
+  return NextResponse.json(
+    {
+      status: 'ok',
+      // Which build is actually serving, and whether it can reach the services
+      // it needs. Without this there is no way to tell a deployment that has
+      // not happened from an environment variable that was never saved — the
+      // symptom is identical from outside.
+      commit: process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? 'local',
+      configured: {
+        deepseek: Boolean(process.env.DEEPSEEK_API_KEY),
+        groq: Boolean(process.env.GROQ_API_KEY),
+        mongo: Boolean(process.env.MONGODB_URI),
+      },
+    },
+    { status: 200 }
+  )
 }
