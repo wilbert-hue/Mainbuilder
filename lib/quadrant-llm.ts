@@ -34,6 +34,16 @@ export const Y_AXIS_NAME = 'Business Capability'
  */
 const FILLER_OPENER = /^(measures|assesses|evaluates|reviews|tracks|examines|analyzes|analyses|determines)\s+/i
 
+/**
+ * Named regulators, standards bodies and certification schemes.
+ *
+ * The prompt forbids these and the model agrees, then writes "CE/ FDA filings"
+ * anyway. A demo dashboard that cites a real regulator reads as a claim about
+ * what was actually checked, so the parameter is dropped rather than shown.
+ */
+const NAMED_AUTHORITY =
+  /\b(FDA|CE[ /-]?mark(ed|ing)?|ISO|ASTM|IEC|UL|OSHA|EPA|USDA|FCC|GDPR|HIPAA|REACH|RoHS|MDR|CFR|ANSI|DIN|JIS|BIS|FSSAI|EFSA|EMA|NIST|SOC ?2|PCI ?DSS)\b/
+
 function openWithTheSubject(definition: string): string {
   const trimmed = definition.replace(FILLER_OPENER, '')
   if (trimmed === definition || !trimmed) return definition
@@ -46,27 +56,49 @@ Return ONLY JSON:
 {"xParameters":[{"name":string,"definition":string}],
  "yParameters":[{"name":string,"definition":string}]}
 
-Give 6 xParameters and 6 yParameters. The best 5 of each are kept, so a weak one is not fatal.
+Give exactly 5 xParameters and 5 yParameters.
 
-The X axis is "${X_AXIS_NAME}" and scores what the vendor MAKES: the specific technical and
-quality dimensions on which products in THIS market are actually judged by the people who buy them.
-The Y axis is "${Y_AXIS_NAME}" and scores the vendor as a COMMERCIAL OPERATION in THIS market:
-its installed base, its revenue in this category, where it sells, how it reaches customers, its
-financial strength.
+These score a COMPANY against its competitors, so each parameter is a capability a company can be
+strong or weak at across its whole range. A single laboratory measurement of one product is not a
+capability: "Moisture Vapor Transmission Rate" is a spec on a datasheet, while "Dressing Performance
+and Healing Evidence" is something a company is good or bad at.
+
+The X axis is "${X_AXIS_NAME}" and scores what the company MAKES. Cover these five, in order,
+each named in the vocabulary of THIS trade:
+  1 core performance of the main product
+  2 breadth of the range: types, formats, grades or modalities offered
+  3 depth of the supporting portfolio: accessories, consumables, adjacent lines
+  4 quality, compliance and the evidence behind the claims
+  5 innovation: new development reaching the market
+
+The Y axis is "${Y_AXIS_NAME}" and scores the company as a COMMERCIAL OPERATION in this market.
+Cover these five, in order:
+  1 installed base and the contracts behind it
+  2 revenue in this category and its growth
+  3 geographic footprint
+  4 route to market: channels, distributors, partnerships
+  5 financial strength and capacity to invest
 
 Write each parameter the way a sector analyst who knows this trade would:
 
-GOOD (an electrosurgical devices market):
+GOOD (an electrosurgical devices market) - a capability, named in the trade's own words:
   "Generator Power and Precision" - "Maximum power output, cutting and coagulation quality, and
    precision control of monopolar and bipolar generators. Evidence includes published wattage,
    impedance monitoring, and clinical performance data."
+  "Instrument and Accessory Portfolio Depth" - "Breadth of disposable and reusable instruments and
+   the accessories supplied with them. Evidence includes catalogue counts, specialty specific
+   designs, and compatibility with third party generators."
   "Installed Base and Hospital Contracts" - "Number of generators and systems installed in hospitals
    and surgical centers, plus named contracts with providers or group purchasing organizations.
    Evidence includes installed base figures, contract announcements, and tender wins."
 
-BAD (rejected - this is generic template language that would fit any market):
+BAD - generic template language that would fit any market:
   "Product Capability Depth" - "Measures the range and sophistication of solutions offered."
   "Regulatory Compliance Rigor" - "Reviews adherence to applicable requirements."
+
+ALSO BAD - a single laboratory measurement rather than a company capability:
+  "Moisture Vapor Transmission Rate", "Hydrogel Osmotic Swelling Capacity", "Backlash Tolerance"
+  These describe one product on a test bench. Widen them to the capability they belong to.
 
 Rules:
 - Every parameter name must use this market's own vocabulary. A name that would fit any market is wrong.
@@ -104,13 +136,20 @@ function cleanParameters(axis: string, value: unknown): ScoringParameterPart[] |
       reject(`${axis} definition length ${definition.length}`, `${name}: ${definition}`)
       continue
     }
+    if (NAMED_AUTHORITY.test(definition) || NAMED_AUTHORITY.test(name)) {
+      reject(`${axis} names a real authority`, `${name}: ${definition}`)
+      continue
+    }
     const key = name.toLowerCase()
     if (seen.has(key)) continue
     seen.add(key)
     out.push({ name, definition })
   }
 
-  return out.length >= 5 ? out.slice(0, 5) : reject(`${axis} kept only ${out.length} of 5`)
+  // Four is enough to render: the view counts what it is given rather than
+  // printing a fixed ten, and a complete axis minus one dropped entry beats
+  // falling back to the template for the whole quadrant.
+  return out.length >= 4 ? out.slice(0, 5) : reject(`${axis} kept only ${out.length} of 5`)
 }
 
 /**

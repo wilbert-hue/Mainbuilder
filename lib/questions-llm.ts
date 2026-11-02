@@ -14,7 +14,7 @@
  * Server only.
  */
 
-import { askForJson, cleanProse, COMMON_RULES } from '@/lib/llm-client'
+import { askForJson, cleanProse, reject, COMMON_RULES } from '@/lib/llm-client'
 import type {
   MarketProfileParts,
   QuestionSectionPart,
@@ -27,6 +27,36 @@ const SELECT_ALL = 'Select all that apply.'
 const YES_NO_OPENER =
   /^(is|are|was|were|do|does|did|will|would|have|has|had|can|could|should|shall|may|might)\b/i
 
+/**
+ * A stand-in for the thing being bought.
+ *
+ * "Where did you purchase the ingredient?" only means something after another
+ * question has said which ingredient, which is what made a questionnaire read
+ * as a conversation rather than twenty independent items.
+ */
+const STANDS_IN_FOR_SUBJECT =
+  /\b(the|this|that|your|their|its)\s+(product|item|ingredient|unit|device|service|brand|offering|solution|supplier|provider|retailer|purchase|one)\b/i
+
+/** Wording that points at another question instead of asking its own. */
+const BACK_REFERENCE =
+  /\b(you (chose|selected|picked|mentioned|named|identified)|the one you|chosen (brand|supplier|product|provider)|previous(ly)? (question|answer)|above|aforementioned|same (brand|product|supplier) again)\b/i
+
+/** Conversational register, where a survey wants a neutral one. */
+const CONVERSATIONAL =
+  // "fell short" was here and came out again: it is ordinary business register,
+  // and once a question names its own subject in full there is nothing chatty
+  // left in it. Banning it only cost retries.
+  /\b(ultimately|opt(ed)? for|happen to|end(ed)? up|by any chance|would you say|feel like)\b/i
+
+/**
+ * The respondent described from outside.
+ *
+ * Told not to say "you", the model starts asking what "the shopper" would do,
+ * which is a question about somebody else.
+ */
+const THIRD_PERSON_RESPONDENT =
+  /\b(the|a)\s+(shopper|consumer|customer|buyer|respondent|participant|user|purchaser)\b/i
+
 const B2B_SYSTEM = `You write a B2B buyer questionnaire for a market research study.
 
 Return ONLY JSON: {"sections":[{"title":string,"questions":[{"text":string,"type":"single_choice"|"multi_choice"}]}]}
@@ -37,7 +67,17 @@ Section 2 is about adoption and use.
 Section 3 is about experience with what they chose.
 Section 4 is about the future - EVERY question in it must be future or conditional tense.
 
+EVERY QUESTION MUST STAND ALONE. A respondent may see it on its own, in any order, with no other
+question in front of it. So each one names the subject in full and never points back at another
+question or at an answer given earlier.
+
 Rules, all mandatory:
+- Name the subject in full in every question. Never "the product", "the item", "the supplier",
+  "it" or any other word standing in for it, and never "the one you chose".
+- Write in a neutral survey register. No conversational wording: not "ultimately", "opt for",
+  "might you consider", "happen to", "end up", "by any chance".
+- Never describe the respondent from outside. No "the shopper", "the customer", "the buyer",
+  "the respondent". Ask about the purchase itself, in the passive voice.
 - One idea per question. Every question is closed and ends with a question mark.
 - NEVER a question that can be answered yes or no. Never start a question with
   Is, Are, Do, Does, Did, Will, Would, Have, Has, Can, Could or Should.
@@ -60,7 +100,28 @@ Exactly 4 sections of 5 questions each, with these titles and in this order:
 
 Write a short Title Case title for each section naming this market's subject.
 
+EVERY QUESTION MUST STAND ALONE. A respondent may see it on its own, in any order, with no other
+question in front of it. So each one names the subject in full and never points back at another
+question.
+
+BAD - these only make sense read in sequence, and read as a conversation rather than a survey:
+  "Which product type did you select?"        (which product? names nothing)
+  "Where did you purchase the ingredient?"    ("the ingredient" points at an earlier answer)
+  "Which performance attribute fell short?"   (short of what? assumes the question before it)
+  "Which alternative might you consider next?"
+
+GOOD - each names its own subject and could be asked first:
+  "Which type of plant based protein ingredient was purchased most recently?"
+  "At which type of retailer were the plant based protein ingredients purchased?"
+  "Which aspect of plant based protein ingredient performance was rated lowest?"
+
 Rules, all mandatory:
+- Name the subject in full in every question. Never "the product", "the item", "the ingredient",
+  "the unit", "the service", "it", "that one" or any other word standing in for it.
+- Never refer to a previous question, a previous answer, or anything "you chose" earlier.
+- Write in a neutral survey register. No conversational wording: not "ultimately", "opt for",
+  "might you consider", "happen to", "end up", "by any chance".
+- Never describe the respondent from outside. No "the buyer", "the customer", "the respondent".
 - One idea per question. Every question is closed and ends with a question mark.
 - NEVER a question that can be answered yes or no. Never start a question with
   Is, Are, Do, Does, Did, Will, Would, Have, Has, Can, Could or Should.
@@ -74,20 +135,6 @@ Rules, all mandatory:
 - Write for a shopper, in the words a shopper uses.
 ${COMMON_RULES}`
 
-/**
- * Say why a question was thrown out, when asked.
- *
- * A questionnaire falls back as a whole, so without this a rejection is a
- * silent "FELL BACK" and the rule that fired is anyone's guess. Set LLM_DEBUG
- * to see it; it is off in production because a rejection is routine, not an
- * error.
- */
-function reject(reason: string, text: unknown): null {
-  if (process.env.LLM_DEBUG) {
-    console.error(`  rejected [${reason}]: ${typeof text === 'string' ? text : JSON.stringify(text)}`)
-  }
-  return null
-}
 
 /**
  * Normalise one question, repairing only what is safe to repair.
@@ -126,6 +173,9 @@ function cleanQuestion(raw: unknown): GeneratedQuestionPart | null {
     return reject('bare how often', text)
   }
   if (/latest purchase/i.test(text)) return reject('latest purchase', text)
+  if (BACK_REFERENCE.test(text)) return reject('refers to another question', text)
+  if (CONVERSATIONAL.test(text)) return reject('conversational register', text)
+  if (THIRD_PERSON_RESPONDENT.test(text)) return reject('respondent in third person', text)
   // "Which packaging feature (e.g., bottle, can, label) attracts you?" shows the
   // respondent its own answer options, which leads the answer.
   if (/\be\.?g\.?\b|\bfor example\b/i.test(text)) return reject('example answers in question', text)
@@ -176,6 +226,33 @@ function cleanSections(value: unknown, perSection: number): QuestionSectionPart[
 /** Every question across the questionnaire, flattened. */
 const allQuestions = (sections: QuestionSectionPart[]): GeneratedQuestionPart[] =>
   sections.flatMap((s) => s.questions)
+
+const SUBJECT_STOPWORDS = new Set(['and', 'for', 'the', 'with', 'based', 'global', 'market'])
+
+/**
+ * Word stems a question can use to name this market's subject.
+ * Stemmed to five characters so "ingredients" matches "ingredient".
+ */
+function subjectStems(subject: string): string[] {
+  return subject
+    .toLowerCase()
+    .split(/[^a-z]+/)
+    .filter((word) => word.length >= 4 && !SUBJECT_STOPWORDS.has(word))
+    .map((word) => word.slice(0, 5))
+}
+
+/**
+ * How many questions name what they are asking about.
+ *
+ * Banning the stand-in words is not enough on its own: the model answers a ban
+ * on "the product" by dropping the noun altogether ("Which type was
+ * purchased?"), which is just as dependent on the question before it.
+ */
+function namesSubject(text: string, stems: string[]): boolean {
+  if (!stems.length) return true
+  const lower = text.toLowerCase()
+  return stems.some((stem) => lower.includes(stem))
+}
 
 /**
  * Write a questionnaire for a market.
@@ -229,6 +306,22 @@ export async function generateQuestionnaire(
     const brandQuestions = questions.filter((q) => /\bbrands?\b/i.test(q.text)).length
     if (brandQuestions > 1) return reject(`${brandQuestions} brand questions, want 1`, '')
   }
+
+  // A questionnaire where most questions never name their own subject reads as
+  // one conversation in twenty parts.
+  const stems = subjectStems(profile.subject)
+  const named = questions.filter((q) => namesSubject(q.text, stems)).length
+  if (named < Math.ceil(questions.length * 0.7)) {
+    return reject(`only ${named} of ${questions.length} questions name the subject`)
+  }
+
+  // A stand-in is only a problem in a question that never says what it is
+  // standing in for. "Which claim on the plant based protein ingredient
+  // packaging influenced the purchase decision?" says it twice over.
+  const orphaned = questions.find(
+    (q) => STANDS_IN_FOR_SUBJECT.test(q.text) && !namesSubject(q.text, stems)
+  )
+  if (orphaned) return reject('stands in for a subject it never names', orphaned.text)
 
   // Six questions that differ only by one noun was a real failure in testing:
   // "Which brand do you use for foam dressings?" five times over.
