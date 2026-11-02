@@ -12,6 +12,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { hasModelKey } from '@/lib/llm-client'
 import { getMongoClient } from '@/lib/mongodb'
 import { getMongoDatabaseName } from '@/lib/mongo-config'
 import { generateMethodologyParts } from '@/lib/methodology-llm'
@@ -81,7 +82,7 @@ export async function POST(request: NextRequest) {
     })
   }
 
-  if (!process.env.GROQ_API_KEY) {
+  if (!hasModelKey()) {
     return NextResponse.json(
       { generated: false, error: 'Methodology generation is not configured.' },
       { status: 503 }

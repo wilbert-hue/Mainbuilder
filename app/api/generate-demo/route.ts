@@ -11,6 +11,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { hasModelKey } from '@/lib/llm-client'
 import { getMongoClient } from '@/lib/mongodb'
 import { getMongoDatabaseName } from '@/lib/mongo-config'
 import { generateDemoContent, isEmptyRecord } from '@/lib/demo-generation'
@@ -114,7 +115,7 @@ export async function POST(request: NextRequest) {
     })
   }
 
-  if (!process.env.GROQ_API_KEY) {
+  if (!hasModelKey()) {
     // A partial entry is still better than nothing for the sections it covers.
     if (cached) {
       return NextResponse.json({
