@@ -14,7 +14,7 @@
  * Server only.
  */
 
-import { askForJson, cleanProse, reject, COMMON_RULES } from '@/lib/llm-client'
+import { askForJson, cleanProse, reject, stockStageTitles, COMMON_RULES } from '@/lib/llm-client'
 import type {
   MarketProfileParts,
   QuestionSectionPart,
@@ -106,10 +106,17 @@ Exactly 4 sections of 5 questions each, with these titles and in this order:
 Write a short Title Case title for each section, in the language a shopper of THIS thing would
 recognise. Name the actual activity, not the abstract stage.
 
-Write a short Title Case title for each section. Every title must NAME the market's short subject,
-and must not simply repeat the description of the section given above.
-For an advanced wound care market: ["Choosing Advanced Wound Care",
-"Buying Advanced Wound Care", "Using Advanced Wound Care", "Future Advanced Wound Care Purchases"].
+Write a short Title Case title for each section. Every title must NAME the market's short subject
+and say its stage in the words a shopper of THIS thing would use. Do not repeat the section
+description above as the title.
+
+NEVER use the words Buying, Purchase, Purchasing, Adoption, Usage, Performance, Investment,
+Repurchase or Intentions. Those are the stock words, and using them makes every market's tabs read
+identically. Say the same thing in this market's own language instead.
+
+For an air purifier market:
+  ["Choosing an Air Purifier", "Where Air Purifiers Are Bought",
+   "Living With an Air Purifier", "The Next Air Purifier"]
 
 EVERY QUESTION MUST STAND ALONE. A respondent may see it on its own, in any order, with no other
 question in front of it. So each one names the subject in full and never points back at another
@@ -334,6 +341,10 @@ export async function generateQuestionnaire(
     if (brandQuestions > 1) return reject(`${brandQuestions} brand questions, want 1`, '')
   }
 
+
+  // The four stages named with the stock words give every market the same tabs.
+  const stock = stockStageTitles(sections.map((s) => s.title))
+  if (stock.length) return reject('section titles use the stock stage words', stock.join(' / '))
 
   // A questionnaire where most questions never name their own subject reads as
   // one conversation in twenty parts.

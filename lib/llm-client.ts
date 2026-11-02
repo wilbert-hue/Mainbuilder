@@ -9,18 +9,66 @@
  * Server only — the key must never reach the browser.
  */
 
-const GROQ_ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions'
+/**
+ * Which service writes the copy.
+ *
+ * DeepSeek is the one we use. Groq's free tier allows 8,000 tokens a minute
+ * against a market that costs about 9,000, so a single new market could not be
+ * generated inside one minute and most of a batch was spent waiting out
+ * refusals. It stays here as a fallback for a deployment that only has the
+ * Groq key configured.
+ *
+ * Both speak the OpenAI chat-completions shape, so only the field names differ:
+ * DeepSeek takes max_tokens, Groq takes max_completion_tokens and a reasoning
+ * budget. Picking by whichever key is present means no deployment has to be
+ * told which one it is using.
+ */
+interface Provider {
+  name: string
+  endpoint: string
+  model: string
+  apiKey: string
+  /** Request fields that differ between the two services. */
+  budget: (maxTokens: number) => Record<string, unknown>
+}
 
-/** Chosen for quality on this account's model list; the others are much weaker. */
-const MODEL = 'openai/gpt-oss-120b'
+function provider(): Provider | null {
+  const deepseek = process.env.DEEPSEEK_API_KEY
+  if (deepseek) {
+    return {
+      name: 'deepseek',
+      endpoint: 'https://api.deepseek.com/chat/completions',
+      model: 'deepseek-chat',
+      apiKey: deepseek,
+      budget: (maxTokens) => ({ max_tokens: maxTokens }),
+    }
+  }
+
+  const groq = process.env.GROQ_API_KEY
+  if (groq) {
+    return {
+      name: 'groq',
+      endpoint: 'https://api.groq.com/openai/v1/chat/completions',
+      model: 'openai/gpt-oss-120b',
+      apiKey: groq,
+      // gpt-oss is a reasoning model and its reasoning counts against the
+      // completion budget, so a tight ceiling cuts it off mid-JSON. Keep the
+      // budget wide and the reasoning short — these tasks need recall, not
+      // deliberation.
+      budget: (maxTokens) => ({
+        max_completion_tokens: maxTokens,
+        reasoning_effort: 'low',
+      }),
+    }
+  }
+
+  return null
+}
 
 /**
- * The free tier allows 8,000 tokens a minute and a full market costs about
- * 9,000, so the later calls in a fresh generation are refused as a matter of
- * course rather than as an exception. Groq says how long to wait and it is
- * usually a second or two, so we wait and retry rather than giving up —
- * but only up to a point, because a dashboard is waiting on the answer and a
- * deterministic fallback is already on screen.
+ * A refusal is still possible on any service, and waiting out a short one beats
+ * falling back to the template. Two attempts, then give the dashboard its
+ * deterministic copy rather than holding the request open.
  */
 const RATE_LIMIT_RETRIES = 2
 
@@ -28,7 +76,7 @@ const RATE_LIMIT_RETRIES = 2
 const RETRY_CEILING_MS = 15_000
 
 export function hasModelKey(): boolean {
-  return Boolean(process.env.GROQ_API_KEY)
+  return provider() !== null
 }
 
 /**
@@ -137,6 +185,22 @@ export function sizeLedCount(lines: string[]): number {
   return lines.filter((line) => SIZE_LED.test(line)).length
 }
 
+/**
+ * The stock words for the four survey stages.
+ *
+ * Both questionnaires run the same arc — how they buy, how they use it, how it
+ * held up, what they do next — and naming the stages with these words gives
+ * every market the identical four tabs with only the subject changed. The arc
+ * stays; the vocabulary has to come from the trade.
+ */
+export const STOCK_STAGE_WORD =
+  /\b(buying|buys?|purchase[sd]?|purchasing|adoption|usage|performance|investment|repurchase|intentions?)\b/i
+
+/** The titles that reached for a stock word rather than the trade's own. */
+export function stockStageTitles(titles: string[]): string[] {
+  return titles.filter((title) => STOCK_STAGE_WORD.test(title))
+}
+
 /** Waited when Groq refuses without saying how long to wait for. */
 const DEFAULT_RETRY_MS = 2_500
 
@@ -171,23 +235,21 @@ export async function askForJson(
   maxTokens: number,
   signal?: AbortSignal
 ): Promise<Record<string, unknown> | null> {
-  const apiKey = process.env.GROQ_API_KEY
-  if (!apiKey) return null
+  const service = provider()
+  if (!service) return null
 
   for (let attempt = 0; attempt <= RATE_LIMIT_RETRIES; attempt++) {
     try {
-      const res = await fetch(GROQ_ENDPOINT, {
+      const res = await fetch(service.endpoint, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+        headers: {
+          Authorization: `Bearer ${service.apiKey}`,
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
-          model: MODEL,
+          model: service.model,
           temperature: 0.3,
-          // This is a reasoning model and its reasoning counts against the
-          // completion budget, so a tight ceiling cuts it off mid-JSON and the
-          // call fails with json_validate_failed. Keep the budget wide and the
-          // reasoning short — these tasks need recall, not deliberation.
-          reasoning_effort: 'low',
-          max_completion_tokens: maxTokens,
+          ...service.budget(maxTokens),
           response_format: { type: 'json_object' },
           messages: [
             { role: 'system', content: systemPrompt },
@@ -208,7 +270,7 @@ export async function askForJson(
       }
 
       if (!res.ok) {
-        console.error(`llm ${label}: ${res.status} — ${(await res.text()).slice(0, 300)}`)
+        console.error(`llm ${label} (${service.name}): ${res.status} — ${(await res.text()).slice(0, 300)}`)
         return null
       }
 

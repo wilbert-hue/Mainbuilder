@@ -11,7 +11,7 @@
  * Server only.
  */
 
-import { askForJson, cleanLine, cleanProse, cleanNameList, reject, SIZE_LED, COMMON_RULES } from '@/lib/llm-client'
+import { askForJson, cleanLine, cleanProse, cleanNameList, reject, SIZE_LED, stockStageTitles, COMMON_RULES } from '@/lib/llm-client'
 import type { B2bLandscapeParts } from '@/lib/demo-generation-types'
 
 const SYSTEM_PROMPT = `You write the header of a B2B buyer survey report: who buys in this market, who answered the survey, and what the four question sections are called.
@@ -30,24 +30,36 @@ buyerTypes - exactly 4 kinds of organisation that buy here, named plainly and br
 organisations - 6 kinds of organisation that answered the survey. Name the kinds that actually
   exist in THIS trade and distinguish them by what they DO differently, not by how big they are.
   A reader should learn something about the market from the list.
-  GOOD for wound care: "Teaching hospitals with specialist burn units", "Nursing home groups",
-    "Community wound clinics", "Homecare nursing providers", "Veterans health networks",
-    "Hospital group purchasing organisations".
+  This shows the SHAPE only - never reuse its wording. For a commercial laundry market:
+    "Hotel housekeeping operations", "Hospital linen services", "Workwear rental companies",
+    "Care home laundry rooms", "Sports club kit rooms", "Prison service laundries".
   BAD, and the trap to avoid: starting entries with a size or scope word. "Large Urban Academic
     Hospital System", "Mid Sized Regional Non Profit Hospital", "Small Independent Clinics" -
-    these say nothing about wound care and come out identical on every market.
+    these say nothing about the trade and come out identical on every market.
   NEVER begin an entry with Large, Mid, Medium, Small, Major, Leading, Global, National or
   Regional, and use at most one such word across all six entries.
 designations - 5 job titles of the people who answered, at working and middle level - the people who
   actually handle this purchase, not the board. Example style: "Surgical Supply Chain Coordinator",
   "Biomedical Equipment Specialist", "Operating Room Inventory Manager".
-sectionTitles - exactly 4 tab titles naming this market's own subject, in this order:
-  buying, adoption and usage, performance, future buying and investment.
-  Example style for a surgical devices market: ["Surgical Device Buying",
-  "Surgical Device Adoption and Usage", "Surgical Device Performance",
-  "Future Surgical Device Buying and Investment"].
-  Use the market's short subject, not its full name: "Gearbox Buying", not
-  "Industrial Gearbox Market Buying".
+sectionTitles - exactly 4 tab titles. They always cover the same four stages, in this order:
+  1 how buyers choose, qualify and contract a supplier
+  2 how the thing is put to work once bought
+  3 how it has held up in service and what it returned
+  4 what the organisation will do next
+
+  Each title names this market's short subject and says its stage in the words of THIS trade.
+  Use the short subject, not the full market name: "Gearbox", not "Industrial Gearbox Market".
+
+  NEVER use the words Buying, Purchase, Purchasing, Adoption, Usage, Performance or Investment.
+  Those are the stock words, and using them makes every market's tabs read identically.
+  Say the same thing in this trade's language instead.
+
+  For a surgical devices market:
+    ["Surgical Device Sourcing", "Surgical Device Use in Theatre",
+     "Surgical Device Reliability in Service", "Future Surgical Device Plans"]
+  For a bakery ingredients market:
+    ["Ingredient Supplier Selection", "Ingredient Use in the Bakery",
+     "Ingredient Quality in Production", "Forward Ingredient Planning"]
 
 Rules:
 - Every entry must be a real, specific kind of organisation or a real job title in this trade.
@@ -138,6 +150,9 @@ export async function generateB2bLandscape(
 
   // A tab title that is only a couple of characters leaves a bare-looking tab.
   if (sectionTitles.some((title) => title.length < 6 || title.length > 60)) return null
+
+  const stock = stockStageTitles(sectionTitles)
+  if (stock.length) return reject('tab titles use the stock stage words', stock.join(' / '))
 
   // Two is tolerable — "Regional Burn Treatment Centers" still names the trade.
   // Three or more means the size ladder has come back.

@@ -22,8 +22,9 @@ organisations - 5 kinds of organisation that BUY in this market.
   finances or insures the purchase.
   Name the kinds that actually exist in THIS trade, and tell them apart by what they DO, not by
   how big they are. A reader should learn something about the market from the list.
-  GOOD for wound care: "Teaching hospitals with specialist burn units", "Nursing home groups",
-    "Community wound clinics", "Homecare nursing providers", "Hospital buying consortia".
+  This shows the SHAPE only - never reuse its wording. For a commercial laundry market:
+    "Hotel housekeeping operations", "Hospital linen services", "Workwear rental companies",
+    "Care home laundry rooms", "Prison service laundries".
   BAD, and the trap to avoid: starting an entry with a size or scope word. "Multi Site Private
     Hospital Groups", "Large Integrated Health Systems", "National Railway Freight Operators" -
     these say nothing about the trade and come out identical on every market.
