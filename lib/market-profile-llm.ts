@@ -32,8 +32,12 @@ isBrand - TRUE if the subject names ONE specific commercial brand or product lin
 audience - who buys it. b2c if households buy it, b2b if organisations do, both if genuinely both.
 offering - what kind of thing it is.
 definition - 2 sentences saying what this market covers: what is made or sold, and the scope.
-providerCategories - 1 to 3 kinds of company the quadrant would compare. Each with a one sentence
-  description starting with the plural name and a colon.
+providerCategories - EXACTLY ONE entry: the single kind of company this market's vendor comparison
+  is actually about. A quadrant ranks one population against itself, so pick the one that makes
+  the product - usually "Manufacturers", or "Service providers", "Software vendors", "Processors",
+  "Operators" where that fits the trade better. Never list resellers, distributors or integrators
+  alongside it; they buy from the companies being compared rather than competing with them.
+  One sentence of description, starting with the plural name and a colon.
 askUnit - the noun a survey question should use when asking what someone bought.
   If isBrand is TRUE this MUST NOT be "brand" - use "pack size", "variant", "retailer" or similar.
   If isBrand is FALSE it is usually "brand".
@@ -55,7 +59,10 @@ function cleanCategories(value: unknown): ProviderCategoryPart[] {
     if (description.length < 10 || description.length > 400) continue
     out.push({ name, description })
   }
-  return out.slice(0, 3)
+  // One population, not a supply chain: the quadrant scores companies against
+  // each other, and a distributor does not compete with the manufacturer it
+  // buys from.
+  return out.slice(0, 1)
 }
 
 function cleanAudience(value: unknown): MarketProfileParts['audience'] | null {

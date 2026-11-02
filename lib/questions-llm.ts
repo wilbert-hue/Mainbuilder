@@ -92,13 +92,31 @@ const B2C_SYSTEM = `You write a B2C consumer questionnaire for a market research
 
 Return ONLY JSON: {"sections":[{"title":string,"questions":[{"text":string,"type":"single_choice"|"multi_choice"}]}]}
 
+NEVER list possible answers inside a question. No "e.g.", no "such as", no bracketed list of
+types. "Which type of wound care product (e.g., dressing, bandage, negative pressure device) was
+purchased?" is wrong — the options belong in the answer list, not the question. Write "Which type
+of advanced wound care product was purchased most recently?" and stop there.
+
 Exactly 4 sections of 5 questions each, with these titles and in this order:
 1 what was bought, which variant, which claim decided it
 2 where they buy, what they pay, and why
 3 whether it performs, what goes wrong, value for money
 4 repurchase, switching, what they want next, next budget
 
-Write a short Title Case title for each section naming this market's subject.
+Write a short Title Case title for each section, in the language a shopper of THIS thing would
+recognise. Name the actual activity, not the abstract stage.
+
+A section title MUST NOT contain any of these words: Purchase, Purchased, Purchasing, Buying,
+Performance, Value, Adoption, Usage, Intentions, Assessment, Future, Investment, Decisions.
+Those are the words that make every market's tabs read the same. Describe what the section is
+about in the words of this particular trade instead.
+
+These show the SHAPE only. Never reuse their wording; write your own for this market.
+For a running shoe market:
+  ["What Was Bought and Why", "Where It Was Bought and the Price Paid",
+   "Comfort and Wear Over Time", "The Next Pair"]
+For a bottled water market:
+  ["Choice at the Shelf", "Shop, Pack and Price", "Taste and Everyday Use", "Switching and Budget"]
 
 EVERY QUESTION MUST STAND ALONE. A respondent may see it on its own, in any order, with no other
 question in front of it. So each one names the subject in full and never points back at another
@@ -178,7 +196,22 @@ function cleanQuestion(raw: unknown): GeneratedQuestionPart | null {
   if (THIRD_PERSON_RESPONDENT.test(text)) return reject('respondent in third person', text)
   // "Which packaging feature (e.g., bottle, can, label) attracts you?" shows the
   // respondent its own answer options, which leads the answer.
-  if (/\be\.?g\.?\b|\bfor example\b/i.test(text)) return reject('example answers in question', text)
+  // Listing the options inside the question is the model's most stubborn habit:
+  // "Which channel (direct sales, distributor, online portal) was used?" Cutting
+  // the bracket out leaves the question intact and asking the same thing, so it
+  // is repaired rather than refused — refusing it threw away the other 19.
+  text = text
+    .replace(/\s*\((?:e\.?g\.?|such as|for example)[^)]*\)/gi, '')
+    .replace(/\s*\([^)]*,[^)]*\)/g, '')
+    .replace(/\s+([?,.])/g, '$1')
+    .replace(/\s+/g, ' ')
+    .trim()
+
+  // Outside brackets there is no safe cut: "Which type, such as foam or film,
+  // was bought?" needs rewriting, not trimming.
+  if (/\be\.?g\.?\b|\bfor example\b|\bsuch as\b/i.test(text)) {
+    return reject('example answers in question', text)
+  }
 
   // One question mark: a second means two questions in one.
   if ((text.match(/\?/g) || []).length !== 1) return reject('question mark count', text)
@@ -226,6 +259,15 @@ function cleanSections(value: unknown, perSection: number): QuestionSectionPart[
 /** Every question across the questionnaire, flattened. */
 const allQuestions = (sections: QuestionSectionPart[]): GeneratedQuestionPart[] =>
   sections.flatMap((s) => s.questions)
+
+/**
+ * The generic survey arc as a heading.
+ *
+ * Both questionnaires came back with the same four titles on every market, the
+ * subject swapped in front: "X Purchase Decisions", "X Performance and Value".
+ */
+const GENERIC_SECTION_TITLE =
+  /(\bbuying\b|\bpurchases?d?\b|\badoption\b|\busage\b|\bperformance\b|\bvalue assessment\b|\brepurchase\b|^future\b|\bintentions?\b|\binvestment\b|\bassessment\b)/i
 
 const SUBJECT_STOPWORDS = new Set(['and', 'for', 'the', 'with', 'based', 'global', 'market'])
 
@@ -305,6 +347,15 @@ export async function generateQuestionnaire(
   if (kind === 'b2c' && !profile.isBrand) {
     const brandQuestions = questions.filter((q) => /\bbrands?\b/i.test(q.text)).length
     if (brandQuestions > 1) return reject(`${brandQuestions} brand questions, want 1`, '')
+  }
+
+  // The same four headings with the subject bolted on, market after market.
+  // Three, not two. The prompt's banned-word list does most of the work here,
+  // and a questionnaire that falls back loses the generated questions as well
+  // as the titles — landing on the very headings this is trying to replace.
+  const genericTitles = sections.filter((s) => GENERIC_SECTION_TITLE.test(s.title)).length
+  if (genericTitles >= 3) {
+    return reject('section titles are the generic arc', sections.map((s) => s.title).join(' / '))
   }
 
   // A questionnaire where most questions never name their own subject reads as
