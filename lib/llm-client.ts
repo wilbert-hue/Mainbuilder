@@ -201,6 +201,34 @@ export function stockStageTitles(titles: string[]): string[] {
   return titles.filter((title) => STOCK_STAGE_WORD.test(title))
 }
 
+/**
+ * A tab title written as a sentence rather than a label.
+ *
+ * "Choosing Advanced Wound Care", "Where Advanced Wound Care Is Sourced",
+ * "Living With Advanced Wound Care" all say the right thing at three times the
+ * width a tab strip has for it.
+ */
+const SENTENCE_TITLE = /^(choosing|where|living|running|working|using|buying|the|how|what|when)\b/i
+
+/** Titles that are too long, or phrased as a sentence instead of a label. */
+export function wordyTitles(titles: string[]): string[] {
+  return titles.filter((title) => {
+    const words = title.trim().split(/\s+/).length
+    return words > 4 || SENTENCE_TITLE.test(title)
+  })
+}
+
+/**
+ * An entry that explains itself instead of naming itself.
+ *
+ * "Pharmaceutical manufacturers shipping temperature sensitive biologics" is a
+ * sentence about a buyer; "Pharmaceutical manufacturers" is the buyer. The
+ * panel lists categories, so the trailing clause is wasted width.
+ */
+export function wordyEntries(lines: string[], maxWords = 5): string[] {
+  return lines.filter((line) => line.trim().split(/\s+/).length > maxWords)
+}
+
 /** Waited when Groq refuses without saying how long to wait for. */
 const DEFAULT_RETRY_MS = 2_500
 

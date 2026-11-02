@@ -11,7 +11,7 @@
  * Server only.
  */
 
-import { askForJson, cleanLine, cleanProse, cleanNameList, reject, SIZE_LED, stockStageTitles, COMMON_RULES } from '@/lib/llm-client'
+import { askForJson, cleanLine, cleanProse, cleanNameList, reject, SIZE_LED, stockStageTitles, wordyTitles, wordyEntries, COMMON_RULES } from '@/lib/llm-client'
 import type { B2bLandscapeParts } from '@/lib/demo-generation-types'
 
 const SYSTEM_PROMPT = `You write the header of a B2B buyer survey report: who buys in this market, who answered the survey, and what the four question sections are called.
@@ -30,9 +30,12 @@ buyerTypes - exactly 4 kinds of organisation that buy here, named plainly and br
 organisations - 6 kinds of organisation that answered the survey. Name the kinds that actually
   exist in THIS trade and distinguish them by what they DO differently, not by how big they are.
   A reader should learn something about the market from the list.
+  Keep each one SHORT and factual: 2 to 5 words, a plain category a reader recognises. Never add
+  a trailing clause explaining what they do with it - "Pharmaceutical manufacturers" is right,
+  "Pharmaceutical manufacturers shipping temperature sensitive biologics" is a sentence.
   This shows the SHAPE only - never reuse its wording. For a commercial laundry market:
-    "Hotel housekeeping operations", "Hospital linen services", "Workwear rental companies",
-    "Care home laundry rooms", "Sports club kit rooms", "Prison service laundries".
+    "Hotel housekeeping teams", "Hospital linen services", "Workwear rental companies",
+    "Care home laundries", "Sports club kit rooms", "Prison service laundries".
   BAD, and the trap to avoid: starting entries with a size or scope word. "Large Urban Academic
     Hospital System", "Mid Sized Regional Non Profit Hospital", "Small Independent Clinics" -
     these say nothing about the trade and come out identical on every market.
@@ -47,19 +50,18 @@ sectionTitles - exactly 4 tab titles. They always cover the same four stages, in
   3 how it has held up in service and what it returned
   4 what the organisation will do next
 
-  Each title names this market's short subject and says its stage in the words of THIS trade.
-  Use the short subject, not the full market name: "Gearbox", not "Industrial Gearbox Market".
+  These are TAB LABELS, not sentences. 2 to 4 words each, Title Case, professional and plain.
+  Do not name the market in them - the page already does. Do not start one with Choosing, Where,
+  Living, Running, Working, Using or The.
 
   NEVER use the words Buying, Purchase, Purchasing, Adoption, Usage, Performance or Investment.
   Those are the stock words, and using them makes every market's tabs read identically.
-  Say the same thing in this trade's language instead.
+  Name the stage in this trade's own language instead.
 
   For a surgical devices market:
-    ["Surgical Device Sourcing", "Surgical Device Use in Theatre",
-     "Surgical Device Reliability in Service", "Future Surgical Device Plans"]
+    ["Supplier Selection", "Theatre Use", "Device Reliability", "Forward Plans"]
   For a bakery ingredients market:
-    ["Ingredient Supplier Selection", "Ingredient Use in the Bakery",
-     "Ingredient Quality in Production", "Forward Ingredient Planning"]
+    ["Supplier Approval", "Recipe Use", "Batch Consistency", "Forward Sourcing"]
 
 Rules:
 - Every entry must be a real, specific kind of organisation or a real job title in this trade.
@@ -153,6 +155,12 @@ export async function generateB2bLandscape(
 
   const stock = stockStageTitles(sectionTitles)
   if (stock.length) return reject('tab titles use the stock stage words', stock.join(' / '))
+
+  const wordyTabs = wordyTitles(sectionTitles)
+  if (wordyTabs.length) return reject('tab titles read as sentences', wordyTabs.join(' / '))
+
+  const wordyOrgs = wordyEntries(organisations)
+  if (wordyOrgs.length) return reject('organisations written as sentences', wordyOrgs.join(' | '))
 
   // Two is tolerable — "Regional Burn Treatment Centers" still names the trade.
   // Three or more means the size ladder has come back.

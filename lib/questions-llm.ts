@@ -14,7 +14,7 @@
  * Server only.
  */
 
-import { askForJson, cleanProse, reject, stockStageTitles, COMMON_RULES } from '@/lib/llm-client'
+import { askForJson, cleanProse, reject, stockStageTitles, wordyTitles, COMMON_RULES } from '@/lib/llm-client'
 import type {
   MarketProfileParts,
   QuestionSectionPart,
@@ -106,17 +106,16 @@ Exactly 4 sections of 5 questions each, with these titles and in this order:
 Write a short Title Case title for each section, in the language a shopper of THIS thing would
 recognise. Name the actual activity, not the abstract stage.
 
-Write a short Title Case title for each section. Every title must NAME the market's short subject
-and say its stage in the words a shopper of THIS thing would use. Do not repeat the section
-description above as the title.
+Write a TAB LABEL for each section, not a sentence. 2 to 4 words each, Title Case, professional
+and plain. Do not name the market in them - the page already does. Do not start one with
+Choosing, Where, Living, Running, Working, Using or The.
 
 NEVER use the words Buying, Purchase, Purchasing, Adoption, Usage, Performance, Investment,
 Repurchase or Intentions. Those are the stock words, and using them makes every market's tabs read
-identically. Say the same thing in this market's own language instead.
+identically. Name the stage in this market's own language instead.
 
 For an air purifier market:
-  ["Choosing an Air Purifier", "Where Air Purifiers Are Bought",
-   "Living With an Air Purifier", "The Next Air Purifier"]
+  ["Model Choice", "Retail Channel", "Everyday Use", "Next Unit"]
 
 EVERY QUESTION MUST STAND ALONE. A respondent may see it on its own, in any order, with no other
 question in front of it. So each one names the subject in full and never points back at another
@@ -345,6 +344,9 @@ export async function generateQuestionnaire(
   // The four stages named with the stock words give every market the same tabs.
   const stock = stockStageTitles(sections.map((s) => s.title))
   if (stock.length) return reject('section titles use the stock stage words', stock.join(' / '))
+
+  const wordyTabs = wordyTitles(sections.map((s) => s.title))
+  if (wordyTabs.length) return reject('section titles read as sentences', wordyTabs.join(' / '))
 
   // A questionnaire where most questions never name their own subject reads as
   // one conversation in twenty parts.

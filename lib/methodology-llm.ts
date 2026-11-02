@@ -10,7 +10,7 @@
  * Server only — the key must never reach the browser.
  */
 
-import { askForJson, cleanNameList, sizeLedCount, reject, COMMON_RULES } from '@/lib/llm-client'
+import { askForJson, cleanNameList, sizeLedCount, wordyEntries, reject, COMMON_RULES } from '@/lib/llm-client'
 import type { MethodologyParts } from '@/lib/methodology-parts'
 
 const SYSTEM_PROMPT = `You write the research methodology panel shown above a B2B customer directory in a market research report.
@@ -21,10 +21,13 @@ organisations - 5 kinds of organisation that BUY in this market.
   They must be the people who PAY FOR AND USE it. Never a vendor, a supplier, or anyone who only
   finances or insures the purchase.
   Name the kinds that actually exist in THIS trade, and tell them apart by what they DO, not by
-  how big they are. A reader should learn something about the market from the list.
+  how big they are. Keep each one SHORT and factual: 2 to 5 words, a plain category a reader
+  recognises. Never add a trailing clause explaining what they do with it -
+  "Pharmaceutical manufacturers" is right, "Pharmaceutical manufacturers shipping temperature
+  sensitive biologics" is a sentence, not a category.
   This shows the SHAPE only - never reuse its wording. For a commercial laundry market:
-    "Hotel housekeeping operations", "Hospital linen services", "Workwear rental companies",
-    "Care home laundry rooms", "Prison service laundries".
+    "Hotel housekeeping teams", "Hospital linen services", "Workwear rental companies",
+    "Care home laundries", "Prison service laundries".
   BAD, and the trap to avoid: starting an entry with a size or scope word. "Multi Site Private
     Hospital Groups", "Large Integrated Health Systems", "National Railway Freight Operators" -
     these say nothing about the trade and come out identical on every market.
@@ -71,6 +74,10 @@ export async function generateMethodologyParts(
   // that and the size ladder has come back in place of the market.
   const sized = sizeLedCount(organisations)
   if (sized > 2) return reject(`${sized} organisations qualified by size alone`, organisations.join(' | '))
+
+  // The panel lists categories, not descriptions of them.
+  const wordy = wordyEntries(organisations)
+  if (wordy.length) return reject('organisations written as sentences', wordy.join(' | '))
 
   return { organisations, designations, triggerSignals }
 }
