@@ -6,11 +6,33 @@
  * and deliberately do not show it.
  */
 
+import { Lock } from 'lucide-react'
+
 /** Shown wherever a demo dashboard withholds a value behind a lock. */
 export const DEMO_SUBSCRIBE_NOTE = 'Please subscribe for real world data'
 
 export const DEMO_DATA_NOTE =
   'Data presented is dummy, and simply for representation. Kindly subscribe to this platform for real world data.'
+
+/**
+ * The strip shown in place of a withheld value.
+ *
+ * It lives here rather than beside one chart because the same empty panel turns
+ * up in several: a question with no response breakdown, a parameter with no
+ * evidence behind it. Those panels used to say "No response breakdown available
+ * for this question", which reads as a fault in the dashboard rather than as
+ * the paywall it is.
+ */
+export function LockedStrip({ className = '' }: { className?: string }) {
+  return (
+    <div
+      className={`flex items-center gap-2 rounded-md border border-dashed border-amber-300 bg-amber-50/60 px-4 py-3 text-sm font-semibold text-amber-900 ${className}`}
+    >
+      <Lock className="h-4 w-4 shrink-0 text-amber-600" />
+      {DEMO_SUBSCRIBE_NOTE}
+    </div>
+  )
+}
 
 export function DemoDataNote({ className = '' }: { className?: string }) {
   return (

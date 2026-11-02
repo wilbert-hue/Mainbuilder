@@ -12,6 +12,7 @@
  * largest option rather than to 100.
  */
 
+import { LockedStrip } from '@/components/DemoDataNote'
 import { useMemo } from 'react'
 import {
   PieChart,
@@ -108,10 +109,12 @@ export function BuyerSurveyChart({ options, chartType, height = 340 }: Props) {
     [options]
   )
 
+  // A question with no breakdown is one whose answers are withheld, not one
+  // the dashboard failed to load.
   if (data.length === 0) {
     return (
-      <div className="flex h-40 items-center justify-center rounded-md bg-slate-50 text-sm text-slate-500">
-        No response breakdown available for this question.
+      <div className="flex h-40 items-center justify-center rounded-md bg-slate-50 px-4">
+        <LockedStrip />
       </div>
     )
   }

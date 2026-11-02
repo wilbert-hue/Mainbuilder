@@ -25,7 +25,7 @@ import { useDashboardStore } from '@/lib/store'
 import { buildDemoQuadrant } from '@/lib/demo-quadrant'
 import { useDemoGeneration } from '@/lib/use-demo-generation'
 import { titleCaseGeography } from '@/lib/market-scope'
-import { DEMO_SUBSCRIBE_NOTE } from '@/components/DemoDataNote'
+import { DEMO_SUBSCRIBE_NOTE, LockedStrip } from '@/components/DemoDataNote'
 import { useLocksEnabled } from '@/lib/lock-mode'
 import { buildDemoMethodology } from '@/lib/demo-methodology'
 import MethodologyPanel from './MethodologyPanel'
@@ -45,16 +45,6 @@ const NAVY = '#002857'
 const SCORE_BLUE = '#1e3a8a'
 
 /** Withheld content, in a strip the width of the panel it replaces. */
-function LockedStrip({ className = '' }: { className?: string }) {
-  return (
-    <div
-      className={`flex items-center gap-2 rounded-md border border-dashed border-amber-300 bg-amber-50/60 px-4 py-3 text-sm font-semibold text-amber-900 ${className}`}
-    >
-      <Lock className="h-4 w-4 shrink-0 text-amber-600" />
-      {DEMO_SUBSCRIBE_NOTE}
-    </div>
-  )
-}
 
 /** The axis label with its name withheld: "X —" followed by a lock. */
 function LockedAxisLabel({ axis }: { axis: 'X' | 'Y' }) {
@@ -306,9 +296,8 @@ function AxisParameterPanel({
                 </>
               )}
 
-              {!active.basis && active.evidence.length === 0 && (
-                <p className="text-sm text-slate-500">No supporting detail recorded.</p>
-              )}
+              {/* Nothing behind a parameter means it is withheld, not missing. */}
+              {!active.basis && active.evidence.length === 0 && <LockedStrip />}
             </div>
           ) : (
             <p className="text-sm text-slate-500">
