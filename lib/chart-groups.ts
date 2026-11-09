@@ -38,13 +38,11 @@ export const CHART_GROUPS: ChartGroup[] = [
     charts: ['grouped-bar', 'multi-line', 'heatmap', 'comparison-table', 'waterfall'],
     icon: '📊'
   },
-  {
-    id: 'coherent-opportunity',
-    label: 'Coherent Opportunity Matrix',
-    description: 'Opportunity identification and analysis',
-    charts: ['bubble'],
-    icon: '🎯'
-  },
+  // The Coherent Opportunity Matrix was retired from the dashboards. Dropping
+  // the group is what removes it: a chart is only ever shown when the selected
+  // group lists it, so nothing reaches the bubble chart once no group does.
+  // The chart and its filters are left in the codebase, unreferenced by any
+  // group, so the view can be brought back by restoring this entry alone.
   {
     id: 'competitive-intelligence',
     label: 'Competitive Intelligence 2025',
