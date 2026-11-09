@@ -185,7 +185,11 @@ function AxisParameterPanel({
     <div>
       <div className="mb-2 flex items-center gap-2 text-[0.78rem] font-bold uppercase tracking-wider text-[#1A759F]">
         {axisLabel} —
-        <span>{axisName}</span>
+        {evidenceLocked ? (
+          <Lock className="h-3.5 w-3.5 text-slate-400" aria-label="Withheld" />
+        ) : (
+          <span>{axisName}</span>
+        )}
       </div>
 
       <div className="grid gap-3 md:grid-cols-[minmax(220px,300px)_1fr]">
@@ -194,7 +198,7 @@ function AxisParameterPanel({
           {params.map((p) => {
             const isActive = p.name === selected
             return (
-              <li key={p.name}>
+              <li key={evidenceLocked ? `Parameter ${params.indexOf(p) + 1}` : p.name}>
                 <button
                   onClick={() => setSelected(isActive ? null : p.name)}
                   aria-expanded={isActive}
@@ -571,6 +575,7 @@ export function QuadrantView() {
       {(xNames.length > 0 || yNames.length > 0) && (
         <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <h2 className="mb-2 text-lg font-bold text-slate-900">Market Scoring Parameters</h2>
+          {isDemo && <LockedStrip className="mb-4" />}
           <p className="mb-4 text-[0.92rem] leading-relaxed text-slate-500">
             The X and Y axes and these {xNames.length + yNames.length} parameters were defined for{' '}
             <strong className="text-slate-700">{report.market}</strong> and form the basis of the
@@ -966,7 +971,9 @@ export function QuadrantView() {
       {(xNames.length > 0 || yNames.length > 0) && (
         <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <h2 className="mb-2 text-lg font-bold text-slate-900">Parameter Definitions</h2>
-          {(
+          {isDemo ? (
+            <LockedStrip />
+          ) : (
             <>
               <p className="mb-4 text-[0.92rem] leading-relaxed text-slate-500">
                 X and Y axes and these {xNames.length + yNames.length} parameters are defined for{' '}
@@ -1009,7 +1016,7 @@ export function QuadrantView() {
         {primaryResearch.length > 0 && (
           <div className="mb-5 overflow-hidden rounded-lg border border-slate-200">
             {/* Written for this market, so there is nothing to withhold. */}
-            <MethodologyPanel sections={primaryResearch} />
+            <MethodologyPanel sections={primaryResearch} locked={isDemo} />
           </div>
         )}
         <h2 className="mb-3 text-lg font-bold text-slate-900">Research Methodology</h2>
