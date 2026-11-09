@@ -100,10 +100,40 @@ function longestLabel(options: BuyerSurveyOption[]): number {
 interface Props {
   options: BuyerSurveyOption[]
   chartType: string | null
+  /** Position in the section, used only to vary the chart when none is named. */
+  index?: number
   height?: number
 }
 
-export function BuyerSurveyChart({ options, chartType, height = 340 }: Props) {
+/**
+ * Choose a chart for a question that did not name one.
+ *
+ * Almost no export sets chart_type, so every question in every survey rendered
+ * as the same half ring and a twenty question report read as one chart
+ * repeated. Shape decides first — a question with many answers, or long ones,
+ * is unreadable as a circle however pretty — and where more than one form
+ * works, the position in the section breaks the tie so neighbours differ.
+ */
+function pickChartType(data: { label: string }[], index: number): string {
+  const count = data.length
+  const longest = data.reduce((m, d) => Math.max(m, d.label.length), 0)
+
+  // Long answers do not rule out a circle: a legend sits beside every chart and
+  // carries the names, so only the number of slices decides. Nine wedges is
+  // where a ring stops being readable.
+  if (count >= 9) return 'horizontal_bar'
+  // Two answers make a ring that is really a ratio; a pie of two reads oddly.
+  if (count === 2) return 'donut'
+
+  const rotation = ['donut', 'pie', 'vertical_bar', 'semi_donut', 'horizontal_bar']
+  const choice = rotation[index % rotation.length]
+  // A vertical bar writes its names along the axis with no legend to fall back
+  // on, so it is the one form long answers really do rule out.
+  if (choice === 'vertical_bar' && longest > 18) return 'horizontal_bar'
+  return choice
+}
+
+export function BuyerSurveyChart({ options, chartType, index = 0, height = 340 }: Props) {
   const data = useMemo(
     () => options.map((o, i) => ({ ...o, fill: colorAt(i) })),
     [options]
@@ -119,7 +149,7 @@ export function BuyerSurveyChart({ options, chartType, height = 340 }: Props) {
     )
   }
 
-  let type = (chartType || '').toLowerCase()
+  let type = (chartType || '').toLowerCase() || pickChartType(data, index)
 
   // A vertical bar chart cannot show long category names: rotated ticks run off
   // the canvas and get clipped. Long labels belong on a horizontal bar, where

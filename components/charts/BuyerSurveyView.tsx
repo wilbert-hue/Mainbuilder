@@ -235,7 +235,7 @@ function QuestionCard({
           <LockedAnswer />
         ) : (
           <>
-            <BuyerSurveyChart options={question.options} chartType={question.chartType} />
+            <BuyerSurveyChart options={question.options} chartType={question.chartType} index={index} />
             <BuyerSurveyLegend options={question.options} />
           </>
         )}
