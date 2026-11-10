@@ -513,7 +513,8 @@ async function processSegmentTypeAsync(
   geographies: string[],
   allYears: number[],
   segmentTypeIndex: number,
-  geographyHierarchy?: Record<string, string[]> // Optional: pre-built geography hierarchy for "By Region" type
+  geographyHierarchy?: Record<string, string[]>, // Optional: pre-built geography hierarchy for "By Region" type
+  cagrWindow: { start: number; end: number } = { start: METRICS_START_YEAR, end: METRICS_END_YEAR }
 ): Promise<{
   segmentDimension: SegmentDimension
   records: DataRecord[]
@@ -965,8 +966,10 @@ async function processSegmentTypeAsync(
         timeSeries[year] = data[yearStr] !== null && data[yearStr] !== undefined ? (data[yearStr] as number) : 0
       })
       
-      // CAGR always derived from 2026–2033 time series (not sheet CAGR column)
-      const cagr = calculateCAGRFromTimeSeries(timeSeries, METRICS_START_YEAR, METRICS_END_YEAR)
+      // CAGR is derived from the time series over the report's window — the
+      // standard 2026–2033 unless the report declares its own — never from a
+      // CAGR column in the sheet.
+      const cagr = calculateCAGRFromTimeSeries(timeSeries, cagrWindow.start, cagrWindow.end)
       
       records.push({
         geography,
@@ -1025,6 +1028,20 @@ async function processSegmentTypeAsync(
 export type ProcessJsonOptions = {
   /** Display label for volume axis/KPIs (e.g. "Million units", "Units") */
   volumeUnit?: string
+  /**
+   * First and last year of the CAGR window, when the report declares its own.
+   * A report running 2027–2034 compounds over seven periods, not the standard
+   * 2026–2033. Both must be given for the override to apply.
+   */
+  cagrStartYear?: number
+  cagrEndYear?: number
+}
+
+/** The CAGR window a report declares, or the standard one when it declares none. */
+export function resolveCagrWindow(options?: ProcessJsonOptions): { start: number; end: number } {
+  const { cagrStartYear: start, cagrEndYear: end } = options ?? {}
+  if (start !== undefined && end !== undefined && end > start) return { start, end }
+  return { start: METRICS_START_YEAR, end: METRICS_END_YEAR }
 }
 
 export async function processJsonDataAsync(
@@ -1039,7 +1056,8 @@ export async function processJsonDataAsync(
     // Use segmentationData for structure (geographies and segments)
     // Use valueData/volumeData for numeric data (years, values, CAGR)
     const structureData = segmentationData || valueData
-    
+    const cagrWindow = resolveCagrWindow(options)
+
     if (!structureData) {
       throw new Error('No structure data available (need segmentation or value data)')
     }
@@ -1427,7 +1445,8 @@ export async function processJsonDataAsync(
         geographies,
         allYears,
         segmentTypeIndex,
-        geoHierarchyForSegment // Pass geography hierarchy for "By Region" type
+        geoHierarchyForSegment, // Pass geography hierarchy for "By Region" type
+        cagrWindow
       )
       segments[segmentType] = segmentDimension
       valueRecords.push(...records)
@@ -1452,7 +1471,8 @@ export async function processJsonDataAsync(
           geographies,
           allYears,
           segmentTypeIndex,
-          geoHierarchyForSegment // Pass geography hierarchy for "By Region" type
+          geoHierarchyForSegment, // Pass geography hierarchy for "By Region" type
+          cagrWindow
         )
         volumeRecords.push(...volumeRecs)
       }
@@ -1556,8 +1576,8 @@ export async function processJsonDataAsync(
 
           const regionCagr = calculateCAGRFromTimeSeries(
             aggregatedTimeSeries,
-            METRICS_START_YEAR,
-            METRICS_END_YEAR
+            cagrWindow.start,
+            cagrWindow.end
           )
 
           newRecords.push({
@@ -1660,6 +1680,8 @@ export async function processJsonDataAsync(
       currency: 'USD',
       value_unit: 'Million',
       volume_unit: options?.volumeUnit ?? 'Units',
+      cagr_start_year: cagrWindow.start,
+      cagr_end_year: cagrWindow.end,
       has_value: valueRecords.length > 0,
       has_volume: volumeRecords.length > 0,
     }

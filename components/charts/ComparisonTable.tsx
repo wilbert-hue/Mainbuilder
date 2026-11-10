@@ -22,6 +22,12 @@ export function ComparisonTable({ title, height = 600 }: ComparisonTableProps) {
   const [sortField, setSortField] = useState<string>('geography')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
 
+  // CAGR runs over the window the report declares, falling back to the
+  // standard one. The KPI cards read the same two fields, so the headline
+  // growth rate and the per-row rates always cover the same period.
+  const cagrStartYear = data?.metadata?.cagr_start_year ?? METRICS_START_YEAR
+  const cagrEndYear = data?.metadata?.cagr_end_year ?? METRICS_END_YEAR
+
   const tableData = useMemo(() => {
     if (!data) return []
 
@@ -49,8 +55,8 @@ export function ComparisonTable({ title, height = 600 }: ComparisonTableProps) {
       const { cagr, market_share } = applyMetricsToRecord(
         record,
         shareDenominatorPool,
-        METRICS_START_YEAR,
-        METRICS_END_YEAR
+        cagrStartYear,
+        cagrEndYear
       )
 
       return {
@@ -176,8 +182,8 @@ export function ComparisonTable({ title, height = 600 }: ComparisonTableProps) {
             {title || 'Data Comparison Table'}
           </h3>
           <p className="text-sm text-black mt-1">
-            Year: {year} | Values in {valueUnit} | CAGR &amp; share use mean {METRICS_START_YEAR}–
-            {METRICS_END_YEAR}
+            Year: {year} | Values in {valueUnit} | CAGR &amp; share use mean {cagrStartYear}–
+            {cagrEndYear}
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">

@@ -213,6 +213,10 @@ function addAggregationsToData(data: any): any {
  * - valueFile: Excel or CSV file for value data (required)
  * - volumeFile: Excel or CSV file for volume data (optional)
  * - volumeUnit: "million-units" | "units" | "th-units" | "tons" — display label for volume (optional)
+ * - volumeUnitLabel: a label to show verbatim, for units the list above does
+ *   not cover ("Th Metric Tons", "Million Metric Tons"). Wins over volumeUnit.
+ * - cagrStartYear / cagrEndYear: the window CAGR compounds over, when the
+ *   report declares its own rather than the standard 2026–2033. Both or neither.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -229,6 +233,15 @@ export async function POST(request: NextRequest) {
           : volumeUnitRaw === 'tons'
             ? 'Tons'
             : 'Units'
+    const volumeUnitFreeText = (formData.get('volumeUnitLabel') as string | null)?.trim()
+    const volumeUnit = volumeUnitFreeText || volumeUnitLabel
+    const yearField = (name: string) => {
+      const raw = (formData.get(name) as string | null)?.trim()
+      const year = raw ? Number(raw) : NaN
+      return Number.isInteger(year) && year > 1900 && year < 2200 ? year : undefined
+    }
+    const cagrStartYear = yearField('cagrStartYear')
+    const cagrEndYear = yearField('cagrEndYear')
     const hierarchyConfigStr = formData.get('hierarchyConfig') as string | null
     
     // Parse hierarchy configuration
@@ -436,7 +449,7 @@ export async function POST(request: NextRequest) {
       tempValuePath,
       tempVolumePath,
       tempSegmentationPath,
-      { volumeUnit: volumeUnitLabel }
+      { volumeUnit, cagrStartYear, cagrEndYear }
     )
 
     timer.lap('jsonPipelineMs')
@@ -511,7 +524,7 @@ export async function POST(request: NextRequest) {
           tempCrossValuePath,
           tempCrossVolumePath,
           tempCrossSegPath,
-          { volumeUnit: volumeUnitLabel }
+          { volumeUnit, cagrStartYear, cagrEndYear }
         )
 
         // Clean up cross temp files
