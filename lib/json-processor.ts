@@ -1660,10 +1660,13 @@ export async function processJsonDataAsync(
     // END POST-PROCESSING
     // ============================================================
 
-    // CAGR 2026–2033 and per-geography mean share % (2026–2033)
-    applyMetricsToRecords(valueRecords)
+    // Final word on CAGR and per-geography mean share %, over the report's
+    // window — the standard 2026–2033 unless it declares its own. This runs
+    // after the per-record and regional passes and overwrites both, so the
+    // window has to reach it or the earlier two have no effect.
+    applyMetricsToRecords(valueRecords, cagrWindow.start, cagrWindow.end)
     if (volumeRecords.length > 0) {
-      applyMetricsToRecords(volumeRecords)
+      applyMetricsToRecords(volumeRecords, cagrWindow.start, cagrWindow.end)
     }
     
     // Build metadata
