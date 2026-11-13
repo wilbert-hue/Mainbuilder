@@ -11,7 +11,11 @@
  * assembled, which is exactly what the locked preview is selling.
  */
 
-import type { MethodologySection } from '@/lib/intelligence-sheet-types'
+import {
+  INTENT_CAPTURE_PARAGRAPH,
+  INTENT_CAPTURE_TITLE,
+  type MethodologySection,
+} from '@/lib/intelligence-sheet-types'
 import type { MethodologyParts } from '@/lib/methodology-parts'
 import { stripScopePrefix } from '@/lib/market-scope'
 import { marketFlavour } from '@/lib/market-flavour'
@@ -92,11 +96,10 @@ export function composeMethodology(
       paragraphs: ['…and 50+ other trigger signals'],
     },
     {
-      title: 'Intent Capture from Search Results (Real-time)',
+      // Fixed wording, shared with real uploads — see INTENT_CAPTURE_PARAGRAPH.
+      title: INTENT_CAPTURE_TITLE,
       groups: [],
-      paragraphs: [
-        `Intent data is captured from the search and content behaviour of organisations researching ${subject}, then matched back to the company record so the directory reflects who is in-market now.`,
-      ],
+      paragraphs: [INTENT_CAPTURE_PARAGRAPH],
     },
   ]
 }

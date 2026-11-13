@@ -16,6 +16,39 @@ export interface MethodologySection {
   paragraphs: string[]
 }
 
+/**
+ * The intent-capture paragraph, fixed across every intelligence table.
+ *
+ * The section describes a platform capability rather than anything particular
+ * to one market, so it reads identically on a demo and on a real upload, and
+ * is not taken from whatever the source sheet happened to say.
+ */
+export const INTENT_CAPTURE_PARAGRAPH =
+  'Intent data is captured through our proprietary intent-intelligence technology, which continuously monitors real-time search activity, content consumption and digital engagement across the web to identify organizations actively researching solutions in this market. Signals are scored and refreshed in real time, so the accounts surfaced reflect current buying interest rather than static firmographics.'
+
+/** The heading the paragraph sits under. */
+export const INTENT_CAPTURE_TITLE = 'Intent Capture from Search Results (Real-time)'
+
+const isIntentCapture = (title: string) => /intent\s*capture/i.test(title)
+
+/**
+ * Give a methodology block the standard intent-capture section: the fixed
+ * wording, and the section itself when the block has none.
+ *
+ * Applied both where a block is produced (upload and demo) and on the way out
+ * of storage, so dashboards built before this was settled read the same as new
+ * ones without each having to be rewritten.
+ */
+export function withStandardIntentCapture(sections: MethodologySection[]): MethodologySection[] {
+  const out = sections.map((s) =>
+    isIntentCapture(s.title) ? { ...s, paragraphs: [INTENT_CAPTURE_PARAGRAPH] } : s
+  )
+  if (!out.some((s) => isIntentCapture(s.title))) {
+    out.push({ title: INTENT_CAPTURE_TITLE, groups: [], paragraphs: [INTENT_CAPTURE_PARAGRAPH] })
+  }
+  return out
+}
+
 export interface IntelligenceSheetData {
   headers: string[]
   rows: Record<string, unknown>[]
@@ -72,5 +105,5 @@ export function parseMethodology(value: unknown): MethodologySection[] | undefin
     }))
     .filter((s) => s.title && (s.groups.length > 0 || s.paragraphs.length > 0))
 
-  return sections.length > 0 ? sections : undefined
+  return sections.length > 0 ? withStandardIntentCapture(sections) : undefined
 }

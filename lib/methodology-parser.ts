@@ -20,7 +20,7 @@
  * Anything else is prose.
  */
 
-import type { MethodologySection } from '@/lib/intelligence-sheet-types'
+import { withStandardIntentCapture, type MethodologySection } from '@/lib/intelligence-sheet-types'
 
 /** The row that marks the block. Nothing is parsed unless this is present. */
 const METHODOLOGY_TITLE = /^methodology$/i
@@ -124,5 +124,7 @@ export function parseMethodologyBlock(
   flushPendingAsParagraph()
 
   const usable = sections.filter((s) => s.groups.length > 0 || s.paragraphs.length > 0)
-  return usable.length > 0 ? usable : undefined
+  // The intent-capture wording is ours, not the sheet's, so it is imposed here
+  // rather than taken from whatever the workbook happened to say.
+  return usable.length > 0 ? withStandardIntentCapture(usable) : undefined
 }
