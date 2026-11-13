@@ -91,8 +91,14 @@ export default function MethodologyPanel({
                       </ul>
                     </div>
                   ))}
+                  {/*
+                    Methodology prose reads as body copy, not as an aside: it
+                    carries the intent-capture explanation, which is the longest
+                    text in the panel and was the hardest to read in small
+                    italics.
+                  */}
                   {section.paragraphs.map((text, p) => (
-                    <p key={p} className="text-xs leading-relaxed text-slate-600 italic">
+                    <p key={p} className="text-sm leading-relaxed text-slate-600">
                       {text}
                     </p>
                   ))}
