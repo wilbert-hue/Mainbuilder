@@ -47,6 +47,8 @@ export interface DashboardSnapshot {
   staticCustomerProp1?: boolean
   staticDistributorProp1?: boolean
   previewUnlocked?: boolean
+  /** Offer only the geography each module reports on in the country strip */
+  singleGeographyStrip?: boolean
 }
 
 export class StorageError extends Error {

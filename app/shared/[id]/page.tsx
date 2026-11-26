@@ -47,6 +47,7 @@ export default function SharedDashboardPage() {
     setStaticCustomerProp1,
     setStaticDistributorProp1,
     setPreviewUnlocked,
+    setSingleGeographyStrip,
     setLogoChoice,
     loadDefaultFilters,
     clearData,
@@ -108,6 +109,7 @@ export default function SharedDashboardPage() {
       setStaticCustomerProp1(snapshot.staticCustomerProp1 || false)
       setStaticDistributorProp1(snapshot.staticDistributorProp1 || false)
       setPreviewUnlocked(snapshot.previewUnlocked || false)
+      setSingleGeographyStrip(snapshot.singleGeographyStrip || false)
       setLogoChoice((snapshot.logoChoice === 'wmr' || snapshot.logoChoice === 'mi') ? snapshot.logoChoice : 'coherent')
 
       setStatus('ready')

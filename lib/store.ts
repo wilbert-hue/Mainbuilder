@@ -64,6 +64,12 @@ interface DashboardStore {
   staticCustomerProp1: boolean // When true, render static 20-row Proposition 1 template instead of uploaded data
   staticDistributorProp1: boolean // Same for distributor intelligence
   previewUnlocked: boolean // Review links only: show what a lock would withhold
+  /**
+   * Offer only the geography a module reports on, instead of also listing the
+   * cut it does not carry. A study with no second cut to sell reads as
+   * incomplete when the strip shows a locked one beside it.
+   */
+  singleGeographyStrip: boolean
   dashboardId: string | null // MongoDB document ID assigned after first save
 
   // Actions
@@ -116,6 +122,7 @@ interface DashboardStore {
   setStaticCustomerProp1: (val: boolean) => void
   setStaticDistributorProp1: (val: boolean) => void
   setPreviewUnlocked: (val: boolean) => void
+  setSingleGeographyStrip: (val: boolean) => void
   setDashboardId: (id: string | null) => void
 }
 
@@ -322,6 +329,7 @@ export const useDashboardStore = create<DashboardStore>((set, get) => ({
   staticCustomerProp1: false,
   staticDistributorProp1: false,
   previewUnlocked: false,
+  singleGeographyStrip: false,
   dashboardId: null,
   
   setData: (rawData) => {
@@ -610,6 +618,7 @@ export const useDashboardStore = create<DashboardStore>((set, get) => ({
   setStaticCustomerProp1: (val) => set({ staticCustomerProp1: val }),
   setStaticDistributorProp1: (val) => set({ staticDistributorProp1: val }),
   setPreviewUnlocked: (val) => set({ previewUnlocked: val }),
+  setSingleGeographyStrip: (val) => set({ singleGeographyStrip: val }),
   setDashboardId: (id) => set({ dashboardId: id }),
   
   setLoading: (loading) => set({ isLoading: loading }),

@@ -146,6 +146,7 @@ export async function POST(request: NextRequest) {
       showDemoB2cSurvey: body.showDemoB2cSurvey === true,
       staticCustomerProp1: body.staticCustomerProp1 === true,
       staticDistributorProp1: body.staticDistributorProp1 === true,
+      singleGeographyStrip: body.singleGeographyStrip === true,
       logoChoice: (['wmr', 'mi'].includes(body.logoChoice as string) ? body.logoChoice : 'coherent') as 'coherent' | 'wmr' | 'mi',
       intelligenceCuts: parseIntelligenceCuts(body.intelligenceCuts),
       customerScope: typeof body.customerScope === 'string' && body.customerScope.trim() ? body.customerScope.trim().slice(0, 40) : null,

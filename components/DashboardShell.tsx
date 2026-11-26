@@ -130,6 +130,7 @@ export function DashboardShell({ readOnly = false }: Props) {
     staticCustomerProp1,
     staticDistributorProp1,
     intelligenceCuts,
+    singleGeographyStrip,
   } = useDashboardStore()
 
   const [activeTab, setActiveTab] = useState<ActiveTab>('bar')
@@ -321,6 +322,9 @@ export function DashboardShell({ readOnly = false }: Props) {
   const countriesFor = (key: string) => {
     if (surveyRegions.length) return surveyRegions
     const scope = scopeFor(key)
+    // A dashboard that has no second cut to sell says so by offering only the
+    // one it reports on, rather than showing a locked cut beside it.
+    if (singleGeographyStrip) return [scope]
     return GLOBAL_AND_INDIA.some((g) => g.toLowerCase() === scope.toLowerCase())
       ? GLOBAL_AND_INDIA
       : [scope]

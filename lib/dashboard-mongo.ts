@@ -83,6 +83,8 @@ export interface DashboardDocument {
   staticDistributorProp1?: boolean
   /** Review links only: render what a lock would otherwise withhold. */
   previewUnlocked?: boolean
+  /** Offer only the geography each module reports on in the country strip */
+  singleGeographyStrip?: boolean
   logoChoice?: 'coherent' | 'wmr' | 'mi'
   /** Renames the customer-intelligence module on this dashboard alone. */
   customerModuleLabel?: string | null
